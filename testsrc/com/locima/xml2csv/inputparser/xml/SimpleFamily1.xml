@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<family>
+	<address>Brodie Family Home</address>
+	<name>Brodie</name>
+	<person>
+		<name>Andy</name>
+		<age>38</age>
+	</person>
+	<person age="2">
+		<name>
+			Lincoln
+		</name>
+	</person>
+</family>

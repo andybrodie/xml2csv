@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://locima.com/xml2csv/MappingSet"
+	xmlns:tns="http://locima.com/xml2csv/MappingSet" elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+
+	<element name="MappingSet" type="tns:MappingSet" />
+
+	<complexType name="MappingSet">
+		<annotation>
+			<documentation>
+				Root element of a mapping set document. This contains
+				a set of mapping elements that define the mappings between the input
+				XML documents and their output CSV equivalents.
+			</documentation>
+		</annotation>
+		<sequence minOccurs="1" maxOccurs="unbounded">
+			<element name="Mapping" type="tns:Mapping" />
+		</sequence>
+		<attribute name="inputSchema" type="anyURI" />
+	</complexType>
+
+	<complexType name="Mapping">
+		<annotation>
+			<documentation>A group of mappings.</documentation>
+		</annotation>
+		<choice minOccurs="1" maxOccurs="unbounded">
+			<element name="Field" type="tns:Field" />
+			<element name="Mapping" type="tns:Mapping" />
+		</choice>
+		<attribute name="mappingRoot" type="string">
+			<annotation>
+				<documentation>XPath expression, relative to the parent mapping (or
+					document element if parent is MappingSet), of the root node for
+					these mappings. If omitted, document element is assumed. An
+					expression that returns multiple nodes will result in multiple rows
+					in the output file.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="inline" type="boolean">
+			<annotation>
+				<documentation>If true, then fields found by this mapping are added
+					to the parent mapping as extra columns, using outputName as the
+					base.  If false then a new output will be created for these
+					mappings.  Defaults to false.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="outputName" type="string">
+			<annotation>
+				<documentation>Specifies the name of this mapping output.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="type" type="tns:MappingType" />
+	</complexType>
+
+	<complexType name="Field">
+		<annotation>
+			<documentation>Specifies a single field in an output record using an
+				XPath expression (relative to the parent Mapping's mappingRoot).
+			</documentation>
+		</annotation>
+		<attribute name="xPath" type="string" />
+		<attribute name="name" type="string" />
+	</complexType>
+
+	<simpleType name="MappingType">
+		<restriction base="string">
+			<enumeration value="embedded">
+				<annotation>
+					<documentation>If "embedded" then all found fields will be embedded
+						within the same output file, using a suffix of "1", "2", "3", etc.
+						for all field definitions contained within.
+					</documentation>
+				</annotation>
+			</enumeration>
+			<enumeration value="new">
+				<annotation>
+					<documentation>
+						If "new" then all found fields within this one will
+						be created in a new output file. It is the responsibility of the
+						configuration author to ensure that it is possible to link between
+						parent and child documents.
+					</documentation>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+</schema>

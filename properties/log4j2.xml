@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" strict="true" name="XMLConfigTest"
+	packages="org.apache.logging.log4j.test">
+	<Properties>
+		<Property name="filename">log.txt</Property>
+	</Properties>
+	<Filter type="ThresholdFilter" level="trace" />
+
+	<Appenders>
+		<Appender type="Console" name="STDOUT">
+			<Layout type="PatternLayout" pattern="%r [%t] %-5p %c - %m%n" />
+		</Appender>
+		<Appender type="File" name="File" fileName="${filename}">
+			<Layout type="PatternLayout">
+				<Pattern>%r [%t] %-5p %c - %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="List" name="List">
+		</Appender>
+	</Appenders>
+
+	<Loggers>
+		<Logger name="org.apache.logging.log4j.test1" level="debug"
+			additivity="false">
+			<AppenderRef ref="STDOUT" />
+		</Logger>
+
+		<Root level="trace">
+			<AppenderRef ref="List" />
+		</Root>
+	</Loggers>
+
+</Configuration>

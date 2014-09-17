@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<family>
+	<address>West Family Home</address>
+	<name>West</name>
+	<person age="39">
+		<name>Emma</name>
+	</person>
+	<person age="16">
+		<name>
+			Benjamin
+		</name>
+	</person>
+	<person age="13">
+		<name>
+			William
+		</name>
+	</person>
+</family>
