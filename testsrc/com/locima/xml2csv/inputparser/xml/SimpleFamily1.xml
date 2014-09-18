@@ -2,13 +2,12 @@
 <family>
 	<address>Brodie Family Home</address>
 	<name>Brodie</name>
-	<person>
-		<name>Andy</name>
-		<age>38</age>
+	<person age="38">
+		<name>
+		Andy
+		</name>
 	</person>
 	<person age="2">
-		<name>
-			Lincoln
-		</name>
+		<name>Lincoln</name>
 	</person>
 </family>

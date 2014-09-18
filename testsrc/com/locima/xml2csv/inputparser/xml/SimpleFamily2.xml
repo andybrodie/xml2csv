@@ -6,13 +6,9 @@
 		<name>Emma</name>
 	</person>
 	<person age="16">
-		<name>
-			Benjamin
-		</name>
+		<name>Benjamin</name>
 	</person>
 	<person age="13">
-		<name>
-			William
-		</name>
+		<name>William</name>
 	</person>
 </family>

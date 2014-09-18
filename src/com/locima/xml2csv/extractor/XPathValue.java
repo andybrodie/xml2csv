@@ -3,6 +3,7 @@ package com.locima.xml2csv.extractor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmEmptySequence;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 
@@ -32,7 +33,12 @@ public class XPathValue {
 	}
 
 	public XdmNode evaluateAsNode(XdmNode element) throws DataExtractorException {
-		return (XdmNode) evaluate(element);
+		XdmValue evalResult = evaluate(element);
+		if (evalResult instanceof XdmEmptySequence) {
+			return null;
+		} else {
+			return (XdmNode) evaluate(element);
+		}
 	}
 
 	public String getSource() {

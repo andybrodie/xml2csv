@@ -62,6 +62,11 @@ public class XmlDataExtractor {
 
 	private Processor saxonProcessor;
 
+	/**
+	 * Is set, then all whitespace will be trimmed from the beginning and end of element and attribute values.
+	 */
+	private boolean trimWhitespace;
+
 	public XmlDataExtractor() {
 		this.saxonProcessor = SaxonProcessorManager.getProcessor();
 	}
@@ -153,6 +158,9 @@ public class XmlDataExtractor {
 			XdmNode node = xPathExpr.evaluateAsNode(mappingRoot);
 			if (node != null) {
 				String nodeValue = node.getStringValue();
+				if (nodeValue != null && this.trimWhitespace) {
+					nodeValue = nodeValue.trim();
+				}
 				values.add(nodeValue);
 				LOG.debug("Column {} value {} found after executing XPath {}", colName, nodeValue, xPathExpr.getSource());
 			} else {
@@ -170,5 +178,9 @@ public class XmlDataExtractor {
 	 */
 	public void setMappings(MappingsSet newMappings) {
 		this.mappings = newMappings;
+	}
+
+	public void setTrimWhitespace(boolean trimWhitespace) {
+		this.trimWhitespace = trimWhitespace;
 	}
 }

@@ -30,19 +30,24 @@ public class OutputManager implements IOutputManager {
 	/**
 	 * Escapes any string so that it can be added to a CSV. Specifically, if the value contains a double-quote, CR or LF then the entire value is
 	 * wrapped in double-quotes. Also, any instances of double-quote are replaced with 2 double-quotes.
-	 * 
+	 *
 	 * @param value Any string value. If null is passed, null is returned.
 	 * @return A string suitable to be embedded in to a CSV file that will be read by Excel.
 	 */
 	static String escapeForCsv(String value) {
-		String escapedValue;
-		if (value == null) {
-			escapedValue = null;
-		} else {
-			String escapedQuotes = value.replace(QUOTE, "\"\"");
-			escapedValue = QUOTE + escapedQuotes + QUOTE;
+		boolean quotesRequired = false;
+		if (null == value) {
+			return null;
 		}
-		return escapedValue;
+		if (value.contains(QUOTE)) {
+			value = value.replace(QUOTE, "\"\"");
+			quotesRequired = true;
+		}
+		if (value.contains("\n") || value.contains(",") || value.contains(";")) {
+			quotesRequired = true;
+		}
+
+		return quotesRequired ? QUOTE + value + QUOTE : value;
 	}
 
 	private File outputDirectory;
@@ -98,7 +103,7 @@ public class OutputManager implements IOutputManager {
 	}
 
 	/**
-	 * Creates the CSV files that will be used for the difference writers.
+	 * Creates the CSV files that will be used for the different writers.
 	 */
 	@Override
 	public void createFiles(Map<String, List<String>> outputConfiguration) throws OutputManagerException {
@@ -113,8 +118,18 @@ public class OutputManager implements IOutputManager {
 				writerFile = new File(this.outputDirectory, writerName + ".csv");
 				LOG.trace("Creating output file for writer {} ({})", writerName, writerFile.getAbsolutePath());
 				Writer writerFileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(writerFile), encoding));
+
 				this.writers.put(writerName, new Tuple<File, Writer>(writerFile, writerFileWriter));
 				LOG.info("Successfully created output file for writer {} ({})", writerName, writerFile.getAbsolutePath());
+
+				// Write field names to the first row of the file.
+				try {
+					writerFileWriter.write(collectionToString(entry.getValue(), ",", null));
+					writerFileWriter.write(System.getProperty("line.separator"));
+				} catch (IOException ioe) {
+					close();
+					throw new OutputManagerException("Unable to write field names to " + writerName, ioe);
+				}
 			}
 		} catch (FileNotFoundException fileNotFoundException) {
 			// If we can't even create an output file, throw an exception up to abort
@@ -133,7 +148,7 @@ public class OutputManager implements IOutputManager {
 
 	/**
 	 * Sets the directory to which output files will be written.
-	 * 
+	 *
 	 * @param outputDirectoryName the name of the output directory.
 	 * @throws OutputManagerException If the directory does not exist
 	 */
@@ -151,7 +166,7 @@ public class OutputManager implements IOutputManager {
 
 	/**
 	 * Writes a set of values out to the specified writer using CSV notation.
-	 * 
+	 *
 	 * @param writerName the name of the writer to send the values to
 	 * @param values the values to write in a CSV format
 	 * @throws OutputManagerException if an error occurred writing the files.
@@ -166,10 +181,11 @@ public class OutputManager implements IOutputManager {
 		File writerFileName = writerTuple.getFirst();
 		Writer writer = writerTuple.getSecond();
 
-		String outputLine = collectionToString(values, ",", "\"");
+		String outputLine = collectionToString(values, ",", null);
 		try {
-			LOG.trace("Wrote output line {} to {}", outputLine, writerFileName);
+			LOG.debug("Writing output {}: {}", writerFileName, outputLine);
 			writer.write(outputLine);
+			writer.write(System.getProperty("line.separator"));
 		} catch (IOException ioe) {
 			throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", writerName, writerFileName, outputLine);
 		}

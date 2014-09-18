@@ -29,6 +29,7 @@ public class Program {
 	public static final String OPT_OUT_DIR = "o";
 	public static final String OPT_SQL_DIR = "s";
 	public static final String OPT_XML_DIR = "x";
+	public static final String OPT_TRIM_WHITESPACE = "w";
 
 	/**
 	 * Entry point for the command line execution.
@@ -37,7 +38,7 @@ public class Program {
 		new Program().execute(args);
 	}
 
-	/**	 
+	/**
 	 * Entry point for code-based execution.
 	 *
 	 * @param configDirectory The directory from which configuration files should be read that define the mappings from XML to CSV.
@@ -45,7 +46,7 @@ public class Program {
 	 * @param outputDirectory The directory to which output CSV files should be written.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configDirectory, String xmlInputDirectory, String outputDirectory) throws ProgramException {
+	public void execute(String configDirectory, String xmlInputDirectory, String outputDirectory, boolean trimWhitespace) throws ProgramException {
 		List<File> inputConfigFiles = FileUtility.getFilesInDirectory(configDirectory);
 
 		IConfigParser configParser = new XmlFileParser();
@@ -60,6 +61,7 @@ public class Program {
 
 			// Parse the input XML files
 			XmlDataExtractor xde = new XmlDataExtractor();
+			xde.setTrimWhitespace(trimWhitespace);
 			xde.setMappings(mappings);
 
 			// Iterate over all files and write out all the records to the output, managed by the OutputManager
@@ -87,7 +89,8 @@ public class Program {
 			CommandLine cmdLine = getOptions(args);
 			LOG.trace("Arguments ok");
 
-			execute(cmdLine.getOptionValue(OPT_SQL_DIR), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR));
+			execute(cmdLine.getOptionValue(OPT_SQL_DIR), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR),
+							(boolean) cmdLine.getParsedOptionValue(OPT_TRIM_WHITESPACE));
 
 			CONSOLE.info("Completed succesfully.");
 		} catch (final ProgramException pe) {
@@ -111,6 +114,8 @@ public class Program {
 		options.addOption(new Option(OPT_SQL_DIR, "sqlDir", true, "The directory containing the SQL files that define what outputs are required."));
 		options.addOption(new Option(OPT_XML_DIR, "xmlDir", true, "The directory containing the XML files from which data will be extracted."));
 		options.addOption(new Option(OPT_OUT_DIR, "outDir", true, "The directory to which the output CSV files will be written."));
+		options.addOption(new Option(OPT_TRIM_WHITESPACE, "trimWhitespace", false,
+						"If set then all whitespace at the front and end of values will be removed."));
 		CommandLineParser parser = new BasicParser();
 		return parser.parse(options, args);
 	}

@@ -9,7 +9,7 @@
 
 		<!-- Create a separate file containing all the members of the family. This 
 			represents a 1..n mapping between families and family members. -->
-		<Mapping mappingRoot="person" outputName="People">
+		<Mapping mappingRoot="/family/person" outputName="People">
 
 			<!-- Use a linking field, which is the name of the family (from our parent) -->
 			<Field name="Family" xPath="../name" />
@@ -18,18 +18,6 @@
 			<!-- Name comes from the child element "name" under person -->
 			<Field name="Name" xPath="name" />
 			<!-- Age comes from the age attribute of the mappingRoot -->
-			<Field name="Age" xPath="@age" />
-		</Mapping>
-
-	</Mapping>
-
-	<!-- An almost identical mapping configuration that adds family members in-line instead of adding them as a new file.   -->
-	<Mapping mappingRoot="/family" outputName="familyInline">
-		<Field name="Family" xPath="name" />
-		<Field name="Address" xPath="address" />
-		<Mapping mappingRoot="person" outputName="Person" inline="true">
-			<Field name="Family" xPath="../name" />
-			<Field name="Name" xPath="name" />
 			<Field name="Age" xPath="@age" />
 		</Mapping>
 
