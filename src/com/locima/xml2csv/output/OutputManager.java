@@ -35,19 +35,20 @@ public class OutputManager implements IOutputManager {
 	 * @return A string suitable to be embedded in to a CSV file that will be read by Excel.
 	 */
 	static String escapeForCsv(String value) {
+		String returnValue = value;
 		boolean quotesRequired = false;
-		if (null == value) {
+		if (value == null) {
 			return null;
 		}
-		if (value.contains(QUOTE)) {
-			value = value.replace(QUOTE, "\"\"");
+		if (returnValue.contains(QUOTE)) {
+			returnValue = returnValue.replace(QUOTE, "\"\"");
 			quotesRequired = true;
 		}
-		if (value.contains("\n") || value.contains(",") || value.contains(";")) {
+		if (returnValue.contains("\n") || returnValue.contains(",") || returnValue.contains(";")) {
 			quotesRequired = true;
 		}
 
-		return quotesRequired ? QUOTE + value + QUOTE : value;
+		return quotesRequired ? QUOTE + returnValue + QUOTE : returnValue;
 	}
 
 	private File outputDirectory;

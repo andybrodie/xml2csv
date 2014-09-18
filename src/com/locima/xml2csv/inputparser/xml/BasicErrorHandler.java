@@ -6,36 +6,39 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+/**
+ * A simple implementation of an SAX ContentHandler error manager.
+ */
 public class BasicErrorHandler implements ErrorHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicErrorHandler.class);
 
 	@Override
 	public void error(SAXParseException spe) throws SAXException {
-		String message = "Error: " + getParseExceptionInfo(spe);
+		String message = getParseExceptionInfo("Error", spe);
 		throw new SAXException(message);
 	}
 
 	@Override
 	public void fatalError(SAXParseException spe) throws SAXException {
-		String message = "Fatal Error: " + getParseExceptionInfo(spe);
+		String message = getParseExceptionInfo("Fatal Error", spe);
 		throw new SAXException(message);
 	}
 
-	private String getParseExceptionInfo(SAXParseException spe) {
+	private String getParseExceptionInfo(String errorType, SAXParseException spe) {
 		String systemId = spe.getSystemId();
 
 		if (systemId == null) {
 			systemId = "null";
 		}
 
-		String info = "URI=" + systemId + " Line=" + spe.getLineNumber() + ": " + spe.getMessage();
+		String info = String.format("%1$s: URI=%2$s Line=%3$d : %4$s", errorType, systemId, spe.getLineNumber(), spe.getMessage());
 
 		return info;
 	}
 
 	@Override
 	public void warning(SAXParseException spe) throws SAXException {
-		LOG.warn(getParseExceptionInfo(spe));
+		LOG.warn(getParseExceptionInfo("Warning", spe));
 	}
 }

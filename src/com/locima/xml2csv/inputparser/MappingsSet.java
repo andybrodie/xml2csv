@@ -25,9 +25,9 @@ public class MappingsSet {
 	 * @return null if a mapping set with that name could not be found.
 	 */
 	public NameToXPathMappings get(String name) {
-		for (NameToXPathMappings mappings : this.mappings) {
-			if (mappings.getName().equals(name)) {
-				return mappings;
+		for (NameToXPathMappings mapping : this.mappings) {
+			if (mapping.getName().equals(name)) {
+				return mapping;
 			}
 		}
 		return null;
@@ -41,13 +41,13 @@ public class MappingsSet {
 	public Map<String, List<String>> getHeaders() {
 		// This would be a one-liner in LINQ. Unfortunately, Java collections turns it in to a living nightmare.
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
-		for (NameToXPathMappings mappings : this.mappings) {
+		for (NameToXPathMappings mapping : this.mappings) {
 			List<String> columnNames = new ArrayList<String>();
-			for (String columnDefn : mappings.keySet()) {
+			for (String columnDefn : mapping.keySet()) {
 				// Remember "first" is the column name, "second" is the XPath
 				columnNames.add(columnDefn);
 			}
-			headers.put(mappings.getName(), columnNames);
+			headers.put(mapping.getName(), columnNames);
 		}
 		return headers;
 	}

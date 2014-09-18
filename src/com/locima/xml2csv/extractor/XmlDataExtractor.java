@@ -180,6 +180,13 @@ public class XmlDataExtractor {
 		this.mappings = newMappings;
 	}
 
+	/**
+	 * If set to true, then all whitespace will be trimmed from the beginning and end of values extracted from XML. If false, they will be left alone.
+	 * <p>
+	 * The typically required behaviour is to set this to true.
+	 * 
+	 * @param trimWhitespace whether to trim whitespace from the beginning and end of values extracted from XML.
+	 */
 	public void setTrimWhitespace(boolean trimWhitespace) {
 		this.trimWhitespace = trimWhitespace;
 	}
