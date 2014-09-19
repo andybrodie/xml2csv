@@ -47,8 +47,10 @@ public class Program {
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
 	public void execute(String configDirectory, String xmlInputDirectory, String outputDirectory, boolean trimWhitespace) throws ProgramException {
+		LOG.info("Finding all the input configuration files.");
 		List<File> inputConfigFiles = FileUtility.getFilesInDirectory(configDirectory);
 
+		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
 		configParser.load(inputConfigFiles);
 		MappingsSet mappings = configParser.getMappings();
@@ -84,10 +86,9 @@ public class Program {
 		CONSOLE.info("Initialised");
 
 		try {
-			// Parse command line parameters
 			LOG.trace("Parsing command line arguments");
 			CommandLine cmdLine = getOptions(args);
-			LOG.trace("Arguments ok");
+			LOG.trace("Arguments valid, proceeding");
 
 			execute(cmdLine.getOptionValue(OPT_SQL_DIR), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR),
 							(boolean) cmdLine.getParsedOptionValue(OPT_TRIM_WHITESPACE));

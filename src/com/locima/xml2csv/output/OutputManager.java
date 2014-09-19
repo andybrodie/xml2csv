@@ -31,11 +31,11 @@ public class OutputManager implements IOutputManager {
 	 * Escapes any string so that it can be added to a CSV. Specifically, if the value contains a double-quote, CR or LF then the entire value is
 	 * wrapped in double-quotes. Also, any instances of double-quote are replaced with 2 double-quotes.
 	 *
-	 * @param value Any string value. If null is passed, null is returned.
+	 * @param value Any value that can be converted to a String. If null is passed, null is returned.
 	 * @return A string suitable to be embedded in to a CSV file that will be read by Excel.
 	 */
-	static String escapeForCsv(String value) {
-		String returnValue = value;
+	static String escapeForCsv(Object value) {
+		String returnValue = value == null ? null : value.toString();
 		boolean quotesRequired = false;
 		if (value == null) {
 			return null;
@@ -56,7 +56,7 @@ public class OutputManager implements IOutputManager {
 	private Map<String, Tuple<File, Writer>> writers;
 
 	/**
-	 * Close all the writers managed by this class. All exceptions are suppressed as there's nothing you can do about it anyway.
+	 * Close all the writers managed by this class. All exceptions are suppressed as there's nothing we're going to do about it anyway.
 	 */
 	@Override
 	public void close() {
@@ -82,19 +82,27 @@ public class OutputManager implements IOutputManager {
 		}
 	}
 
-	private String collectionToString(List<String> value, String separator, String wrapper) {
-		if (null == value) {
+	/**
+	 * Converts a list of values in to a single output line.
+	 *
+	 * @param fields the collection of strings that are the individual fields to output.
+	 * @param fieldSeparator the character to use to separate all the values. Must not be null.
+	 * @param wrapper a string to write before and after all the values. May be null (which means no wrapper written).
+	 * @return a String, possibly empty, but never null.
+	 */
+	private String collectionToString(List<?> fields, String fieldSeparator, String wrapper) {
+		if (null == fields) {
 			return null;
 		}
 		StringBuilder sb = new StringBuilder();
 		if (null != wrapper) {
 			sb.append(wrapper);
 		}
-		int size = value.size();
+		int size = fields.size();
 		for (int i = 0; i < size; i++) {
-			sb.append(escapeForCsv(value.get(i)));
+			sb.append(escapeForCsv(fields.get(i)));
 			if (i < (size - 1)) {
-				sb.append(separator);
+				sb.append(fieldSeparator);
 			}
 		}
 		if (null != wrapper) {
@@ -163,13 +171,14 @@ public class OutputManager implements IOutputManager {
 			throw new OutputManagerException("Output directory is not writeable: %1$s", outputDirectoryName);
 		}
 		this.outputDirectory = dir;
+		LOG.info("Configured output directory as {}", this.outputDirectory.getAbsolutePath());
 	}
 
 	/**
 	 * Writes a set of values out to the specified writer using CSV notation.
 	 *
-	 * @param writerName the name of the writer to send the values to
-	 * @param values the values to write in a CSV format
+	 * @param writerName the name of the writer to send the values to.
+	 * @param values the values to write in a CSV format.
 	 * @throws OutputManagerException if an error occurred writing the files.
 	 */
 	@Override
@@ -181,12 +190,13 @@ public class OutputManager implements IOutputManager {
 
 		File writerFileName = writerTuple.getFirst();
 		Writer writer = writerTuple.getSecond();
+		String lineSeparator = System.getProperty("line.separator");
 
 		String outputLine = collectionToString(values, ",", null);
 		try {
-			LOG.debug("Writing output {}: {}", writerFileName, outputLine);
+			LOG.trace("Writing output {}: {}", writerFileName, outputLine);
 			writer.write(outputLine);
-			writer.write(System.getProperty("line.separator"));
+			writer.write(lineSeparator);
 		} catch (IOException ioe) {
 			throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", writerName, writerFileName, outputLine);
 		}
