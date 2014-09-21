@@ -13,10 +13,18 @@ public class SaxonProcessorManager {
 
 	private static Processor processor = new Processor(false);
 
+	/**
+	 * Returns the singleton instance.
+	 * 
+	 * @return instance of the Saxon processor manager, never returns null.
+	 */
 	public static Processor getProcessor() {
 		return processor;
 	}
 
+	/**
+	 * Prevents instances as all methods are static.
+	 */
 	private SaxonProcessorManager() {
 	}
 }

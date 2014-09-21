@@ -113,6 +113,10 @@ public class OutputManager implements IOutputManager {
 
 	/**
 	 * Creates the CSV files that will be used for the different writers.
+	 * 
+	 * @param outputConfiguration a map of output names (used for file names within the output directory) and the columns or fields that will be
+	 *            present in each one.
+	 * @throws OutputManagerException if an unrecoverable error occurs whilst creating the output files or writing to them.
 	 */
 	@Override
 	public void createFiles(Map<String, List<String>> outputConfiguration) throws OutputManagerException {
@@ -150,8 +154,13 @@ public class OutputManager implements IOutputManager {
 		LOG.info("Successfully created {} writers in {}", outputConfiguration.size(), this.outputDirectory.getAbsolutePath());
 	}
 
+	/**
+	 * Retrieve all the writers managed by this instance.
+	 * 
+	 * @return a map between the output name and a tuple of the {@link File} that the output is written to and an open file writer to that file.
+	 */
 	@Override
-	public Map<String, Tuple<File, Writer>> getWriterFiles() throws OutputManagerException {
+	public Map<String, Tuple<File, Writer>> getWriterFiles() {
 		return this.writers;
 	}
 

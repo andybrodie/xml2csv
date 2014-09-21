@@ -52,7 +52,7 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
-	public Map<String, Tuple<File, Writer>> getWriterFiles() throws OutputManagerException {
+	public Map<String, Tuple<File, Writer>> getWriterFiles() {
 		return null;
 	}
 

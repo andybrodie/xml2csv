@@ -83,6 +83,12 @@ public class XmlFileParser implements IConfigParser {
 		return parser;
 	}
 
+	/**
+	 * Given an array of resource names for XSD files, this retrieves {@link Source} versions of all of them, by opening all the resources in turn.
+	 * 
+	 * @param schemaResourceNames a list of resource names, retrieves from the current class loader, of XSD files.
+	 * @return an array of {@link Source} objects, suitable to use with {@link SAXParserFactory#setSchema(javax.xml.validation.Schema)}.
+	 */
 	private Source[] getSchemasFromResourceNames(String[] schemaResourceNames) {
 		List<Source> schemas = new ArrayList<Source>(schemaResourceNames.length);
 		ClassLoader cl = getClass().getClassLoader();

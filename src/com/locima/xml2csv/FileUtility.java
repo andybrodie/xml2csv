@@ -14,12 +14,15 @@ public class FileUtility {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FileUtility.class);
 	
+	/**
+	 * Prevents instances being created. 
+	 */
 	private FileUtility() {
 	}
 
 	/**
 	 * Get all the files within a directory.  Sub-directories or any other objects that aren't files are ignored.
-	 * @param directoryName
+	 * @param directoryName The name of the directory (relative or absolute) to retrieve files from. 
 	 * @return A (possibly empty) list of files. 
 	 */
 	public static List<File> getFilesInDirectory(String directoryName) {

@@ -25,6 +25,12 @@ public class BasicErrorHandler implements ErrorHandler {
 		throw new SAXException(message);
 	}
 
+	/**
+	 * Creates a nice, human readable error for a parser exception.
+	 * @param errorType type of error that has occurred (warn, fatal, error).
+	 * @param spe the exception that was thrown for the error.
+	 * @return a nice, human readable error for a parser exception.
+	 */
 	private String getParseExceptionInfo(String errorType, SAXParseException spe) {
 		String systemId = spe.getSystemId();
 

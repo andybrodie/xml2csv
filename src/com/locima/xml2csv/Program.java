@@ -1,5 +1,6 @@
 package com.locima.xml2csv;
 
+
 import java.io.File;
 import java.util.List;
 
@@ -28,11 +29,12 @@ public class Program {
 
 	public static final String OPT_OUT_DIR = "o";
 	public static final String OPT_SQL_DIR = "s";
-	public static final String OPT_XML_DIR = "x";
 	public static final String OPT_TRIM_WHITESPACE = "w";
+	public static final String OPT_XML_DIR = "x";
 
 	/**
 	 * Entry point for the command line execution.
+	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
 		new Program().execute(args);
@@ -44,6 +46,7 @@ public class Program {
 	 * @param configDirectory The directory from which configuration files should be read that define the mappings from XML to CSV.
 	 * @param xmlInputDirectory The directory from which XML files should be read.
 	 * @param outputDirectory The directory to which output CSV files should be written.
+	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
 	public void execute(String configDirectory, String xmlInputDirectory, String outputDirectory, boolean trimWhitespace) throws ProgramException {
