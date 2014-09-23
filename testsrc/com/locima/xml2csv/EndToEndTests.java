@@ -58,7 +58,7 @@ public class EndToEndTests {
 
 		OutputManager om = new OutputManager();
 		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
-		om.createFiles(set.getHeaders());
+		om.createFiles(set.getMappingsHeaders());
 
 		XmlDataExtractor extractor = new XmlDataExtractor();
 		extractor.setTrimWhitespace(true);

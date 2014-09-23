@@ -1,4 +1,4 @@
-package com.locima.xml2csv.extractor;
+package com.locima.xml2csv.inputparser;
 
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathExecutable;
@@ -6,6 +6,8 @@ import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmEmptySequence;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
+
+import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
  * A tuple structure storing an XPath expression in String form as well as its compiled version.
@@ -19,7 +21,8 @@ public class XPathValue {
 
 	/**
 	 * Constructs a new instance with the source XPath and compiled XPath passed.
-	 * @param xPathExpr the source XPath (string) expression.  Used for debug and trace.
+	 * 
+	 * @param xPathExpr the source XPath (string) expression. Used for debug and trace.
 	 * @param xPath the compiled (Saxon) XPath object.
 	 */
 	public XPathValue(String xPathExpr, XPathExecutable xPath) {
@@ -29,7 +32,8 @@ public class XPathValue {
 
 	/**
 	 * Evaluates this instance using the passed element as the current node.
-	 * @param element the current node.  Must not be null.
+	 * 
+	 * @param element the current node. Must not be null.
 	 * @return the result of evaluating the XPath modelled by this object.
 	 * @throws DataExtractorException if an error occurs executing the XPath.
 	 */
@@ -44,11 +48,11 @@ public class XPathValue {
 	}
 
 	/**
-	 * Evaluates this instance using the passed element as the current node, casting the result
-	 * to an {@link XdmNode}, or null if the result wasn't a node. 
-	 * @param element the current node.  Must not be null.
-	 * @return the result of evaluating the XPath modelled by this object, or null if the result
-	 * wasn't compatible with {@link XdmNode}.
+	 * Evaluates this instance using the passed element as the current node, casting the result to an {@link XdmNode}, or null if the result wasn't a
+	 * node.
+	 * 
+	 * @param element the current node. Must not be null.
+	 * @return the result of evaluating the XPath modelled by this object, or null if the result wasn't compatible with {@link XdmNode}.
 	 * @throws DataExtractorException if an error occurs executing the XPath.
 	 */
 	public XdmNode evaluateAsNode(XdmNode element) throws DataExtractorException {
@@ -60,8 +64,9 @@ public class XPathValue {
 		}
 	}
 
-	/** Gets the XPath source for this instance.
-	 * 
+	/**
+	 * Gets the XPath source for this instance.
+	 *
 	 * @return The XPath source for this instance.
 	 */
 	public String getSource() {

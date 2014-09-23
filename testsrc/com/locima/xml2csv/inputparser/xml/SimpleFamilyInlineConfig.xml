@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+http://www.bbc.co.uk/news/uk-politics-29301287<?xml version="1.0" encoding="UTF-8"?>
 
 <MappingSet inputSchema="http://www.example.com/xml2csv/family"
 	xmlns="http://locima.com/xml2csv/MappingSet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -7,16 +7,9 @@
 		<Field name="Family" xPath="name" />
 		<Field name="Address" xPath="address" />
 
-		<!-- Create a separate file containing all the members of the family. This 
-			represents a 1..n mapping between families and family members. 
-			
-			In this case, the column name will be formed by concatenating:
-			1) The outputName ("People" in this case)
-			2) The field name ("Name" ad "Age")
-			3) A sequence number, starting at 1.
-			
-		-->
-		<Mapping mappingRoot="/family/person" outputName="People">
+		<!-- Now add a set of columns containing all the members of the family. This 
+			represents a 1..n mapping between families and family members. -->
+		<Mapping mappingRoot="/family/person" outputName="People" inline="true">
 
 			<!-- Use a linking field, which is the name of the family (from our parent) -->
 			<Field name="Family" xPath="../name" />

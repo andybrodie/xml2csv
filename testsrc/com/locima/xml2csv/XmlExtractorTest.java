@@ -30,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.SaxonProcessorManager;
-import com.locima.xml2csv.extractor.NameToXPathMappings;
 import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.MappingsSet;
+import com.locima.xml2csv.inputparser.NameToXPathMappings;
 
 public class XmlExtractorTest {
 
@@ -86,8 +86,8 @@ public class XmlExtractorTest {
 		familyMembers.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/families/family/member");
 
 		MappingsSet set = new MappingsSet();
-		set.add(families);
-		set.add(familyMembers);
+		set.addMappings(families);
+		set.addMappings(familyMembers);
 
 		XmlDataExtractor extractor = new XmlDataExtractor();
 		extractor.setMappings(set);
@@ -125,7 +125,7 @@ public class XmlExtractorTest {
 		mappings.setName("Test");
 
 		MappingsSet s = new MappingsSet();
-		s.add(mappings);
+		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
 		x.setMappings(s);
@@ -152,7 +152,7 @@ public class XmlExtractorTest {
 		mappings.setName("Test");
 
 		MappingsSet s = new MappingsSet();
-		s.add(mappings);
+		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
 		x.setMappings(s);
@@ -177,7 +177,7 @@ public class XmlExtractorTest {
 		mappings.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/personcollection/person");
 
 		MappingsSet s = new MappingsSet();
-		s.add(mappings);
+		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
 		x.setMappings(s);

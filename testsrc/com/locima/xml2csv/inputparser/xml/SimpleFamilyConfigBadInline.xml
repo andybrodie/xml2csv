@@ -3,7 +3,7 @@
 <MappingSet inputSchema="http://www.example.com/xml2csv/family"
 	xmlns="http://locima.com/xml2csv/MappingSet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<Mapping mappingRoot="/family" outputName="family">
+	<Mapping mappingRoot="/family" outputName="family" inline="1">
 		<Field name="Family" xPath="name" />
 		<Field name="Address" xPath="address" />
 

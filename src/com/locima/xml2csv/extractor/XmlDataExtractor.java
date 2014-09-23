@@ -24,11 +24,18 @@ import org.w3c.dom.NodeList;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
 import com.locima.xml2csv.inputparser.MappingsSet;
+import com.locima.xml2csv.inputparser.NameToXPathMappings;
+import com.locima.xml2csv.inputparser.XPathValue;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
 /**
  * Extracts data from XML documents provided according a @see MappingsSet provided.
+ * <p>
+ * This makes use of Saxon for parsing XPath, because Saxon was the only XPath 2.0 compliant parser I could find.
+ * JAXP does NOT support default namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs.
+ * All suggestions seem to be "just rewrite the XPath statement to include a NS declaration.  This Apple-style
+ * suggestion only works when I have control over the input files.  For some use-cases this is not the case.
  */
 public class XmlDataExtractor {
 
@@ -130,8 +137,8 @@ public class XmlDataExtractor {
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
 	public void extractDocTo(XdmNode xmlDoc, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		LOG.trace("Executing {} sets of mappings", this.mappings.size());
-		for (NameToXPathMappings mapping : this.mappings.getAll()) {
+		LOG.trace("Executing {} sets of mappings", this.mappings.getNumberOfMappings());
+		for (NameToXPathMappings mapping : this.mappings.mappingsToArray()) {
 			extractDocTo(xmlDoc, mapping, om);
 		}
 		LOG.trace("Completed all mappings against documents");

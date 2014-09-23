@@ -24,8 +24,8 @@ import com.locima.xml2csv.Tuple;
 public class OutputManager implements IOutputManager {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OutputManager.class);
-
-	private static final String QUOTE = "\"";
+	
+	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	/**
 	 * Escapes any string so that it can be added to a CSV. Specifically, if the value contains a double-quote, CR or LF then the entire value is
@@ -40,15 +40,16 @@ public class OutputManager implements IOutputManager {
 		if (value == null) {
 			return null;
 		}
-		if (returnValue.contains(QUOTE)) {
-			returnValue = returnValue.replace(QUOTE, "\"\"");
+		final String quote = "\"";
+		if (returnValue.contains(quote)) {
+			returnValue = returnValue.replace(quote, "\"\"");
 			quotesRequired = true;
 		}
 		if (returnValue.contains("\n") || returnValue.contains(",") || returnValue.contains(";")) {
 			quotesRequired = true;
 		}
 
-		return quotesRequired ? QUOTE + returnValue + QUOTE : returnValue;
+		return quotesRequired ? quote + returnValue + quote : returnValue;
 	}
 
 	private File outputDirectory;
@@ -199,13 +200,12 @@ public class OutputManager implements IOutputManager {
 
 		File writerFileName = writerTuple.getFirst();
 		Writer writer = writerTuple.getSecond();
-		String lineSeparator = System.getProperty("line.separator");
 
 		String outputLine = collectionToString(values, ",", null);
 		try {
 			LOG.trace("Writing output {}: {}", writerFileName, outputLine);
 			writer.write(outputLine);
-			writer.write(lineSeparator);
+			writer.write(LINE_SEPARATOR);
 		} catch (IOException ioe) {
 			throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", writerName, writerFileName, outputLine);
 		}

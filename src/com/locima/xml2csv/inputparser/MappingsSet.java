@@ -5,24 +5,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.extractor.NameToXPathMappings;
 
 /**
  * Abstracts a list of mappings between XPath statements and Column Names with methods only relevant to this application.
  */
-public class MappingsSet {
+public class MappingsSet implements IMappingListContainer {
 
+	/**
+	 * The list of mappings maintained by this object.
+	 */
 	private List<NameToXPathMappings> mappings = new ArrayList<NameToXPathMappings>();
 
 	/**
-	 * Adds another set of mappings to this mappings set.
+	 * Adds a child set of mappings to this mappings set.
 	 *
-	 * @param maps a set of mappings, must not be null.
+	 * @param maps a set of mappings, must not be null and must have a unique {@link NameToXPathMappings#getName()} value.
 	 */
-	public void add(NameToXPathMappings maps) {
+	@Override
+	public void addMappings(NameToXPathMappings maps) {
 		if (maps == null) {
 			throw new ArgumentNullException("maps");
+		}
+		// Ensure that the mapping set name is unique
+		String mappingSetName = maps.getName();
+		if (mappingSetName == null) {
+			throw new ArgumentException("maps", "contains a null name.");
+		}
+		if (getMappingsByName(maps.getName()) != null) {
+			throw new ArgumentException("maps", "must contain a unique name");
 		}
 		this.mappings.add(maps);
 	}
@@ -33,22 +45,23 @@ public class MappingsSet {
 	 * @param name the name of the mapping set to return
 	 * @return null if a mapping set with that name could not be found.
 	 */
-	public NameToXPathMappings get(String name) {
+	@Override
+	public NameToXPathMappings getMappingsByName(String name) {
 		for (NameToXPathMappings mapping : this.mappings) {
 			if (mapping.getName().equals(name)) {
 				return mapping;
 			}
 		}
 		return null;
-
 	}
 
 	/**
-	 * Gets all the mappings contained wtihin this set as an array.
+	 * Gets all the mappings contained within this set as an array.
 	 *
 	 * @return an array of mappings, possibly empty but never null.
 	 */
-	public NameToXPathMappings[] getAll() {
+	@Override
+	public NameToXPathMappings[] mappingsToArray() {
 		return this.mappings.toArray(new NameToXPathMappings[0]);
 	}
 
@@ -60,7 +73,8 @@ public class MappingsSet {
 	 *
 	 * @return a map, possibly empty, but never null, or output name to the list of column names.
 	 */
-	public Map<String, List<String>> getHeaders() {
+	@Override
+	public Map<String, List<String>> getMappingsHeaders() {
 		// This would be a one-liner in LINQ. Unfortunately, Java collections turns it in to a living nightmare.
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		for (NameToXPathMappings mapping : this.mappings) {
@@ -76,9 +90,11 @@ public class MappingsSet {
 
 	/**
 	 * Gets the number of mappings contained within this set of mappings.
+	 *
 	 * @return the natural number of mappings contained within this set of mappings.
 	 */
-	public int size() {
+	@Override
+	public int getNumberOfMappings() {
 		return this.mappings.size();
 	}
 

@@ -1,7 +1,8 @@
-package com.locima.xml2csv.extractor;
+package com.locima.xml2csv.inputparser;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -23,11 +24,13 @@ import com.locima.xml2csv.XMLException;
 /**
  * Models an ordered list of mappings of column name to XPath expression.
  */
-public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
+public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> implements IMappingListContainer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(NameToXPathMappings.class);
 
 	private static final long serialVersionUID = -3781997484476001198L;
+
+	private IMappingListContainer container;
 
 	private Map<String, String> defaultNamespaceMappings;
 
@@ -36,6 +39,8 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 	private String name;
 
 	private Processor saxonProcessor;
+
+	private boolean inline;
 
 	/**
 	 * Calls {@link NameToXPathMappings#NameToXPathMappings(Map)} with an empty map.
@@ -55,6 +60,12 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 		}
 		this.saxonProcessor = SaxonProcessorManager.getProcessor();
 		this.defaultNamespaceMappings = defaultPrefixUriMap;
+		this.container = new MappingsSet();
+	}
+
+	@Override
+	public void addMappings(NameToXPathMappings maps) {
+		this.container.addMappings(maps);
 	}
 
 	/**
@@ -70,7 +81,7 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 	/**
 	 * Given a default namespace URI and an XPath expression (that uses only the default namespace), create a compiled version of the XPath
 	 * expression.
-	 * 
+	 *
 	 * @param defaultNamespace the default namespace URI.
 	 * @param xPathExpression the XPath expression to compile
 	 * @return A compiled XPath expression.
@@ -107,18 +118,38 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 		return this.mappingRoot == null ? null : this.mappingRoot.load();
 	}
 
+	@Override
+	public NameToXPathMappings getMappingsByName(String searchName) {
+		return this.container.getMappingsByName(searchName);
+	}
+
+	@Override
+	public Map<String, List<String>> getMappingsHeaders() {
+		return this.container.getMappingsHeaders();
+	}
+
 	/**
 	 * Retrieves the output name of this set of mappings.
-	 * 
-	 * @return the name of this set of mapings. Will never be null or the empty string.
+	 *
+	 * @return the name of this set of mappings. Will never be null or the empty string.
 	 */
 	public String getName() {
 		return this.name;
 	}
 
+	@Override
+	public int getNumberOfMappings() {
+		return this.container.getNumberOfMappings();
+	}
+
+	@Override
+	public NameToXPathMappings[] mappingsToArray() {
+		return this.container.mappingsToArray();
+	}
+
 	/**
 	 * Stores a new column definition in this set of mappings.
-	 * 
+	 *
 	 * @param colName the name of the column, may be null or empty, but must be unique.
 	 * @param defaultNamespace the default namespace URI.
 	 * @param xPathExpression the XPath expression to compile
@@ -131,7 +162,7 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 
 	/**
 	 * Sets the query that returns the XML node(s) from which all the mappings will be based.
-	 * 
+	 *
 	 * @param defaultNamespace the default namespace URI.
 	 * @param mappingRootXPathExpression the XPath expression that will return one or more nodes. All other XPath expressions within this mapping will
 	 *            be executed from the context of the returned node(s). Multiple nodes means multiple lines of output.
@@ -143,7 +174,7 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 
 	/**
 	 * Sets the output name of this mapping.
-	 * 
+	 *
 	 * @param newName the new name of the mapping. Must not be null or the empty string.
 	 */
 	public void setName(String newName) {
@@ -154,6 +185,14 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> {
 			throw new ArgumentException("newName", "must have a length >0");
 		}
 		this.name = newName;
+	}
+
+	/**
+	 * Set to indicate whether the output from this mapping should be inline or not.
+	 * @param inline if true then output from this mapping will be inline with its parent.
+	 */
+	public void setInline(boolean inline) {
+		this.inline = inline;
 	}
 
 }

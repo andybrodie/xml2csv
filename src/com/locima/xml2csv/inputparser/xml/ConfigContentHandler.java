@@ -5,12 +5,13 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
+import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.extractor.NameToXPathMappings;
 import com.locima.xml2csv.inputparser.MappingsSet;
+import com.locima.xml2csv.inputparser.NameToXPathMappings;
 
 /**
  * The SAX Content Handler for input XML files.
@@ -20,6 +21,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 
 	private String defaultSchemaNamespace;
+
+	private Locator documentLocator;
 
 	private MappingsSet mappingSet;
 
@@ -37,14 +40,14 @@ public class ConfigContentHandler extends DefaultHandler {
 		try {
 			current.put(name, this.defaultSchemaNamespace, xPath);
 		} catch (XMLException e) {
-			throw new SAXException("Unable to add field", e);
+			throw getException(e, "Unable to add field");
 		}
 	}
 
 	@Override
 	public void endDocument() throws SAXException {
 		if (!this.mappingStack.empty()) {
-			throw new SAXException("Mapping stack should be empty, contains " + this.mappingStack.size() + " elements!");
+			throw getException(null, "Mapping stack should be empty, contains %s elements!", this.mappingStack.size());
 		}
 	}
 
@@ -55,8 +58,35 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		if ("Mapping".equals(qName)) {
 			NameToXPathMappings current = this.mappingStack.pop();
-			this.mappingSet.add(current);
+			this.mappingSet.addMappings(current);
 		}
+	}
+
+	/**
+	 * Returns the string value specified for an xsd boolean type as a Java boolean.
+	 *
+	 * @param value the value found in an XML attribute.
+	 * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
+	 */
+	private boolean getBoolean(String value) {
+		return ("true".equals(value) || "1".equals(value));
+	}
+
+	/**
+	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
+	 *
+	 * @param inner the exception that caused this exception to be created. May be null.
+	 * @param message the message formatting string.
+	 * @param parameters parameters to the message formatting string.
+	 * @return an exception, ready to be thrown.
+	 */
+	private SAXException getException(Exception inner, String message, Object... parameters) {
+		String temp = String.format(message, parameters);
+		XMLException de =
+						new XMLException(inner, "Error parsing %s(%d,%d) %s", this.documentLocator.getSystemId(),
+										this.documentLocator.getLineNumber(), this.documentLocator.getColumnNumber(), temp);
+		SAXException se = new SAXException(de);
+		return se;
 	}
 
 	/**
@@ -66,6 +96,11 @@ public class ConfigContentHandler extends DefaultHandler {
 	 */
 	public MappingsSet getMappings() {
 		return this.mappingSet;
+	}
+
+	@Override
+	public void setDocumentLocator(Locator locator) {
+		this.documentLocator = locator;
 	}
 
 	/**
@@ -103,7 +138,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		if ("Field".equals(qName)) {
 			addField(atts.getValue("name"), atts.getValue("xPath"));
 		} else if ("Mapping".equals(qName)) {
-			startMapping(atts.getValue("mappingRoot"), atts.getValue("outputName"));
+			startMapping(atts.getValue("mappingRoot"), atts.getValue("outputName"), getBoolean(atts.getValue("inline")));
 		} else if ("MappingSet".equals(qName)) {
 			setMappingSet(atts.getValue("inputSchema"));
 		} else {
@@ -116,14 +151,21 @@ public class ConfigContentHandler extends DefaultHandler {
 	 *
 	 * @param mappingRoot The XPath expression that identifies the "root" elements for the mapping.
 	 * @param outputName The name of the output that this set of mappings should be written to.
+	 * @param inline If set to true then output will be flushed inline with the parent. If true and there is no parent {@link NameToXPathMappings}
+	 *            then an {@link DataExtractorException} is thrown (wrapped in a {@link SAXException}).
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 */
-	private void startMapping(String mappingRoot, String outputName) throws SAXException {
+	private void startMapping(String mappingRoot, String outputName, boolean inline) throws SAXException {
 		NameToXPathMappings newMapping = new NameToXPathMappings();
+		if ((this.mappingStack.size() == 0) && inline) {
+			throw getException(null, "Cannot mark top level Mapping elements as inline");
+		}
+
 		try {
 			newMapping.setMappingRoot(this.defaultSchemaNamespace, mappingRoot);
+			newMapping.setInline(inline);
 		} catch (XMLException e) {
-			throw new SAXException("Invalid XPath found in mapping root", e);
+			throw getException(e, "Invalid XPath found in mapping root");
 		}
 		newMapping.setName(outputName);
 		this.mappingStack.push(newMapping);

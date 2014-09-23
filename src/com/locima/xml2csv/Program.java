@@ -62,7 +62,7 @@ public class Program {
 		OutputManager outputMgr = new OutputManager();
 		outputMgr.setDirectory(outputDirectory);
 		try {
-			outputMgr.createFiles(mappings.getHeaders());
+			outputMgr.createFiles(mappings.getMappingsHeaders());
 
 			// Parse the input XML files
 			XmlDataExtractor xde = new XmlDataExtractor();

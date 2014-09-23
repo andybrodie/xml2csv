@@ -72,7 +72,7 @@ public class OutputManagerTest {
 	@Test
 	public void testEscape() {
 		String[] input = new String[] { null, "a", "", "\"", "a\"b", "," };
-		String[] expected = new String[] { null, "\"a\"", "\"\"", "\"\"\"\"", "\"a\"\"b\"", "\",\"" };
+		String[] expected = new String[] { null, "a", "", "\"\"\"\"", "\"a\"\"b\"", "\",\"" };
 		for (int i = 0; i < input.length; i++) {
 			assertEquals(expected[i], OutputManager.escapeForCsv(input[i]));
 		}
