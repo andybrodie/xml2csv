@@ -18,7 +18,7 @@ import org.xml.sax.XMLReader;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.IConfigParser;
-import com.locima.xml2csv.inputparser.MappingsSet;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
 
 /**
  * Reads configuration from an XML input file.
@@ -43,10 +43,10 @@ public class XmlFileParser implements IConfigParser {
 		return "file:" + path;
 	}
 
-	private MappingsSet mappings;
+	private MappingConfiguration mappings;
 
 	@Override
-	public MappingsSet getMappings() {
+	public MappingConfiguration getMappings() {
 		return this.mappings;
 	}
 

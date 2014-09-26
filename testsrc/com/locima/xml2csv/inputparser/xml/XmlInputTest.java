@@ -15,17 +15,17 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.inputparser.MappingsSet;
-import com.locima.xml2csv.inputparser.NameToXPathMappings;
+import com.locima.xml2csv.inputparser.IMappingContainer;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
 
 public class XmlInputTest {
 
-    @Rule
-    public ExpectedException thrown= ExpectedException.none();
-    
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 	}
+
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	@Before
 	public void setUp() throws Exception {
@@ -41,11 +41,11 @@ public class XmlInputTest {
 		List<File> files = new ArrayList<File>();
 		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfig.xml"));
 		parser.load(files);
-		MappingsSet set = parser.getMappings();
+		MappingConfiguration set = parser.getMappings();
 		assertNotNull("MappingSet was null, should be non-null", set);
-		assertEquals(2, set.getNumberOfMappings());
+		assertEquals(2, set.size());
 
-		NameToXPathMappings mapping1 = set.getMappingsByName("family");
+		IMappingContainer mapping1 = set.getMappingsByName("family");
 		assertNotNull("Couldn't find family mapping", mapping1);
 	}
 
@@ -54,7 +54,7 @@ public class XmlInputTest {
 		XmlFileParser parser = new XmlFileParser();
 		List<File> files = new ArrayList<File>();
 		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfigBadInline.xml"));
-		thrown.expect(XMLException.class);
+		this.thrown.expect(XMLException.class);
 		parser.load(files);
 	}
 

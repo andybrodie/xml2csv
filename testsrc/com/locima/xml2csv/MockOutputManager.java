@@ -8,12 +8,17 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.Tuple;
+import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
 public class MockOutputManager implements IOutputManager {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MockOutputManager.class);
 
 	private Queue<Tuple<String, String[]>> _expectedResults = new LinkedList<Tuple<String, String[]>>();
 
@@ -48,7 +53,23 @@ public class MockOutputManager implements IOutputManager {
 		}
 
 		Assert.assertEquals(s.getFirst(), writerName);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("Expected {}", toFlatString(s.getSecond()));
+			LOG.trace("Actual {}", toFlatString(values));
+		}
 		Assert.assertArrayEquals(s.getSecond(), values);
+	}
+
+	private String toFlatString(String[] second) {
+		StringBuffer buf = new StringBuffer();
+		if (second!=null) {
+			for (String s: second) {
+				buf.append(s);
+				buf.append(", ");
+			}
+			buf = buf.deleteCharAt(buf.length()-1);
+		}
+		return buf.toString();
 	}
 
 	@Override

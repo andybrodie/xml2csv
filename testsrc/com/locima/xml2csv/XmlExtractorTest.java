@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.SaxonProcessorManager;
 import com.locima.xml2csv.extractor.XmlDataExtractor;
-import com.locima.xml2csv.inputparser.MappingsSet;
-import com.locima.xml2csv.inputparser.NameToXPathMappings;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.inputparser.MappingList;
 
 public class XmlExtractorTest {
 
-	private static final Logger LOG = LoggerFactory.getLogger(NameToXPathMappings.class);
+	private static final Logger LOG = LoggerFactory.getLogger(XmlExtractorTest.class);
 
 	private static String getJaxpImplementationInfo(String componentName, Class<?> componentClass) {
 		CodeSource source = componentClass.getProtectionDomain().getCodeSource();
@@ -73,19 +73,19 @@ public class XmlExtractorTest {
 
 	@Test
 	public void testMultipleMappingsWithRoot() throws Exception {
-		NameToXPathMappings families = new NameToXPathMappings();
+		MappingList families = new MappingList();
 		families.setName("Families");
 		families.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/families/family");
 		families.put("Name", null, "name");
 
-		NameToXPathMappings familyMembers = new NameToXPathMappings();
+		MappingList familyMembers = new MappingList();
 		familyMembers.put("Name", null, "name");
 		familyMembers.put("Age", null, "age");
 		familyMembers.put("Address", null, "address");
 		familyMembers.setName("FamilyMembers");
 		familyMembers.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/families/family/member");
 
-		MappingsSet set = new MappingsSet();
+		MappingConfiguration set = new MappingConfiguration();
 		set.addMappings(families);
 		set.addMappings(familyMembers);
 
@@ -118,13 +118,13 @@ public class XmlExtractorTest {
 
 	@Test
 	public void testSimpleMappings() throws Exception {
-		NameToXPathMappings mappings = new NameToXPathMappings();
+		MappingList mappings = new MappingList();
 		mappings.put("Name", null, "/person/name");
 		mappings.put("Age", null, "/person/age");
 		mappings.put("Address", null, "/person/address");
 		mappings.setName("Test");
 
-		MappingsSet s = new MappingsSet();
+		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
@@ -145,13 +145,13 @@ public class XmlExtractorTest {
 		prefixUriMap.put("a", "http://example.com/a");
 		prefixUriMap.put("b", "http://example.com/b");
 
-		NameToXPathMappings mappings = new NameToXPathMappings(prefixUriMap);
+		MappingList mappings = new MappingList(prefixUriMap);
 		mappings.put("Name", XMLConstants.DEFAULT_NS_PREFIX, "/a:person/b:name");
 		mappings.put("Age", "a", "/person/b:age");
 		mappings.put("Address", "b", "/a:person/address");
 		mappings.setName("Test");
 
-		MappingsSet s = new MappingsSet();
+		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
@@ -169,14 +169,14 @@ public class XmlExtractorTest {
 
 	@Test
 	public void testSimpleMappingsWithRoot() throws Exception {
-		NameToXPathMappings mappings = new NameToXPathMappings();
+		MappingList mappings = new MappingList();
 		mappings.put("Name", null, "name");
 		mappings.put("Age", null, "age");
 		mappings.put("Address", null, "address");
 		mappings.setName("Test");
 		mappings.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/personcollection/person");
 
-		MappingsSet s = new MappingsSet();
+		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();

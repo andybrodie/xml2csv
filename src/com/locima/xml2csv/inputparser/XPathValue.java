@@ -60,7 +60,7 @@ public class XPathValue {
 		if (evalResult instanceof XdmEmptySequence) {
 			return null;
 		} else {
-			return (XdmNode) evaluate(element);
+			return (XdmNode) evalResult;
 		}
 	}
 

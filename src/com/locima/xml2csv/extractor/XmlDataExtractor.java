@@ -2,19 +2,17 @@ package com.locima.xml2csv.extractor;
 
 import java.io.File;
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.RandomAccess;
 
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +21,18 @@ import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
-import com.locima.xml2csv.inputparser.MappingsSet;
-import com.locima.xml2csv.inputparser.NameToXPathMappings;
-import com.locima.xml2csv.inputparser.XPathValue;
+import com.locima.xml2csv.inputparser.IMappingContainer;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
 /**
- * Extracts data from XML documents provided according a @see MappingsSet provided.
+ * Extracts data from XML documents provided according a @see MappingConfiguration provided.
  * <p>
- * This makes use of Saxon for parsing XPath, because Saxon was the only XPath 2.0 compliant parser I could find.
- * JAXP does NOT support default namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs.
- * All suggestions seem to be "just rewrite the XPath statement to include a NS declaration.  This Apple-style
- * suggestion only works when I have control over the input files.  For some use-cases this is not the case.
+ * This makes use of Saxon for parsing XPath, because Saxon was the only XPath 2.0 compliant parser I could find. JAXP does NOT support default
+ * namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs. All suggestions seem to be "just rewrite the XPath statement to
+ * include a NS declaration. This Apple-style suggestion only works when I have control over the input files. For some use-cases this is not the case.
  */
 public class XmlDataExtractor {
 
@@ -91,7 +88,7 @@ public class XmlDataExtractor {
 		return n.getLength() == 0 ? Collections.<Node>emptyList() : new NodeListWrapper(n);
 	}
 
-	private MappingsSet mappings;
+	private MappingConfiguration mappings;
 
 	private Processor saxonProcessor;
 
@@ -127,26 +124,41 @@ public class XmlDataExtractor {
 		}
 	}
 
-	/**
-	 * Executes the mappings set by {@link #setMappings(MappingsSet)} against a document <code>xmlDoc</code> and passes the results to <code>om</code>
-	 * .
-	 *
-	 * @param xmlDoc The XML document to extract information from.
-	 * @param om The output manager to send the extracted data to.
-	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
-	 * @throws OutputManagerException If an error occurred writing data to the output manager.
-	 */
-	public void extractDocTo(XdmNode xmlDoc, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		LOG.trace("Executing {} sets of mappings", this.mappings.getNumberOfMappings());
-		for (NameToXPathMappings mapping : this.mappings.mappingsToArray()) {
-			extractDocTo(xmlDoc, mapping, om);
+	private void executeMappingOnDoc(XdmNode xmlDoc, IOutputManager om, MappingList mapping) throws DataExtractorException,
+					OutputManagerException {
+		/**
+		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
+		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single cal to om (one CSV
+		 * line).
+		 */
+		XPathExecutable rootXPath = mapping.getMappingRoots();
+		if (rootXPath == null) {
+			List<String> outputLine = mapping.evaluate(xmlDoc, this.trimWhitespace);
+			om.writeRecords(mapping.getOutputName(), outputLine);
+		} else {
+			try {
+				XPathSelector rootIterator = rootXPath.load();
+				rootIterator.setContextItem(xmlDoc);
+				for (XdmItem item : rootIterator) {
+					if (item instanceof XdmNode) {
+						List<String> outputLine = mapping.evaluate((XdmNode) item, this.trimWhitespace);
+						om.writeRecords(mapping.getOutputName(), outputLine);
+					} else {
+						LOG.warn("Expected XdmNode, got {}", item.getClass().getName());
+					}
+				}
+			} catch (SaxonApiException e) {
+				throw new DataExtractorException(e, "Error evaluating XPath %s", rootXPath);
+			}
 		}
+
 		LOG.trace("Completed all mappings against documents");
+
 	}
 
 	/**
 	 * Iterate over all the mappings and apply each set to the passed XML document and pass the results to the output manager. This method delegates
-	 * to {@link #extractTo(Element, NameToXpathMappings, OutputManager)}, by either finding the mapping root within {@link NameToXpathMappings} or
+	 * to {@link #extractTo(Element, NameToXpathMappings, IOutputManager)}, by either finding the mapping root within {@link NameToXpathMappings} or
 	 * using the document root element.
 	 *
 	 * @param xmlDoc The XML document to extract information from
@@ -155,55 +167,24 @@ public class XmlDataExtractor {
 	 * @throws DataExtractorException If anything unrecoverable during data extraction happens
 	 * @throws OutputManagerException if anything unrecoverable during writing output happens
 	 */
-	public void extractDocTo(XdmNode xmlDoc, NameToXPathMappings mapping, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		XPathSelector mappingRoot = mapping.getMappingRoot();
-		if (mappingRoot == null) {
-			LOG.info("Executing mappings against document root element");
-			extractTo(xmlDoc, mapping, om);
-		} else {
-			XdmValue mappingRootElements;
-			try {
-				LOG.info("Executing mappings against specified mapping root");
-				mappingRoot.setContextItem(xmlDoc);
-				mappingRootElements = mappingRoot.evaluate();
-			} catch (SaxonApiException e) {
-				throw new DataExtractorException(e, "Invalid Mapping Root specified in %1$s", mapping.getName());
-			}
-			LOG.info("Found {} mapping root elements", mappingRootElements.size());
-			for (XdmItem node : mappingRootElements) {
-				extractTo((XdmNode) node, mapping, om);
-			}
-		}
+	public void extractDocTo(XdmNode xmlDoc, IMappingContainer mapping, IOutputManager om) throws DataExtractorException, OutputManagerException {
+		om.writeRecords(mapping.getOutputName(), mapping.evaluate(xmlDoc, this.trimWhitespace));
 	}
 
 	/**
-	 * Iterate over all the mappings and apply each set to the passed mappingRoot (XML element) and pass the results to the output manager.
+	 * Executes the mappings set by {@link #setMappings(MappingConfiguration)} against a document <code>xmlDoc</code> and passes the results to
+	 * <code>om</code>.
 	 *
-	 * @param mappingRoot The element from which all mappings should be applied
-	 * @param mapping The set of mappings that define the data to be extracted
-	 * @param om The output manager to which the data should be sent
-	 * @throws DataExtractorException If anything unrecoverable during data extraction happens
-	 * @throws com.locima.xml2csv.output.OutputManagerException if anything unrecoverable during writing output happens
+	 * @param xmlDoc The XML document to extract information from.
+	 * @param om The output manager to send the extracted data to.
+	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
+	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
-	public void extractTo(XdmNode mappingRoot, NameToXPathMappings mapping, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		List<String> values = new ArrayList<String>();
-		for (Entry<String, XPathValue> colToXPathMapping : mapping.entrySet()) {
-			String colName = colToXPathMapping.getKey();
-			XPathValue xPathExpr = colToXPathMapping.getValue();
-			LOG.trace("Extracting value for {} using {}", colName, xPathExpr.getSource());
-			XdmNode node = xPathExpr.evaluateAsNode(mappingRoot);
-			if (node != null) {
-				String nodeValue = node.getStringValue();
-				if ((nodeValue != null) && this.trimWhitespace) {
-					nodeValue = nodeValue.trim();
-				}
-				values.add(nodeValue);
-				LOG.debug("Column {} value {} found after executing XPath {}", colName, nodeValue, xPathExpr.getSource());
-			} else {
-				LOG.trace("No value found for {} in {}", colName, xPathExpr.getSource());
-			}
+	public void extractDocTo(XdmNode xmlDoc, IOutputManager om) throws DataExtractorException, OutputManagerException {
+		LOG.trace("Executing {} sets of mappings.", this.mappings.size());
+		for (MappingList mapping : this.mappings.mappingsToArray()) {
+			executeMappingOnDoc(xmlDoc, om, mapping);
 		}
-		om.writeRecords(mapping.getName(), values);
 	}
 
 	/**
@@ -211,7 +192,7 @@ public class XmlDataExtractor {
 	 *
 	 * @param newMappings the mappings that define how to extract data from the XML when {@link #extractTo} is called.
 	 */
-	public void setMappings(MappingsSet newMappings) {
+	public void setMappings(MappingConfiguration newMappings) {
 		this.mappings = newMappings;
 	}
 

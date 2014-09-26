@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.locima.xml2csv.extractor.XmlDataExtractor;
-import com.locima.xml2csv.inputparser.MappingsSet;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.output.OutputManager;
 
@@ -26,9 +26,9 @@ public class EndToEndTests {
 
 		for (int i = 0; i < expected.length; i++) {
 			if (i >= actual.length) {
-				fail(String.format("Unable to compare line %d as actual has run out of lines (expected %d).", i+1, expected.length));
+				fail(String.format("Unable to compare line %d as actual has run out of lines (expected %d).", i + 1, expected.length));
 			}
-			assertEquals(String.format("Mismatch at line %d", i+1), expected[i], actual[i]);
+			assertEquals(String.format("Mismatch at line %d", i + 1), expected[i], actual[i]);
 		}
 		assertEquals("More lines in actual than expected.", expected.length, actual.length);
 	}
@@ -51,7 +51,7 @@ public class EndToEndTests {
 		List<File> files = new ArrayList<File>();
 		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfig.xml"));
 		parser.load(files);
-		MappingsSet set = parser.getMappings();
+		MappingConfiguration set = parser.getMappings();
 
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
@@ -73,6 +73,34 @@ public class EndToEndTests {
 						new File(outputFolder.getRoot(), "family.csv"));
 		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput2.csv"),
 						new File(outputFolder.getRoot(), "people.csv"));
+
+	}
+	@Test
+	public void testEndToEndWithInline() throws Exception {
+		XmlFileParser parser = new XmlFileParser();
+		List<File> files = new ArrayList<File>();
+		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineConfig.xml"));
+		parser.load(files);
+		MappingConfiguration set = parser.getMappings();
+
+		TemporaryFolder outputFolder = new TemporaryFolder();
+		outputFolder.create();
+
+		OutputManager om = new OutputManager();
+		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
+		om.createFiles(set.getMappingsHeaders());
+
+		XmlDataExtractor extractor = new XmlDataExtractor();
+		extractor.setTrimWhitespace(true);
+		extractor.setMappings(set);
+		File family1File = new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml");
+		File family2File = new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml");
+		extractor.convert(family1File, om);
+		extractor.convert(family2File, om);
+		om.close();
+
+		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineOutput.csv"),
+						new File(outputFolder.getRoot(), "family.csv"));
 
 	}
 

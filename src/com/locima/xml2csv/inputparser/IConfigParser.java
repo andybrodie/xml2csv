@@ -22,6 +22,6 @@ public interface IConfigParser {
 	 * Retrieves the mappings read from the configuration files.
 	 * @return a (possibly empty) set of mappings that instruct the XML extractor how to map from XML to CSV output.
 	 */
-	MappingsSet getMappings();
+	MappingConfiguration getMappings();
 
 }

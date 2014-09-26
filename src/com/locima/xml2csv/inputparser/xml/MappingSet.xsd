@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://locima.com/xml2csv/MappingSet"
-	xmlns:tns="http://locima.com/xml2csv/MappingSet" elementFormDefault="qualified"
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://locima.com/xml2csv/MappingConfiguration"
+	xmlns:tns="http://locima.com/xml2csv/MappingConfiguration" elementFormDefault="qualified"
 	attributeFormDefault="unqualified">
 
-	<element name="MappingSet" type="tns:MappingSet" />
+	<element name="MappingConfiguration" type="tns:MappingConfiguration" />
 
-	<complexType name="MappingSet">
+	<complexType name="MappingConfiguration">
 		<annotation>
 			<documentation>
 				Root element of a mapping set document. This contains
@@ -14,47 +14,40 @@
 			</documentation>
 		</annotation>
 		<sequence minOccurs="1" maxOccurs="unbounded">
-			<element name="Mapping" type="tns:Mapping" />
+			<element name="MappingList" type="tns:MappingList" />
 		</sequence>
 		<attribute name="inputSchema" type="anyURI" />
 	</complexType>
 
-	<complexType name="Mapping">
+	<complexType name="MappingList">
 		<annotation>
 			<documentation>A group of mappings.</documentation>
 		</annotation>
 		<choice minOccurs="1" maxOccurs="unbounded">
-			<element name="Field" type="tns:Field" />
 			<element name="Mapping" type="tns:Mapping" />
+			<element name="MappingList" type="tns:MappingList" />
 		</choice>
 		<attribute name="mappingRoot" type="string">
 			<annotation>
 				<documentation>XPath expression, relative to the parent mapping (or
-					document element if parent is MappingSet), of the root node for
+					document element if parent is MappingConfiguration), of the root node for
 					these mappings. If omitted, document element is assumed. An
 					expression that returns multiple nodes will result in multiple rows
 					in the output file.
 				</documentation>
 			</annotation>
 		</attribute>
-		<attribute name="inline" type="boolean">
-			<annotation>
-				<documentation>If true, then fields found by this mapping are added
-					to the parent mapping as extra columns, using outputName as the
-					base.  If false then a new output will be created for these
-					mappings.  Defaults to false.</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="outputName" type="string">
+		<attribute name="name" type="string">
 			<annotation>
 				<documentation>Specifies the name of this mapping output.
+				This is used either as the basis of a filename (if inline is false) or
+				a column name prefix (if inline is true).
 				</documentation>
 			</annotation>
 		</attribute>
-		<attribute name="type" type="tns:MappingType" />
 	</complexType>
 
-	<complexType name="Field">
+	<complexType name="Mapping">
 		<annotation>
 			<documentation>Specifies a single field in an output record using an
 				XPath expression (relative to the parent Mapping's mappingRoot).
@@ -63,7 +56,7 @@
 		<attribute name="xPath" type="string" />
 		<attribute name="name" type="string" />
 	</complexType>
-
+<!-- 
 	<simpleType name="MappingType">
 		<restriction base="string">
 			<enumeration value="embedded">
@@ -86,4 +79,5 @@
 			</enumeration>
 		</restriction>
 	</simpleType>
+	 -->
 </schema>

@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.IConfigParser;
-import com.locima.xml2csv.inputparser.MappingsSet;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.output.OutputManager;
 
@@ -56,7 +56,7 @@ public class Program {
 		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
 		configParser.load(inputConfigFiles);
-		MappingsSet mappings = configParser.getMappings();
+		MappingConfiguration mappings = configParser.getMappings();
 
 		// Create headers for all the output files
 		OutputManager outputMgr = new OutputManager();

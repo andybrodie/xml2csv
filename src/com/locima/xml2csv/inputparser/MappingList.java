@@ -1,7 +1,7 @@
 package com.locima.xml2csv.inputparser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +12,8 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,33 +21,32 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
+import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
- * Models an ordered list of mappings of column name to XPath expression.
+ * Models an ordered list of mappings of column outputName to XPath expression.
  */
-public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> implements IMappingListContainer {
+public class MappingList extends ArrayList<IMapping> implements IMappingContainer {
 
-	private static final Logger LOG = LoggerFactory.getLogger(NameToXPathMappings.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
 
 	private static final long serialVersionUID = -3781997484476001198L;
-
-	private IMappingListContainer container;
 
 	private Map<String, String> defaultNamespaceMappings;
 
 	private XPathExecutable mappingRoot;
 
-	private String name;
+	private String outputName;
 
 	private Processor saxonProcessor;
 
-	private boolean inline;
-
 	/**
-	 * Calls {@link NameToXPathMappings#NameToXPathMappings(Map)} with an empty map.
+	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
 	 */
-	public NameToXPathMappings() {
+	public MappingList() {
 		this(new HashMap<String, String>());
 	}
 
@@ -54,28 +55,12 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> imple
 	 *
 	 * @param defaultPrefixUriMap a (possibly empty, but must not be null) map of prefix to URI mappings
 	 */
-	public NameToXPathMappings(Map<String, String> defaultPrefixUriMap) {
+	public MappingList(Map<String, String> defaultPrefixUriMap) {
 		if (defaultPrefixUriMap == null) {
 			throw new IllegalArgumentException("defaultPrefixUriMap");
 		}
 		this.saxonProcessor = SaxonProcessorManager.getProcessor();
 		this.defaultNamespaceMappings = defaultPrefixUriMap;
-		this.container = new MappingsSet();
-	}
-
-	@Override
-	public void addMappings(NameToXPathMappings maps) {
-		this.container.addMappings(maps);
-	}
-
-	/**
-	 * Returns true if the mapping contains a column with a specified name.
-	 *
-	 * @param colName the name to search for.
-	 * @return true if the name could be found, false otherwise.
-	 */
-	public boolean containsColumn(String colName) {
-		return containsKey(colName);
 	}
 
 	/**
@@ -109,55 +94,57 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> imple
 		}
 	}
 
+	@Override
+	public List<String> evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
+		List<String> values = new ArrayList<String>();
+		for (IMapping mapping : this) {
+			values.addAll(mapping.evaluate(rootNode, trimWhitespace));
+		}
+		return values;
+	}
+
+	@Override
+	public List<String> getColumnNames() {
+		List<String> colNames = new ArrayList<String>();
+
+		for (IMapping mapping : this) {
+			colNames.addAll(mapping.getColumnNames());
+		}
+		return colNames;
+	}
+
+	@Override
+	public Tuple<String, List<String>> getMappingsHeaders() {
+		return new Tuple<String, List<String>>(this.outputName, getColumnNames());
+	}
+
 	/**
-	 * Gets the XPath that when executed specifies the root element(s) from which all data should be extracted from within a document.
+	 * Retrieves the output outputName of this set of mappings.
 	 *
-	 * @return an XPath selector based on the mapping root specified by {@link #setMappingRoot(String, String)} or null if one hasn't been specified
+	 * @return the outputName of this set of mappings. Will never be null or the empty string.
 	 */
-	public XPathSelector getMappingRoot() {
-		return this.mappingRoot == null ? null : this.mappingRoot.load();
-	}
-
 	@Override
-	public NameToXPathMappings getMappingsByName(String searchName) {
-		return this.container.getMappingsByName(searchName);
-	}
-
-	@Override
-	public Map<String, List<String>> getMappingsHeaders() {
-		return this.container.getMappingsHeaders();
-	}
-
-	/**
-	 * Retrieves the output name of this set of mappings.
-	 *
-	 * @return the name of this set of mappings. Will never be null or the empty string.
-	 */
-	public String getName() {
-		return this.name;
-	}
-
-	@Override
-	public int getNumberOfMappings() {
-		return this.container.getNumberOfMappings();
-	}
-
-	@Override
-	public NameToXPathMappings[] mappingsToArray() {
-		return this.container.mappingsToArray();
+	public String getOutputName() {
+		return this.outputName;
 	}
 
 	/**
 	 * Stores a new column definition in this set of mappings.
 	 *
-	 * @param colName the name of the column, may be null or empty, but must be unique.
+	 * @param colName the outputName of the column, must a string of length > 0.
 	 * @param defaultNamespace the default namespace URI.
-	 * @param xPathExpression the XPath expression to compile
+	 * @param xPathExpression the XPath expression to compile. Must not be null.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
 	public void put(String colName, String defaultNamespace, String xPathExpression) throws XMLException {
+		if (StringUtil.isNullOrEmpty(colName)) {
+			throw new ArgumentException("colName", StringUtil.NULL_OR_EMPTY_MESSAGE);
+		}
+		if (StringUtil.isNullOrEmpty(xPathExpression)) {
+			throw new ArgumentException("xPathExpression", StringUtil.NULL_OR_EMPTY_MESSAGE);
+		}
 		XPathExecutable xPath = createXPathExecutable(defaultNamespace, xPathExpression);
-		this.put(colName, new XPathValue(xPathExpression, xPath));
+		this.add(new Mapping(colName, new XPathValue(xPathExpression, xPath)));
 	}
 
 	/**
@@ -173,9 +160,9 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> imple
 	}
 
 	/**
-	 * Sets the output name of this mapping.
+	 * Sets the output outputName of this mapping.
 	 *
-	 * @param newName the new name of the mapping. Must not be null or the empty string.
+	 * @param newName the new outputName of the mapping. Must not be null or the empty string.
 	 */
 	public void setName(String newName) {
 		if (newName == null) {
@@ -184,15 +171,11 @@ public class NameToXPathMappings extends LinkedHashMap<String, XPathValue> imple
 		if (newName.length() == 0) {
 			throw new ArgumentException("newName", "must have a length >0");
 		}
-		this.name = newName;
+		this.outputName = newName;
 	}
 
-	/**
-	 * Set to indicate whether the output from this mapping should be inline or not.
-	 * @param inline if true then output from this mapping will be inline with its parent.
-	 */
-	public void setInline(boolean inline) {
-		this.inline = inline;
+	public XPathExecutable getMappingRoots() {
+		return this.mappingRoot;		
 	}
 
 }

@@ -10,8 +10,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.inputparser.MappingsSet;
-import com.locima.xml2csv.inputparser.NameToXPathMappings;
+import com.locima.xml2csv.inputparser.IMappingContainer;
+import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.inputparser.MappingList;
 
 /**
  * The SAX Content Handler for input XML files.
@@ -24,19 +25,23 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private Locator documentLocator;
 
-	private MappingsSet mappingSet;
+	private MappingConfiguration mappingSet;
 
-	private Stack<NameToXPathMappings> mappingStack;
+	private Stack<MappingList> mappingStack;
+	
+	private static final String MAPPING_CONFIGURATION_QNAME = "MappingConfiguration";
+	private static final String MAPPING_LIST_QNAME = "MappingList";
+	private static final String MAPPING_QNAME = "Mapping";
 
 	/**
-	 * Adds a column mapping to the current NameToXPathMappings instance being defined.
+	 * Adds a column mapping to the current MappingList instance being defined.
 	 *
 	 * @param name the name of the column
 	 * @param xPath the XPath that should be executed to get the value of the column.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addField(String name, String xPath) throws SAXException {
-		NameToXPathMappings current = this.mappingStack.peek();
+		MappingList current = this.mappingStack.peek();
 		try {
 			current.put(name, this.defaultSchemaNamespace, xPath);
 		} catch (XMLException e) {
@@ -56,14 +61,18 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("endElement(URI={})(localName={})(qName={})", uri, localName, qName);
 		}
-		if ("Mapping".equals(qName)) {
-			NameToXPathMappings current = this.mappingStack.pop();
-			this.mappingSet.addMappings(current);
+		if ("MappingList".equals(qName)) {
+			IMappingContainer current = this.mappingStack.pop();
+			if (this.mappingStack.size() > 0) {
+				this.mappingStack.peek().add(current);
+			} else {
+				this.mappingSet.addMappings(current);
+			}
 		}
 	}
 
 	/**
-	 * Returns the string value specified for an xsd boolean type as a Java boolean.
+	 * Returns the string value specified for an XSD boolean type as a Java boolean.
 	 *
 	 * @param value the value found in an XML attribute.
 	 * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
@@ -71,7 +80,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private boolean getBoolean(String value) {
 		return ("true".equals(value) || "1".equals(value));
 	}
-
+	
 	/**
 	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
 	 *
@@ -94,7 +103,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 *
 	 * @return a set of mappings, possibly empty and possible null if no files have been parsed.
 	 */
-	public MappingsSet getMappings() {
+	public MappingConfiguration getMappings() {
 		return this.mappingSet;
 	}
 
@@ -109,8 +118,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param schemaNamespace the namespace for the schema.
 	 */
 	private void setMappingSet(String schemaNamespace) {
-		this.mappingSet = new MappingsSet();
-		this.mappingStack = new Stack<NameToXPathMappings>();
+		this.mappingSet = new MappingConfiguration();
+		this.mappingStack = new Stack<MappingList>();
 		this.defaultSchemaNamespace = schemaNamespace;
 	}
 
@@ -135,11 +144,11 @@ public class ConfigContentHandler extends DefaultHandler {
 			}
 		}
 
-		if ("Field".equals(qName)) {
+		if (MAPPING_QNAME.equals(qName)) {
 			addField(atts.getValue("name"), atts.getValue("xPath"));
-		} else if ("Mapping".equals(qName)) {
-			startMapping(atts.getValue("mappingRoot"), atts.getValue("outputName"), getBoolean(atts.getValue("inline")));
-		} else if ("MappingSet".equals(qName)) {
+		} else if (MAPPING_LIST_QNAME.equals(qName)) {
+			startMapping(atts.getValue("mappingRoot"), atts.getValue("name"));
+		} else if (MAPPING_CONFIGURATION_QNAME.equals(qName)) {
 			setMappingSet(atts.getValue("inputSchema"));
 		} else {
 			LOG.warn("Ignoring element as I wasn't expecting it or wasn't using it.");
@@ -147,23 +156,16 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Initialises a new NameToXPathMappings object based on a Mapping element.
+	 * Initialises a new MappingList object based on a Mapping element.
 	 *
 	 * @param mappingRoot The XPath expression that identifies the "root" elements for the mapping.
 	 * @param outputName The name of the output that this set of mappings should be written to.
-	 * @param inline If set to true then output will be flushed inline with the parent. If true and there is no parent {@link NameToXPathMappings}
-	 *            then an {@link DataExtractorException} is thrown (wrapped in a {@link SAXException}).
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 */
-	private void startMapping(String mappingRoot, String outputName, boolean inline) throws SAXException {
-		NameToXPathMappings newMapping = new NameToXPathMappings();
-		if ((this.mappingStack.size() == 0) && inline) {
-			throw getException(null, "Cannot mark top level Mapping elements as inline");
-		}
-
+	private void startMapping(String mappingRoot, String outputName) throws SAXException {
+		MappingList newMapping = new MappingList();
 		try {
 			newMapping.setMappingRoot(this.defaultSchemaNamespace, mappingRoot);
-			newMapping.setInline(inline);
 		} catch (XMLException e) {
 			throw getException(e, "Invalid XPath found in mapping root");
 		}
