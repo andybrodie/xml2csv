@@ -11,8 +11,6 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.Tuple;
-import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -38,7 +36,24 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
+	public Map<String, Tuple<File, Writer>> getWriterFiles() {
+		return null;
+	}
+
+	@Override
 	public void setDirectory(String outputDirectoryName) throws OutputManagerException {
+	}
+
+	private String toFlatString(String[] second) {
+		StringBuffer buf = new StringBuffer();
+		if (second != null) {
+			for (String s : second) {
+				buf.append(s);
+				buf.append(", ");
+			}
+			buf = buf.deleteCharAt(buf.length() - 1);
+		}
+		return buf.toString();
 	}
 
 	@Override
@@ -58,23 +73,6 @@ public class MockOutputManager implements IOutputManager {
 			LOG.trace("Actual {}", toFlatString(values));
 		}
 		Assert.assertArrayEquals(s.getSecond(), values);
-	}
-
-	private String toFlatString(String[] second) {
-		StringBuffer buf = new StringBuffer();
-		if (second!=null) {
-			for (String s: second) {
-				buf.append(s);
-				buf.append(", ");
-			}
-			buf = buf.deleteCharAt(buf.length()-1);
-		}
-		return buf.toString();
-	}
-
-	@Override
-	public Map<String, Tuple<File, Writer>> getWriterFiles() {
-		return null;
 	}
 
 }

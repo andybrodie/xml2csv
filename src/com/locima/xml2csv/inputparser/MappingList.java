@@ -11,8 +11,6 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
@@ -113,6 +111,10 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return colNames;
 	}
 
+	public XPathExecutable getMappingRoots() {
+		return this.mappingRoot;
+	}
+
 	@Override
 	public Tuple<String, List<String>> getMappingsHeaders() {
 		return new Tuple<String, List<String>>(this.outputName, getColumnNames());
@@ -172,10 +174,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 			throw new ArgumentException("newName", "must have a length >0");
 		}
 		this.outputName = newName;
-	}
-
-	public XPathExecutable getMappingRoots() {
-		return this.mappingRoot;		
 	}
 
 }
