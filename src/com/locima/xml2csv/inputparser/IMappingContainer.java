@@ -31,7 +31,14 @@ public interface IMappingContainer extends IMapping {
 	String getOutputName();
 	
 	/**
-	 * Evaluates the set of mappings contained within this mapping container.
+	 * Containers can produce either one record (via {@link IMapping#evaluate(XdmNode, boolean)) or multiple records via this method.
+	 * All nested mappings can only produce one record (which is part of a larger parent record), however top level mappings can 
+	 * produce multiple records using this method.
+	 * @param rootNode the root from which to evaluate all mappings within this container.
+	 * @param trimWhitespace if true, then leading and trailing whitespace will be removed from all data values.
+	 * @return a list of records, each record consists of a list of strings which make up the fields.  Never returns null.
+	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
+	 *             the <code>mappingRoot</code> specified).
 	 */
 	List<List<String>> evaluateToRecords(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
 

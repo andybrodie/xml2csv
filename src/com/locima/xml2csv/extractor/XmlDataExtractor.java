@@ -2,7 +2,6 @@ package com.locima.xml2csv.extractor;
 
 import java.io.File;
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.RandomAccess;
@@ -10,9 +9,6 @@ import java.util.RandomAccess;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XPathExecutable;
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
@@ -22,7 +18,6 @@ import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
-import com.locima.xml2csv.inputparser.IMappingContainer;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
 import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.IOutputManager;
@@ -126,49 +121,6 @@ public class XmlDataExtractor {
 	}
 
 	/**
-	 * Executes a mapping list against the XML document passed, passing the results to the supplied OutputManager instance.
-	 * 
-	 * @param xmlDoc The XML document to extract data from.
-	 * @param om The output manager to write the output to, this can be null, in which case no output will be written.
-	 * @param mapping the mapping list itself that defines the data to extract from the XML document.
-	 * @throws DataExtractorException If an error occurs when extracting data from the XML document.
-	 * @throws OutputManagerException If an error occurs when writing data to the output manager.
-	 */
-	private void executeMappingOnDoc(XdmNode xmlDoc, IOutputManager om, MappingList mapping) throws DataExtractorException, OutputManagerException {
-		/**
-		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
-		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single call to om (one CSV
-		 * line).
-		 */
-		XPathExecutable rootXPath = mapping.getMappingRoots();
-		if (rootXPath == null) {
-			List<String> outputLine = mapping.evaluate(xmlDoc, this.trimWhitespace);
-			om.writeRecords(mapping.getOutputName(), outputLine);
-		} else {
-			try {
-				XPathSelector rootIterator = rootXPath.load();
-				rootIterator.setContextItem(xmlDoc);
-				for (XdmItem item : rootIterator) {
-					if (item instanceof XdmNode) {
-						List<String> outputLine = mapping.evaluate((XdmNode) item, this.trimWhitespace);
-						// CHECKSTYLE:OFF Suppressing nested if-else warning, can't think of a better way.
-						if (om != null) {
-							// CHECKSTYLE:ON
-							om.writeRecords(mapping.getOutputName(), outputLine);
-						}
-					} else {
-						LOG.warn("Expected XdmNode, got {}", item.getClass().getName());
-					}
-				}
-			} catch (SaxonApiException e) {
-				throw new DataExtractorException(e, "Error evaluating XPath %s", rootXPath);
-			}
-		}
-
-		LOG.trace("Completed all mappings against documents");
-	}
-
-	/**
 	 * Iterate over all the mappings and apply each set to the passed XML document and pass the results to the output manager. This method delegates
 	 * to {@link #extractTo(Element, NameToXpathMappings, IOutputManager)}, by either finding the mapping root within {@link NameToXpathMappings} or
 	 * using the document root element.
@@ -186,7 +138,7 @@ public class XmlDataExtractor {
 	/**
 	 * Executes the mappings set by {@link #setMappings(MappingConfiguration)} against a document <code>xmlDoc</code> and passes the results to
 	 * <code>om</code>.
-	 * 
+	 *
 	 * @param xmlDoc The XML document to extract information from.
 	 * @param om The output manager to send the extracted data to.
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.

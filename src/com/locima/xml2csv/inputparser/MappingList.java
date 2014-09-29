@@ -25,7 +25,6 @@ import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.extractor.DataExtractorException;
-import com.locima.xml2csv.output.IOutputManager;
 
 /**
  * Models an ordered list of mappings of column outputName to XPath expression.
@@ -97,6 +96,31 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 	}
 
+	@Override
+	public List<String> evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
+		List<List<String>> outputLines = evaluateToRecords(rootNode, trimWhitespace);
+		List<String> outputLine = new ArrayList<String>();
+		for (List<String> line : outputLines) {
+			outputLine.addAll(line);
+		}
+		return outputLine;
+	}
+
+	/**
+	 * Evaluates a nested mapping, appending the results to the output line passed.
+	 * @param node the node from which all mappings will be based on.
+	 * @param outputLine the existing output line that will be appended to.
+	 * @param trimWhitespace if true, then leading and trailing whitespace will be removed from all data values.
+	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
+	 *             the <code>mappingRoot</code> specified).
+	 */
+	private void evaluate(XdmNode node, List<String> outputLine, boolean trimWhitespace) throws DataExtractorException {
+		for (IMapping mapping : this) {
+			outputLine.addAll(mapping.evaluate(node, trimWhitespace));
+		}
+	}
+
+	@Override
 	public List<List<String>> evaluateToRecords(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
 		/**
 		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
@@ -130,22 +154,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 		LOG.trace("Completed all mappings against documents");
 		return outputLines;
-	}
-	
-	@Override
-	public List<String> evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
-		List<List<String>> outputLines = evaluateToRecords(rootNode, trimWhitespace);
-		List<String> outputLine = new ArrayList<String>();
-		for (List<String> line : outputLines) {
-			outputLine.addAll(line);
-		}
-		return outputLine;
-	}
-
-	private void evaluate(XdmNode node, List<String> outputLine, boolean trimWhitespace) throws DataExtractorException {
-		for (IMapping mapping : this) {
-			outputLine.addAll(mapping.evaluate(node, trimWhitespace));
-		}
 	}
 
 	@Override
