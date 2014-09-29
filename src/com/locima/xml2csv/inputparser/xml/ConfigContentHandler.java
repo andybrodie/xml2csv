@@ -21,17 +21,17 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 
+	private static final String MAPPING_CONFIGURATION_QNAME = "MappingConfiguration";
+
+	private static final String MAPPING_LIST_QNAME = "MappingList";
+
+	private static final String MAPPING_QNAME = "Mapping";
+
 	private String defaultSchemaNamespace;
 
 	private Locator documentLocator;
-
 	private MappingConfiguration mappingSet;
-
 	private Stack<MappingList> mappingStack;
-	
-	private static final String MAPPING_CONFIGURATION_QNAME = "MappingConfiguration";
-	private static final String MAPPING_LIST_QNAME = "MappingList";
-	private static final String MAPPING_QNAME = "Mapping";
 
 	/**
 	 * Adds a column mapping to the current MappingList instance being defined.
@@ -71,16 +71,16 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
-	/**
-	 * Returns the string value specified for an XSD boolean type as a Java boolean.
-	 *
-	 * @param value the value found in an XML attribute.
-	 * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
-	 */
-	private boolean getBoolean(String value) {
-		return ("true".equals(value) || "1".equals(value));
-	}
-	
+//	/**
+//	 * Returns the string value specified for an XSD boolean type as a Java boolean.
+//	 *
+//	 * @param value the value found in an XML attribute.
+//	 * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
+//	 */
+//	private boolean getBoolean(String value) {
+//		return ("true".equals(value) || "1".equals(value));
+//	}
+
 	/**
 	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
 	 *

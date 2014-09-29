@@ -46,12 +46,12 @@ public class MockOutputManager implements IOutputManager {
 
 	private String toFlatString(String[] second) {
 		StringBuffer buf = new StringBuffer();
-		if (second != null) {
+		if (second != null && second.length > 0) {
 			for (String s : second) {
 				buf.append(s);
 				buf.append(", ");
 			}
-			buf = buf.deleteCharAt(buf.length() - 1);
+			buf = buf.delete(buf.length() - 2, buf.length());
 		}
 		return buf.toString();
 	}
@@ -69,10 +69,10 @@ public class MockOutputManager implements IOutputManager {
 
 		Assert.assertEquals(s.getFirst(), writerName);
 		if (LOG.isTraceEnabled()) {
-			LOG.trace("Expected {}", toFlatString(s.getSecond()));
-			LOG.trace("Actual {}", toFlatString(values));
+			LOG.trace("Expected \"{}\"", toFlatString(s.getSecond()));
+			LOG.trace("Actual \"{}\"", toFlatString(values));
 		}
-		Assert.assertArrayEquals(s.getSecond(), values);
+		 Assert.assertArrayEquals(s.getSecond(), values);
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import net.sf.saxon.s9api.XdmNode;
 
 import com.locima.xml2csv.extractor.DataExtractorException;
+import com.locima.xml2csv.output.IOutputManager;
 
 /**
  * The basic interface for any kind of mapping (may map single or multiple data items).
@@ -27,5 +28,11 @@ public interface IMapping {
 	 * @return a collection of at least one entry.  Never returns null or an empty list. 
 	 */
 	List<String> getColumnNames();
+
+	/**
+	 * Returns the most number of values found when executing this mapping.  This is useful when processing "inline" fields.
+	 * @return the most number of values found when executing this mapping.
+	 */
+	int getMaxInstanceCount();
 
 }

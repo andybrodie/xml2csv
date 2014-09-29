@@ -2,6 +2,7 @@ package com.locima.xml2csv.extractor;
 
 import java.io.File;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.RandomAccess;
@@ -124,11 +125,19 @@ public class XmlDataExtractor {
 		}
 	}
 
-	private void executeMappingOnDoc(XdmNode xmlDoc, IOutputManager om, MappingList mapping) throws DataExtractorException,
-					OutputManagerException {
+	/**
+	 * Executes a mapping list against the XML document passed, passing the results to the supplied OutputManager instance.
+	 * 
+	 * @param xmlDoc The XML document to extract data from.
+	 * @param om The output manager to write the output to, this can be null, in which case no output will be written.
+	 * @param mapping the mapping list itself that defines the data to extract from the XML document.
+	 * @throws DataExtractorException If an error occurs when extracting data from the XML document.
+	 * @throws OutputManagerException If an error occurs when writing data to the output manager.
+	 */
+	private void executeMappingOnDoc(XdmNode xmlDoc, IOutputManager om, MappingList mapping) throws DataExtractorException, OutputManagerException {
 		/**
 		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
-		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single cal to om (one CSV
+		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single call to om (one CSV
 		 * line).
 		 */
 		XPathExecutable rootXPath = mapping.getMappingRoots();
@@ -142,7 +151,11 @@ public class XmlDataExtractor {
 				for (XdmItem item : rootIterator) {
 					if (item instanceof XdmNode) {
 						List<String> outputLine = mapping.evaluate((XdmNode) item, this.trimWhitespace);
-						om.writeRecords(mapping.getOutputName(), outputLine);
+						// CHECKSTYLE:OFF Suppressing nested if-else warning, can't think of a better way.
+						if (om != null) {
+							// CHECKSTYLE:ON
+							om.writeRecords(mapping.getOutputName(), outputLine);
+						}
 					} else {
 						LOG.warn("Expected XdmNode, got {}", item.getClass().getName());
 					}
@@ -153,7 +166,6 @@ public class XmlDataExtractor {
 		}
 
 		LOG.trace("Completed all mappings against documents");
-
 	}
 
 	/**
@@ -167,14 +179,14 @@ public class XmlDataExtractor {
 	 * @throws DataExtractorException If anything unrecoverable during data extraction happens
 	 * @throws OutputManagerException if anything unrecoverable during writing output happens
 	 */
-	public void extractDocTo(XdmNode xmlDoc, IMappingContainer mapping, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		om.writeRecords(mapping.getOutputName(), mapping.evaluate(xmlDoc, this.trimWhitespace));
-	}
+	// public void extractDocTo(XdmNode xmlDoc, IMappingContainer mapping, IOutputManager om) throws DataExtractorException, OutputManagerException {
+	// om.writeRecords(mapping.getOutputName(), mapping.evaluate(xmlDoc, this.trimWhitespace));
+	// }
 
 	/**
 	 * Executes the mappings set by {@link #setMappings(MappingConfiguration)} against a document <code>xmlDoc</code> and passes the results to
 	 * <code>om</code>.
-	 *
+	 * 
 	 * @param xmlDoc The XML document to extract information from.
 	 * @param om The output manager to send the extracted data to.
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
@@ -183,8 +195,12 @@ public class XmlDataExtractor {
 	public void extractDocTo(XdmNode xmlDoc, IOutputManager om) throws DataExtractorException, OutputManagerException {
 		LOG.trace("Executing {} sets of mappings.", this.mappings.size());
 		for (MappingList mapping : this.mappings.mappingsToArray()) {
-			executeMappingOnDoc(xmlDoc, om, mapping);
+			List<List<String>> records = mapping.evaluateToRecords(xmlDoc, this.trimWhitespace);
+			for (List<String> record : records) {
+				om.writeRecords(mapping.getOutputName(), record);
+			}
 		}
+		// executeMappingOnDoc(xmlDoc, om, mapping);
 	}
 
 	/**

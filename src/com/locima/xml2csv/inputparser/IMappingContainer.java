@@ -2,7 +2,10 @@ package com.locima.xml2csv.inputparser;
 
 import java.util.List;
 
+import net.sf.saxon.s9api.XdmNode;
+
 import com.locima.xml2csv.Tuple;
+import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
  * Used for objects that contain lists of mappings of column name to XPath.
@@ -26,5 +29,11 @@ public interface IMappingContainer extends IMapping {
 	 *         {@link MappingConfiguration} cannot be anonymous and must have a valid non-zero length string.
 	 */
 	String getOutputName();
+	
+	/**
+	 * Evaluates the set of mappings contained within this mapping container.
+	 */
+	List<List<String>> evaluateToRecords(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
+
 
 }

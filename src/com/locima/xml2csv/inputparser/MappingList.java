@@ -11,6 +11,8 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
@@ -23,6 +25,7 @@ import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.extractor.DataExtractorException;
+import com.locima.xml2csv.output.IOutputManager;
 
 /**
  * Models an ordered list of mappings of column outputName to XPath expression.
@@ -36,6 +39,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	private Map<String, String> defaultNamespaceMappings;
 
 	private XPathExecutable mappingRoot;
+
+	private int maxInstanceCount;
 
 	private String outputName;
 
@@ -92,25 +97,72 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 	}
 
+	public List<List<String>> evaluateToRecords(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
+		/**
+		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
+		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single call to om (one CSV
+		 * line).
+		 */
+		List<List<String>> outputLines = new ArrayList<List<String>>();
+		XPathExecutable rootXPath = getMappingRoots();
+		XPathSelector rootIterator;
+		if (rootXPath != null) {
+			rootIterator = rootXPath.load();
+			try {
+				rootIterator.setContextItem(rootNode);
+			} catch (SaxonApiException e) {
+				throw new DataExtractorException(e, "Error evaluating XPath %s", rootXPath);
+			}
+			for (XdmItem item : rootIterator) {
+				if (item instanceof XdmNode) {
+					List<String> outputLine = new ArrayList<String>();
+					evaluate((XdmNode) item, outputLine, trimWhitespace);
+					outputLines.add(outputLine);
+				} else {
+					LOG.warn("Expected XdmNode, got {}", item.getClass().getName());
+				}
+			}
+		} else {
+			List<String> outputLine = new ArrayList<String>();
+			evaluate(rootNode, outputLine, trimWhitespace);
+			outputLines.add(outputLine);
+		}
+
+		LOG.trace("Completed all mappings against documents");
+		return outputLines;
+	}
+	
 	@Override
 	public List<String> evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
-		List<String> values = new ArrayList<String>();
-		for (IMapping mapping : this) {
-			values.addAll(mapping.evaluate(rootNode, trimWhitespace));
+		List<List<String>> outputLines = evaluateToRecords(rootNode, trimWhitespace);
+		List<String> outputLine = new ArrayList<String>();
+		for (List<String> line : outputLines) {
+			outputLine.addAll(line);
 		}
-		return values;
+		return outputLine;
+	}
+
+	private void evaluate(XdmNode node, List<String> outputLine, boolean trimWhitespace) throws DataExtractorException {
+		for (IMapping mapping : this) {
+			outputLine.addAll(mapping.evaluate(node, trimWhitespace));
+		}
 	}
 
 	@Override
 	public List<String> getColumnNames() {
 		List<String> colNames = new ArrayList<String>();
-
 		for (IMapping mapping : this) {
 			colNames.addAll(mapping.getColumnNames());
 		}
 		return colNames;
 	}
 
+	/**
+	 * Retrieves the mapping root expression that, when evaluated, will return all the XML node that should be used to extract data from.
+	 *
+	 * @return a mapping root expression, or null if these mappings should be executed against whatever the parents root was (in the case of a
+	 *         non-nested MappingList, this will be the document element of the XML document).
+	 */
 	public XPathExecutable getMappingRoots() {
 		return this.mappingRoot;
 	}
@@ -118,6 +170,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	@Override
 	public Tuple<String, List<String>> getMappingsHeaders() {
 		return new Tuple<String, List<String>>(this.outputName, getColumnNames());
+	}
+
+	@Override
+	public int getMaxInstanceCount() {
+		return this.maxInstanceCount;
 	}
 
 	/**

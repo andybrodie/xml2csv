@@ -4,10 +4,17 @@
 	<name>Brodie</name>
 	<person age="38">
 		<name>
-		Andy
+			Andy
 		</name>
 	</person>
 	<person age="2">
 		<name>Lincoln</name>
+		<name>Neale</name>
 	</person>
+	<ignoredperson age="3">
+		<name>Bogeyman</name>
+		<person age="4">
+			<name>Son of Bogeyman</name>
+		</person>
+	</ignoredperson>
 </family>

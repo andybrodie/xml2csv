@@ -110,6 +110,45 @@ public class XmlExtractorTest {
 		extractor.extractDocTo(testDoc, om);
 		om.close();
 	}
+	
+	@Test
+	public void testBasicMappingsWithRoot() throws Exception {
+		MappingList parents = new MappingList();
+		parents.setName("Parents");
+		parents.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent");
+		parents.put("data", null, "data");
+
+		MappingList children = new MappingList();
+		children.setName("Children");
+		children.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent/child");
+		children.put("data", null, "data");
+
+		MappingConfiguration set = new MappingConfiguration();
+		set.addMappings(parents);
+		set.addMappings(children);
+
+		XmlDataExtractor extractor = new XmlDataExtractor();
+		extractor.setMappings(set);
+
+		MockOutputManager om = new MockOutputManager();
+		om.addExpectedResult("Parents", new String[] { "ParentData1" });
+		om.addExpectedResult("Parents", new String[] { "ParentData2" });
+		om.addExpectedResult("Children", new String[] { "ParentData1Child1"});
+		om.addExpectedResult("Children", new String[] { "ParentData1Child2"});
+		om.addExpectedResult("Children", new String[] { "ParentData2Child1"});
+		om.addExpectedResult("Children", new String[] { "ParentData2Child2"});
+
+		XdmNode testDoc =
+						createFromString("<root><parent><data>ParentData1</data>"
+										+ "<child><data>ParentData1Child1</data></child>"
+										+ "<child><data>ParentData1Child2</data></child></parent>"
+										+ "<parent><data>ParentData2</data>"
+										+ "<child><data>ParentData2Child1</data></child>"
+										+ "<child><data>ParentData2Child2</data></child></parent></root>");
+
+		extractor.extractDocTo(testDoc, om);
+		om.close();
+	}
 
 	@Test
 	public void testRealXmlFile() throws Exception {

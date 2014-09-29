@@ -3,6 +3,8 @@ package com.locima.xml2csv.inputparser;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
@@ -23,11 +25,13 @@ public class Mapping implements IMapping {
 
 	private XPathValue xPathExpr;
 
+	private int maxInstanceCount;
+
 	/**
 	 * Constructs a new instance.
 	 * 
-	 * @param columnName specified the name of the column in the output that will be extracted from the XML.  Must not be null or empty.
-	 * @param xPathExpression the XPath expression that will extract the data for the column.  Must not be null.
+	 * @param columnName specified the name of the column in the output that will be extracted from the XML. Must not be null or empty.
+	 * @param xPathExpression the XPath expression that will extract the data for the column. Must not be null.
 	 */
 	public Mapping(String columnName, XPathValue xPathExpression) {
 		if (StringUtil.isNullOrEmpty(columnName)) {
@@ -43,21 +47,24 @@ public class Mapping implements IMapping {
 	@Override
 	public List<String> evaluate(XdmNode mappingRoot, boolean trimWhitespace) throws DataExtractorException {
 		LOG.trace("Extracting value for {} using {}", this.columnName, this.xPathExpr.getSource());
-		XdmNode node = this.xPathExpr.evaluateAsNode(mappingRoot);
-		String value;
-		if (node != null) {
-			value = node.getStringValue();
+		XPathSelector selector = this.xPathExpr.evaluate(mappingRoot);
+		List<String> values = new ArrayList<String>();
+		for (XdmItem item : selector) {
+			String value = item.getStringValue();
 			if ((value != null) && trimWhitespace) {
 				value = value.trim();
 			}
-			LOG.debug("Column {} value {} found after executing XPath {}", this.columnName, value, this.xPathExpr.getSource());
-		} else {
-			LOG.trace("No value found for {} in {}", this.columnName, this.xPathExpr.getSource());
-			value = null;
+			values.add(value);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Column {} value {} {} found after executing XPath {}", this.columnName, values.size(), value, this.xPathExpr.getSource());
+			}
 		}
-		List<String> result = new ArrayList<String>();
-		result.add(value);
-		return result;
+		int valuesSize = values.size();
+		this.maxInstanceCount = Math.max(this.maxInstanceCount, valuesSize);
+		if (valuesSize == 0) {
+			LOG.debug("No value for Column {} was found after executing XPath {}", this.columnName, this.xPathExpr.getSource());
+		}
+		return values;
 	}
 
 	@Override
@@ -65,6 +72,11 @@ public class Mapping implements IMapping {
 		List<String> columnNames = new ArrayList<String>(1);
 		columnNames.add(this.columnName);
 		return columnNames;
+	}
+	
+	@Override
+	public int getMaxInstanceCount() {
+		return this.maxInstanceCount;
 	}
 
 }
