@@ -5,6 +5,11 @@ package com.locima.xml2csv;
  */
 public class StringUtil {
 
+	/**
+	 * An empty, zero length, non-null string.
+	 */
+	public static final String EMPTY_STRING = "";
+
 	public static final String NULL_OR_EMPTY_MESSAGE = "Must be a string containing at least one character.";
 	
 	/**

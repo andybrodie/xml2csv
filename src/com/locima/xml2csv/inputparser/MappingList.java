@@ -98,7 +98,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public List<String> evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
-		List<List<String>> outputLines = evaluateToRecords(rootNode, trimWhitespace);
+		List<List<String>> outputLines = evaluateToRecordList(rootNode, trimWhitespace);
 		List<String> outputLine = new ArrayList<String>();
 		for (List<String> line : outputLines) {
 			outputLine.addAll(line);
@@ -108,6 +108,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	/**
 	 * Evaluates a nested mapping, appending the results to the output line passed.
+	 *
 	 * @param node the node from which all mappings will be based on.
 	 * @param outputLine the existing output line that will be appended to.
 	 * @param trimWhitespace if true, then leading and trailing whitespace will be removed from all data values.
@@ -121,7 +122,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	@Override
-	public List<List<String>> evaluateToRecords(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
+	public List<List<String>> evaluateToRecordList(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
 		/**
 		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
 		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single call to om (one CSV
@@ -130,6 +131,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		List<List<String>> outputLines = new ArrayList<List<String>>();
 		XPathExecutable rootXPath = getMappingRoots();
 		XPathSelector rootIterator;
+		int instanceCount = 0;
 		if (rootXPath != null) {
 			rootIterator = rootXPath.load();
 			try {
@@ -142,6 +144,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 					List<String> outputLine = new ArrayList<String>();
 					evaluate((XdmNode) item, outputLine, trimWhitespace);
 					outputLines.add(outputLine);
+					instanceCount++;
 				} else {
 					LOG.warn("Expected XdmNode, got {}", item.getClass().getName());
 				}
@@ -149,8 +152,19 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		} else {
 			List<String> outputLine = new ArrayList<String>();
 			evaluate(rootNode, outputLine, trimWhitespace);
+			instanceCount++;
 			outputLines.add(outputLine);
 		}
+
+		// Add any blanks where maxInstanceCount is more than valuesSize
+		if (instanceCount < this.maxInstanceCount) {
+			LOG.trace("Adding {} blank fields to make up to {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount);
+			for (int i = instanceCount; i < instanceCount; i++) {
+				List<String> emptyValues = new ArrayList<String>();
+				outputLines.add(emptyValues);
+			}
+		}
+		this.maxInstanceCount = Math.max(this.maxInstanceCount, instanceCount);
 
 		LOG.trace("Completed all mappings against documents");
 		return outputLines;

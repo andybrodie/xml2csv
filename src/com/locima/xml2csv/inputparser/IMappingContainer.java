@@ -10,7 +10,7 @@ import com.locima.xml2csv.extractor.DataExtractorException;
 /**
  * Used for objects that contain lists of mappings of column name to XPath.
  */
-public interface IMappingContainer extends IMapping {
+public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 
 	/**
 	 * Retrieves all "headers" associated with all the mappings.
@@ -40,7 +40,7 @@ public interface IMappingContainer extends IMapping {
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
-	List<List<String>> evaluateToRecords(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
+	List<List<String>> evaluateToRecordList(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
 
 
 }

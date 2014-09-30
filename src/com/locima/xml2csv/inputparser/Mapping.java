@@ -21,10 +21,19 @@ public class Mapping implements IMapping {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Mapping.class);
 
+	/**
+	 * The name of the column that will be created by this mapping.
+	 */
 	private String columnName;
 
+	/**
+	 * The XPath expression that is executed against an XML element to find a mapped value.
+	 */
 	private XPathValue xPathExpr;
 
+	/**
+	 * Tracks the number of instances found at once by this mapping.  This is needed when doing inline mappings.
+	 */
 	private int maxInstanceCount;
 
 	/**
@@ -59,9 +68,18 @@ public class Mapping implements IMapping {
 				LOG.debug("Column {} value {} {} found after executing XPath {}", this.columnName, values.size(), value, this.xPathExpr.getSource());
 			}
 		}
-		int valuesSize = values.size();
-		this.maxInstanceCount = Math.max(this.maxInstanceCount, valuesSize);
-		if (valuesSize == 0) {
+		int instanceCount = values.size();
+
+		// Add any blanks where maxInstanceCount is more than valuesSize
+		if (instanceCount < this.maxInstanceCount) {
+			LOG.trace("Adding {} blank fields to make up to {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount);
+			for (int i = instanceCount; i < instanceCount; i++) {
+				values.add(StringUtil.EMPTY_STRING);
+			}
+		}
+
+		this.maxInstanceCount = Math.max(this.maxInstanceCount, instanceCount);
+		if (instanceCount == 0) {
 			LOG.debug("No value for Column {} was found after executing XPath {}", this.columnName, this.xPathExpr.getSource());
 		}
 		return values;
@@ -73,7 +91,7 @@ public class Mapping implements IMapping {
 		columnNames.add(this.columnName);
 		return columnNames;
 	}
-	
+
 	@Override
 	public int getMaxInstanceCount() {
 		return this.maxInstanceCount;

@@ -67,7 +67,7 @@ public class Program {
 			// Parse the input XML files
 			XmlDataExtractor xde = new XmlDataExtractor();
 			xde.setTrimWhitespace(trimWhitespace);
-			xde.setMappings(mappings);
+			xde.setMappingConfiguration(mappings);
 
 			// Iterate over all files and write out all the records to the output, managed by the OutputManager
 			List<File> xmlFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);

@@ -2,6 +2,7 @@ package com.locima.xml2csv.inputparser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +12,7 @@ import com.locima.xml2csv.ArgumentNullException;
 /**
  * Abstracts a list of mappings between XPath statements and Column Names with methods only relevant to this application.
  */
-public class MappingConfiguration {
+public class MappingConfiguration implements Iterable<IMappingContainer> {
 
 	/**
 	 * The list of mappings maintained by this object.
@@ -84,6 +85,11 @@ public class MappingConfiguration {
 	 */
 	public int size() {
 		return this.mappings.size();
+	}
+
+	@Override
+	public Iterator<IMappingContainer> iterator() {
+		return this.mappings.iterator();
 	}
 
 }

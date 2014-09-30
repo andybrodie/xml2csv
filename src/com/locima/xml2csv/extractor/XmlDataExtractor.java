@@ -18,8 +18,8 @@ import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
+import com.locima.xml2csv.inputparser.IMappingContainer;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
-import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -84,7 +84,7 @@ public class XmlDataExtractor {
 		return n.getLength() == 0 ? Collections.<Node>emptyList() : new NodeListWrapper(n);
 	}
 
-	private MappingConfiguration mappings;
+	private MappingConfiguration mappingConfiguration;
 
 	private Processor saxonProcessor;
 
@@ -114,54 +114,44 @@ public class XmlDataExtractor {
 			LOG.info("Loading and parsing XML file {}", xmlFile.getName());
 			XdmNode document = db.build(xmlFile);
 			LOG.debug("XML file loaded succesfully");
-			extractDocTo(document, om);
+			convert(document, om);
 		} catch (SaxonApiException e) {
 			throw new DataExtractorException(e, "Unable to read XML file %s", xmlFile);
 		}
 	}
 
 	/**
-	 * Iterate over all the mappings and apply each set to the passed XML document and pass the results to the output manager. This method delegates
-	 * to {@link #extractTo(Element, NameToXpathMappings, IOutputManager)}, by either finding the mapping root within {@link NameToXpathMappings} or
-	 * using the document root element.
-	 *
-	 * @param xmlDoc The XML document to extract information from
-	 * @param mapping The set of mappings that define the data to be extracted
-	 * @param om The output manager to which the data should be sent
-	 * @throws DataExtractorException If anything unrecoverable during data extraction happens
-	 * @throws OutputManagerException if anything unrecoverable during writing output happens
-	 */
-	// public void extractDocTo(XdmNode xmlDoc, IMappingContainer mapping, IOutputManager om) throws DataExtractorException, OutputManagerException {
-	// om.writeRecords(mapping.getOutputName(), mapping.evaluate(xmlDoc, this.trimWhitespace));
-	// }
-
-	/**
-	 * Executes the mappings set by {@link #setMappings(MappingConfiguration)} against a document <code>xmlDoc</code> and passes the results to
-	 * <code>om</code>.
+	 * Executes the mappingConfiguration set by {@link #setMappingConfiguration(MappingConfiguration)} against a document <code>xmlDoc</code> and
+	 * passes the results to <code>outputManager</code>.
+	 * <p>
+	 * Typically called by {@link #convert(File, IOutputManager)} once the XML file is loaded.
 	 *
 	 * @param xmlDoc The XML document to extract information from.
-	 * @param om The output manager to send the extracted data to.
+	 * @param outputManager The output manager to send the extracted data to. May be null if no output is required.
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
-	public void extractDocTo(XdmNode xmlDoc, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		LOG.trace("Executing {} sets of mappings.", this.mappings.size());
-		for (MappingList mapping : this.mappings.mappingsToArray()) {
-			List<List<String>> records = mapping.evaluateToRecords(xmlDoc, this.trimWhitespace);
-			for (List<String> record : records) {
-				om.writeRecords(mapping.getOutputName(), record);
+	public void convert(XdmNode xmlDoc, IOutputManager outputManager) throws DataExtractorException, OutputManagerException {
+		LOG.trace("Executing {} sets of mappingConfiguration.", this.mappingConfiguration.size());
+		for (IMappingContainer mapping : this.mappingConfiguration) {
+			List<List<String>> records = mapping.evaluateToRecordList(xmlDoc, this.trimWhitespace);
+			if (outputManager != null) {
+				for (List<String> record : records) {
+					outputManager.writeRecords(mapping.getOutputName(), record);
+				}
+			} else {
+				LOG.trace("No IOutputManager passed so not writing any output.");
 			}
 		}
-		// executeMappingOnDoc(xmlDoc, om, mapping);
 	}
-
+	
 	/**
-	 * Configure this extractor with the set of mappings specified.
+	 * Configure this extractor with the set of mappingConfiguration specified.
 	 *
-	 * @param newMappings the mappings that define how to extract data from the XML when {@link #extractTo} is called.
+	 * @param newMappings the mappingConfiguration that define how to extract data from the XML when {@link #extractTo} is called.
 	 */
-	public void setMappings(MappingConfiguration newMappings) {
-		this.mappings = newMappings;
+	public void setMappingConfiguration(MappingConfiguration newMappings) {
+		this.mappingConfiguration = newMappings;
 	}
 
 	/**

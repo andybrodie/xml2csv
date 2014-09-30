@@ -1,5 +1,6 @@
 package com.locima.xml2csv;
 
+import static com.locima.xml2csv.TestHelpers.assertMappingInstanceCountsCorrect;
 import static org.junit.Assert.fail;
 
 import java.io.StringReader;
@@ -29,7 +30,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.SaxonProcessorManager;
 import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
 import com.locima.xml2csv.inputparser.MappingList;
@@ -72,6 +72,49 @@ public class XmlExtractorTest {
 	}
 
 	@Test
+	public void testBasicMappingsWithRoot() throws Exception {
+		MappingList parents = new MappingList();
+		parents.setName("Parents");
+		parents.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent");
+		parents.put("data", null, "data");
+
+		MappingList children = new MappingList();
+		children.setName("Children");
+		children.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent/child");
+		children.put("data", null, "data");
+
+		MappingConfiguration config = new MappingConfiguration();
+		config.addMappings(parents);
+		config.addMappings(children);
+
+		XmlDataExtractor extractor = new XmlDataExtractor();
+		extractor.setMappingConfiguration(config);
+
+		MockOutputManager om = new MockOutputManager();
+		om.addExpectedResult("Parents", new String[] { "ParentData1" });
+		om.addExpectedResult("Parents", new String[] { "ParentData2" });
+		om.addExpectedResult("Children", new String[] { "ParentData1Child1" });
+		om.addExpectedResult("Children", new String[] { "ParentData1Child2" });
+		om.addExpectedResult("Children", new String[] { "ParentData2Child1" });
+		om.addExpectedResult("Children", new String[] { "ParentData2Child2" });
+
+		XdmNode testDoc =
+						createFromString("<root><parent><data>ParentData1</data>" + "<child><data>ParentData1Child1</data></child>"
+										+ "<child><data>ParentData1Child2</data></child></parent>" + "<parent><data>ParentData2</data>"
+										+ "<child><data>ParentData2Child1</data></child>"
+										+ "<child><data>ParentData2Child2</data></child></parent></root>");
+
+		extractor.convert(testDoc, om);
+		/*
+		 * We expected 2 and 4 for the top level mappings because there's a total of 2 parents and 4 children. However, each parent and child only
+		 * ever has 1 data item. Hence: 2, 1, 4, 1
+		 */
+		assertMappingInstanceCountsCorrect(config, 2, 1, 4, 1);
+
+		om.close();
+	}
+
+	@Test
 	public void testMultipleMappingsWithRoot() throws Exception {
 		MappingList families = new MappingList();
 		families.setName("Families");
@@ -90,7 +133,7 @@ public class XmlExtractorTest {
 		set.addMappings(familyMembers);
 
 		XmlDataExtractor extractor = new XmlDataExtractor();
-		extractor.setMappings(set);
+		extractor.setMappingConfiguration(set);
 
 		MockOutputManager om = new MockOutputManager();
 		om.addExpectedResult("Families", new String[] { "Brodie" });
@@ -107,46 +150,7 @@ public class XmlExtractorTest {
 										+ "<name>Test</name>" + "<member><name>Bob</name><age>30</age><address>Home</address></member>"
 										+ "<member><name>Zig</name><age>31</age><address>Away</address></member>" + "</family></families>");
 
-		extractor.extractDocTo(testDoc, om);
-		om.close();
-	}
-	
-	@Test
-	public void testBasicMappingsWithRoot() throws Exception {
-		MappingList parents = new MappingList();
-		parents.setName("Parents");
-		parents.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent");
-		parents.put("data", null, "data");
-
-		MappingList children = new MappingList();
-		children.setName("Children");
-		children.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent/child");
-		children.put("data", null, "data");
-
-		MappingConfiguration set = new MappingConfiguration();
-		set.addMappings(parents);
-		set.addMappings(children);
-
-		XmlDataExtractor extractor = new XmlDataExtractor();
-		extractor.setMappings(set);
-
-		MockOutputManager om = new MockOutputManager();
-		om.addExpectedResult("Parents", new String[] { "ParentData1" });
-		om.addExpectedResult("Parents", new String[] { "ParentData2" });
-		om.addExpectedResult("Children", new String[] { "ParentData1Child1"});
-		om.addExpectedResult("Children", new String[] { "ParentData1Child2"});
-		om.addExpectedResult("Children", new String[] { "ParentData2Child1"});
-		om.addExpectedResult("Children", new String[] { "ParentData2Child2"});
-
-		XdmNode testDoc =
-						createFromString("<root><parent><data>ParentData1</data>"
-										+ "<child><data>ParentData1Child1</data></child>"
-										+ "<child><data>ParentData1Child2</data></child></parent>"
-										+ "<parent><data>ParentData2</data>"
-										+ "<child><data>ParentData2Child1</data></child>"
-										+ "<child><data>ParentData2Child2</data></child></parent></root>");
-
-		extractor.extractDocTo(testDoc, om);
+		extractor.convert(testDoc, om);
 		om.close();
 	}
 
@@ -167,14 +171,14 @@ public class XmlExtractorTest {
 		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
-		x.setMappings(s);
+		x.setMappingConfiguration(s);
 
 		MockOutputManager om = new MockOutputManager();
 		om.addExpectedResult("Test", new String[] { "Andy", "21", "Home" });
 
 		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><address>Home</address></person>");
 
-		x.extractDocTo(testDoc, om);
+		x.convert(testDoc, om);
 	}
 
 	@Test
@@ -194,7 +198,7 @@ public class XmlExtractorTest {
 		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
-		x.setMappings(s);
+		x.setMappingConfiguration(s);
 
 		MockOutputManager om = new MockOutputManager();
 		om.addExpectedResult("Test", new String[] { "Andy", "21", "Home" });
@@ -203,7 +207,7 @@ public class XmlExtractorTest {
 						createFromString("<a:person xmlns:a=\"http://example.com/a\" xmlns:b=\"http://example.com/b\">"
 										+ "<b:name>Andy</b:name><b:age>21</b:age><b:address>Home</b:address>" + "</a:person>");
 
-		x.extractDocTo(testDoc, om);
+		x.convert(testDoc, om);
 	}
 
 	@Test
@@ -219,7 +223,7 @@ public class XmlExtractorTest {
 		s.addMappings(mappings);
 
 		XmlDataExtractor x = new XmlDataExtractor();
-		x.setMappings(s);
+		x.setMappingConfiguration(s);
 
 		MockOutputManager om = new MockOutputManager();
 		om.addExpectedResult("Test", new String[] { "Andy", "21", "Home" });
@@ -229,7 +233,7 @@ public class XmlExtractorTest {
 						createFromString("<personcollection><person><name>Andy</name><age>21</age><address>Home</address></person>"
 										+ "<person><name>Emma</name><age>20</age><address>Away</address></person></personcollection>");
 
-		x.extractDocTo(testDoc, om);
+		x.convert(testDoc, om);
 		om.close();
 	}
 
