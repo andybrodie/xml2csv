@@ -97,4 +97,12 @@ public class Mapping implements IMapping {
 		return this.maxInstanceCount;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("Mapping(");
+		sb.append(this.columnName);
+		sb.append(")");
+		return sb.toString();
+	}
+	
 }

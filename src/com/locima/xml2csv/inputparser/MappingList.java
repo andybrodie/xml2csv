@@ -255,4 +255,17 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		this.outputName = newName;
 	}
 
+	@Override
+	public String toString() {
+
+		StringBuilder sb = new StringBuilder("MappingList(");
+		sb.append(this.getOutputName());
+		sb.append(")[");
+		for (IMapping mapping : this) {
+			sb.append(mapping.toString());
+		}
+		sb.append("]");
+		return sb.toString();
+	}
+
 }

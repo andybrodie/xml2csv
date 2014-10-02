@@ -91,5 +91,5 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	public Iterator<IMappingContainer> iterator() {
 		return this.mappings.iterator();
 	}
-
+	
 }

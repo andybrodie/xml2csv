@@ -1,6 +1,7 @@
 package com.locima.xml2csv;
 
 import java.io.File;
+import static com.locima.xml2csv.TestHelpers.toFlatString;
 import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,18 +43,6 @@ public class MockOutputManager implements IOutputManager {
 
 	@Override
 	public void setDirectory(String outputDirectoryName) throws OutputManagerException {
-	}
-
-	private String toFlatString(String[] second) {
-		StringBuffer buf = new StringBuffer();
-		if (second != null && second.length > 0) {
-			for (String s : second) {
-				buf.append(s);
-				buf.append(", ");
-			}
-			buf = buf.delete(buf.length() - 2, buf.length());
-		}
-		return buf.toString();
 	}
 
 	@Override

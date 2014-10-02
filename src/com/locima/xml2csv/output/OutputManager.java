@@ -24,7 +24,7 @@ import com.locima.xml2csv.Tuple;
 public class OutputManager implements IOutputManager {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OutputManager.class);
-	
+
 	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	/**
@@ -55,6 +55,12 @@ public class OutputManager implements IOutputManager {
 	private File outputDirectory;
 
 	private Map<String, Tuple<File, Writer>> writers;
+
+	/**
+	 * Set when the files for the output manager have been created. Set by {@link #createFiles(Map)} and used by {@link #writeRecords(String, List)},
+	 * which will throw an exception if {@link #createFiles(Map)} hasn't previously been called.
+	 */
+	private boolean createdFiles;
 
 	/**
 	 * Close all the writers managed by this class. All exceptions are suppressed as there's nothing we're going to do about it anyway.
@@ -152,6 +158,7 @@ public class OutputManager implements IOutputManager {
 			// This should never happen as we're hard-coding a known supported encoding in Java
 			throw new AssertionError("Unexpected unsupported encoding exception: " + encoding, uee);
 		}
+		this.createdFiles = true;
 		LOG.info("Successfully created {} writers in {}", outputConfiguration.size(), this.outputDirectory.getAbsolutePath());
 	}
 
@@ -193,6 +200,9 @@ public class OutputManager implements IOutputManager {
 	 */
 	@Override
 	public void writeRecords(String writerName, List<String> values) throws OutputManagerException {
+		if (!this.createdFiles) {
+			throw new OutputManagerException("You must call createFiles before calling writeRecords");
+		}
 		Tuple<File, Writer> writerTuple = this.writers.get(writerName);
 		if (writerTuple == null) {
 			throw new OutputManagerException("Attempt to write to non-existant writer: %1$s", writerName);
