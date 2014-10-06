@@ -57,5 +57,19 @@ public class XmlInputTest {
 		this.thrown.expect(XMLException.class);
 		parser.load(files);
 	}
+	
+	@Test
+	public void testNamespaces() throws Exception {
+		XmlFileParser parser = new XmlFileParser();
+		List<File> files = new ArrayList<File>();
+		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/FamilyConfigWithNamespaces.xml"));
+		parser.load(files);
+		MappingConfiguration set = parser.getMappings();
+		assertNotNull("MappingSet was null, should be non-null", set);
+		assertEquals(2, set.size());
+
+		IMappingContainer mapping1 = set.getMappingsByName("family");
+		assertNotNull("Couldn't find family mapping", mapping1);
+	}
 
 }

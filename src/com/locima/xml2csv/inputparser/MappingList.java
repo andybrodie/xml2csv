@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.XMLConstants;
-
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
@@ -34,13 +32,13 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private static final long serialVersionUID = -3781997484476001198L;
 
-	private Map<String, String> defaultNamespaceMappings;
-
 	private XPathExecutable mappingRoot;
 
 	private int maxInstanceCount;
 
 	private int minimumInstanceCount = 1;
+
+	private Map<String, String> namespaceMappings;
 
 	private String outputName;
 
@@ -56,14 +54,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	/**
 	 * Initialises a Saxon processor, using the supplied map of namespace prefix to URI mappings.
 	 *
-	 * @param defaultPrefixUriMap a (possibly empty, but must not be null) map of prefix to URI mappings
+	 * @param namespaceMap a (possibly empty, but must not be null) map of prefix to URI mappings
 	 */
-	public MappingList(Map<String, String> defaultPrefixUriMap) {
-		if (defaultPrefixUriMap == null) {
-			throw new IllegalArgumentException("defaultPrefixUriMap");
-		}
+	public MappingList(Map<String, String> namespaceMap) {
 		this.saxonProcessor = SaxonProcessorManager.getProcessor();
-		this.defaultNamespaceMappings = defaultPrefixUriMap;
+		this.namespaceMappings = namespaceMap;
 	}
 
 	/**
@@ -75,18 +70,14 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @return A compiled XPath expression.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	private XPathExecutable createXPathExecutable(String defaultNamespace, String xPathExpression) throws XMLException {
+	private XPathExecutable createXPathExecutable(String xPathExpression) throws XMLException {
 		// Need to construct a new compiler because the set of namespaces is (potentially) unique to the expression.
 		// We could cache a set of compilers, but I doubt it's worth it.
 		XPathCompiler xPathCompiler = this.saxonProcessor.newXPathCompiler();
-		for (Map.Entry<String, String> entry : this.defaultNamespaceMappings.entrySet()) {
+		for (Map.Entry<String, String> entry : this.namespaceMappings.entrySet()) {
 			String prefix = entry.getKey();
 			String uri = entry.getValue();
 			xPathCompiler.declareNamespace(prefix, uri);
-			if (prefix.equals(defaultNamespace)) {
-				LOG.trace("Allocating default namespace prefix {} to URI {}", prefix, uri);
-				xPathCompiler.declareNamespace(XMLConstants.DEFAULT_NS_PREFIX, uri);
-			}
 		}
 
 		try {
@@ -118,7 +109,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 */
 	private void evaluate(XdmNode node, List<String> outputLine, boolean trimWhitespace) throws DataExtractorException {
 		for (IMapping mapping : this) {
-			outputLine.addAll(mapping.evaluate(node, trimWhitespace));
+			List<String> records = mapping.evaluate(node, trimWhitespace);
+			outputLine.addAll(records);
 		}
 	}
 
@@ -128,17 +120,13 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
 		 * the root node passed. 3. Execute this mapping for each of the root(s). 4. Each execution results in a single call to om (one CSV line).
 		 */
+
 		List<List<String>> outputLines = new ArrayList<List<String>>();
 		XPathExecutable rootXPath = getMappingRoots();
-		XPathSelector rootIterator;
 		int instanceCount = 0;
 		if (rootXPath != null) {
-			rootIterator = rootXPath.load();
-			try {
-				rootIterator.setContextItem(rootNode);
-			} catch (SaxonApiException e) {
-				throw new DataExtractorException(e, "Error evaluating XPath %s", rootXPath);
-			}
+			XPathSelector rootIterator;
+			rootIterator = getRootIterator(rootNode, rootXPath);
 			for (XdmItem item : rootIterator) {
 				if (item instanceof XdmNode) {
 					List<String> outputLine = new ArrayList<String>();
@@ -157,7 +145,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 
 		// Add any blanks where maxInstanceCount is more than valuesSize
-		if (instanceCount < this.maxInstanceCount) {
+		if (instanceCount < getMaxInstanceCount()) {
 			LOG.trace("Adding {} blank fields to make up to {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount);
 			for (int i = instanceCount; i < instanceCount; i++) {
 				List<String> emptyValues = new ArrayList<String>();
@@ -238,8 +226,18 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return this.outputName;
 	}
 
-	public void put(String colName, String defaultNamespace, String xPathExpression) throws XMLException {
-		put(colName, defaultNamespace, xPathExpression, InlineFormat.NoCounts);
+	private XPathSelector getRootIterator(XdmNode rootNode, XPathExecutable rootXPath) throws DataExtractorException {
+		XPathSelector rootIterator = rootXPath.load();
+		try {
+			rootIterator.setContextItem(rootNode);
+		} catch (SaxonApiException e) {
+			throw new DataExtractorException(e, "Error evaluating XPath %s", rootXPath);
+		}
+		return rootIterator;
+	}
+
+	public void put(String colName, String xPathExpression) throws XMLException {
+		put(colName, xPathExpression, InlineFormat.NoCounts);
 	}
 
 	/**
@@ -250,14 +248,14 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @param xPathExpression the XPath expression to compile. Must not be null.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public void put(String colName, String defaultNamespace, String xPathExpression, InlineFormat format) throws XMLException {
+	public void put(String colName, String xPathExpression, InlineFormat format) throws XMLException {
 		if (StringUtil.isNullOrEmpty(colName)) {
 			throw new ArgumentException("colName", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
 		if (StringUtil.isNullOrEmpty(xPathExpression)) {
 			throw new ArgumentException("xPathExpression", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
-		XPathExecutable xPath = createXPathExecutable(defaultNamespace, xPathExpression);
+		XPathExecutable xPath = createXPathExecutable(xPathExpression);
 		Mapping newMapping = new Mapping(colName, new XPathValue(xPathExpression, xPath));
 		newMapping.setInlineFormat(format);
 
@@ -267,13 +265,12 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	/**
 	 * Sets the query that returns the XML node(s) from which all the mappings will be based.
 	 *
-	 * @param defaultNamespace the default namespace URI.
 	 * @param mappingRootXPathExpression the XPath expression that will return one or more nodes. All other XPath expressions within this mapping will
 	 *            be executed from the context of the returned node(s). Multiple nodes means multiple lines of output.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public void setMappingRoot(String defaultNamespace, String mappingRootXPathExpression) throws XMLException {
-		this.mappingRoot = createXPathExecutable(defaultNamespace, mappingRootXPathExpression);
+	public void setMappingRoot(String mappingRootXPathExpression) throws XMLException {
+		this.mappingRoot = createXPathExecutable(mappingRootXPathExpression);
 	}
 
 	/**

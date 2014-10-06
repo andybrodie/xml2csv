@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Lots of different namespaces in the source document to trip up the parser and extractor! -->
+<MappingConfiguration xmlns="http://locima.com/xml2csv/MappingConfiguration"
+	xmlns:family="http://www.example.com/xml2csv/family"
+	xmlns:familymember="http://www.example.com/xml2csv/familymember"
+	xmlns:name="http://www.example.com/xml2csv/name" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<MappingList mappingRoot="/family:family" name="FamilyWithNamespaces">
+		<Mapping name="Family" xPath="name:name" />
+		<Mapping name="Address" xPath="family:address" />
+	</MappingList>
+	<!-- Create a separate file containing all the members of the family. This 
+		represents a 1..n mapping between families and family members. In this case, 
+		the column name will be formed by concatenating: 1) The outputName ("People" 
+		in this case) 2) The field name ("Name" ad "Age") 3) A sequence number, starting 
+		at 1. -->
+	<MappingList mappingRoot="/family:family/familymember:person"
+		name="FamilyMembersWithNamespaces">
+
+		<!-- Use a linking field, which is the name of the family (from our parent) -->
+		<Mapping name="Family" xPath="../name:name" />
+
+		<!-- Include the properties of the family members -->
+		<!-- Name comes from the child element "name" under person -->
+		<Mapping name="Name" xPath="name:name" />
+		<!-- Age comes from the age attribute of the mappingRoot -->
+		<Mapping name="Age" xPath="@age" />
+	</MappingList>
+
+</MappingConfiguration>

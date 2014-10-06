@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<family xmlns="http://www.example.com/xml2csv/family"
+xmlns:member="http://www.example.com/xml2csv/familymember"
+xmlns:n="http://www.example.com/xml2csv/name">
+	<address>Brodie Family Home</address>
+	<n:name>Brodie</n:name>
+	<member:person age="38">
+		<n:name>
+			Andy
+		</n:name>
+	</member:person>
+	<member:person age="2">
+		<n:name>Lincoln</n:name>
+		<n:name>Neale</n:name>
+		<name>IGNORED IN WRONG NAMESPACE</name>
+	</member:person>
+	<ignoredperson age="3">
+		<n:name>IGNORED AS PARENT IN WRONG NAMESPACE</n:name>
+		<member:person age="4">
+			<n:name>Son of Bogeyman</n:name>
+		</member:person>
+	</ignoredperson>
+</family>

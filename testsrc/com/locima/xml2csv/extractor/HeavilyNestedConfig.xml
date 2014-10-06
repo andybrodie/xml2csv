@@ -2,14 +2,14 @@
 
 <!-- Output every Level2 element's data in a single row, i.e. inline levels 
 	3 and 4 -->
-<MappingConfiguration inputSchema="http://www.example.com/xml2csv/family"
+<MappingConfiguration xmlns:fam="http://www.example.com/xml2csv/family"
 	xmlns="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<MappingList mappingRoot="/Level1/Level2" name="HeavilyNestedInstance">
+	<MappingList mappingRoot="/fam:Level1/fam:Level2" name="HeavilyNestedInstance">
 		<Mapping name="Level1" xPath="../@data" inlineStyle="NoCounts" />
 		<Mapping name="Level2" xPath="@data" inlineStyle="NoCounts" />
-		<MappingList name="Level3List" mappingRoot="Level3">
+		<MappingList name="Level3List" mappingRoot="fam:Level3">
 			<Mapping name="Level3" xPath="@data" inlineStyle="WithParentCount" />
-			<Mapping name="Level4" xPath="Level4/@data" inlineStyle="WithCount" />
+			<Mapping name="Level4" xPath="fam:Level4/@data" inlineStyle="WithCount" />
 		</MappingList>
 	</MappingList>
 </MappingConfiguration>

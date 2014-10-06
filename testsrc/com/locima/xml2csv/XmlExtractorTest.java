@@ -75,13 +75,13 @@ public class XmlExtractorTest {
 	public void testBasicMappingsWithRoot() throws Exception {
 		MappingList parents = new MappingList();
 		parents.setName("Parents");
-		parents.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent");
-		parents.put("data", null, "data");
+		parents.setMappingRoot("/root/parent");
+		parents.put("data", "data");
 
 		MappingList children = new MappingList();
 		children.setName("Children");
-		children.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/root/parent/child");
-		children.put("data", null, "data");
+		children.setMappingRoot("/root/parent/child");
+		children.put("data", "data");
 
 		MappingConfiguration config = new MappingConfiguration();
 		config.addMappings(parents);
@@ -118,15 +118,15 @@ public class XmlExtractorTest {
 	public void testMultipleMappingsWithRoot() throws Exception {
 		MappingList families = new MappingList();
 		families.setName("Families");
-		families.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/families/family");
-		families.put("Name", null, "name");
+		families.setMappingRoot("/families/family");
+		families.put("Name", "name");
 
 		MappingList familyMembers = new MappingList();
-		familyMembers.put("Name", null, "name");
-		familyMembers.put("Age", null, "age");
-		familyMembers.put("Address", null, "address");
+		familyMembers.put("Name", "name");
+		familyMembers.put("Age", "age");
+		familyMembers.put("Address", "address");
 		familyMembers.setName("FamilyMembers");
-		familyMembers.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/families/family/member");
+		familyMembers.setMappingRoot("/families/family/member");
 
 		MappingConfiguration set = new MappingConfiguration();
 		set.addMappings(families);
@@ -162,9 +162,9 @@ public class XmlExtractorTest {
 	@Test
 	public void testSimpleMappings() throws Exception {
 		MappingList mappings = new MappingList();
-		mappings.put("Name", null, "/person/name");
-		mappings.put("Age", null, "/person/age");
-		mappings.put("Address", null, "/person/address");
+		mappings.put("Name", "/person/name");
+		mappings.put("Age", "/person/age");
+		mappings.put("Address", "/person/address");
 		mappings.setName("Test");
 
 		MappingConfiguration s = new MappingConfiguration();
@@ -189,9 +189,9 @@ public class XmlExtractorTest {
 		prefixUriMap.put("b", "http://example.com/b");
 
 		MappingList mappings = new MappingList(prefixUriMap);
-		mappings.put("Name", XMLConstants.DEFAULT_NS_PREFIX, "/a:person/b:name");
-		mappings.put("Age", "a", "/person/b:age");
-		mappings.put("Address", "b", "/a:person/address");
+		mappings.put("Name", "/a:person/b:name");
+		mappings.put("Age", "/a:person/b:age");
+		mappings.put("Address", "/a:person/b:address");
 		mappings.setName("Test");
 
 		MappingConfiguration s = new MappingConfiguration();
@@ -213,11 +213,11 @@ public class XmlExtractorTest {
 	@Test
 	public void testSimpleMappingsWithRoot() throws Exception {
 		MappingList mappings = new MappingList();
-		mappings.put("Name", null, "name");
-		mappings.put("Age", null, "age");
-		mappings.put("Address", null, "address");
+		mappings.put("Name", "name");
+		mappings.put("Age", "age");
+		mappings.put("Address", "address");
 		mappings.setName("Test");
-		mappings.setMappingRoot(XMLConstants.DEFAULT_NS_PREFIX, "/personcollection/person");
+		mappings.setMappingRoot("/personcollection/person");
 
 		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);

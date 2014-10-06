@@ -2,6 +2,8 @@ package com.locima.xml2csv.inputparser.xml;
 
 import java.util.Stack;
 
+import javax.xml.XMLConstants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -9,7 +11,9 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.IMappingContainer;
 import com.locima.xml2csv.inputparser.InlineFormat;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
@@ -28,11 +32,9 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private static final String MAPPING_QNAME = "Mapping";
 
-	private String defaultSchemaNamespace;
-
 	private Locator documentLocator;
-	private MappingConfiguration mappingSet;
-	private Stack<MappingList> mappingStack;
+	private MappingConfiguration mappingConfiguration;
+	private Stack<MappingList> mappingListStack;
 
 	/**
 	 * Adds a column mapping to the current MappingList instance being defined.
@@ -42,10 +44,10 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat) throws SAXException {
-		MappingList current = this.mappingStack.peek();
+		MappingList current = this.mappingListStack.peek();
 		try {
 			InlineFormat format = getFormat(inlineStyleName, inlineStyleFormat);
-			current.put(name, this.defaultSchemaNamespace, xPath, format);
+			current.put(name, xPath, format);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field");
 		}
@@ -53,8 +55,8 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	@Override
 	public void endDocument() throws SAXException {
-		if (!this.mappingStack.empty()) {
-			throw getException(null, "Mapping stack should be empty, contains %s elements!", this.mappingStack.size());
+		if (!this.mappingListStack.empty()) {
+			throw getException(null, "Mapping stack should be empty, contains %s elements!", this.mappingListStack.size());
 		}
 	}
 
@@ -64,11 +66,11 @@ public class ConfigContentHandler extends DefaultHandler {
 			LOG.trace("endElement(URI={})(localName={})(qName={})", uri, localName, qName);
 		}
 		if ("MappingList".equals(qName)) {
-			IMappingContainer current = this.mappingStack.pop();
-			if (this.mappingStack.size() > 0) {
-				this.mappingStack.peek().add(current);
+			IMappingContainer current = this.mappingListStack.pop();
+			if (this.mappingListStack.size() > 0) {
+				this.mappingListStack.peek().add(current);
 			} else {
-				this.mappingSet.addMappings(current);
+				this.mappingConfiguration.addMappings(current);
 			}
 		}
 	}
@@ -101,12 +103,44 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
+	 * Parse the inline style name or specified format in to an {@link InlineFormat} instance.
+	 *
+	 * @param inlineStyleName the name of a specific style.
+	 * @param inlineStyleFormat if none of the built-in styles (specified by name) are suitable, this allows a custom style to be defined.
+	 * @return an inline format, or null if one could not be determined.
+	 */
+	private InlineFormat getFormat(String inlineStyleName, String inlineStyleFormat) {
+		InlineFormat format;
+		if (inlineStyleFormat != null) {
+			format = new InlineFormat(inlineStyleFormat);
+		} else if (inlineStyleName != null) {
+			if ("NoCounts".equals(inlineStyleName)) {
+				format = InlineFormat.NoCounts;
+			} else if ("WithCount".equals(inlineStyleName)) {
+				format = InlineFormat.WithCount;
+			} else if ("WithParentCount".equals(inlineStyleName)) {
+				format = InlineFormat.WithParentCount;
+			} else if ("WithCountAndParentCount".equals(inlineStyleName)) {
+				format = InlineFormat.WithCountAndParentCount;
+			} else if ("Custom".equals(inlineStyleName)) {
+				format = new InlineFormat(inlineStyleFormat);
+			} else {
+				throw new IllegalStateException(
+								"Unknown format found, this means that the XSD is wrong as it's permitted a value that isn't supported.");
+			}
+		} else {
+			format = null;
+		}
+		return format;
+	}
+
+	/**
 	 * Get all the mappings that have been found so far by this parser.
 	 *
 	 * @return a set of mappings, possibly empty and possible null if no files have been parsed.
 	 */
 	public MappingConfiguration getMappings() {
-		return this.mappingSet;
+		return this.mappingConfiguration;
 	}
 
 	@Override
@@ -114,15 +148,10 @@ public class ConfigContentHandler extends DefaultHandler {
 		this.documentLocator = locator;
 	}
 
-	/**
-	 * Initialises the parser for a new mappings set.
-	 *
-	 * @param schemaNamespace the namespace for the schema.
-	 */
-	private void setMappingSet(String schemaNamespace) {
-		this.mappingSet = new MappingConfiguration();
-		this.mappingStack = new Stack<MappingList>();
-		this.defaultSchemaNamespace = schemaNamespace;
+	@Override
+	public void startDocument() throws SAXException {
+		this.mappingConfiguration = new MappingConfiguration();
+		this.mappingListStack = new Stack<MappingList>();
 	}
 
 	/**
@@ -151,7 +180,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		} else if (MAPPING_LIST_QNAME.equals(qName)) {
 			startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
 		} else if (MAPPING_CONFIGURATION_QNAME.equals(qName)) {
-			setMappingSet(atts.getValue("inputSchema"));
+			LOG.info("Found start of MappingConfiguration");
 		} else {
 			LOG.warn("Ignoring element as I wasn't expecting it or wasn't using it.");
 		}
@@ -165,46 +194,32 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 */
 	private void startMappingList(String mappingRoot, String outputName) throws SAXException {
-		MappingList newMapping = new MappingList();
+		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
 		try {
-			newMapping.setMappingRoot(this.defaultSchemaNamespace, mappingRoot);
+			newMapping.setMappingRoot(mappingRoot);
 		} catch (XMLException e) {
-			throw getException(e, "Invalid XPath found in mapping root");
+			throw getException(e, "Invalid XPath \"%s\" found in mapping root", mappingRoot);
 		}
 		newMapping.setName(outputName);
-		this.mappingStack.push(newMapping);
+		this.mappingListStack.push(newMapping);
 	}
 
 	/**
-	 * Parse the inline style name or specified format in to an {@link InlineFormat} instance.
-	 * 
-	 * @param inlineStyleName the name of a specific style.
-	 * @param inlineStyleFormat if none of the built-in styles (specified by name) are suitable, this allows a custom style to be defined.
-	 * @return an inline format, or null if one could not be determined.
+	 * Track all namespace declarations that aren't related to the XSD language or the mapping schema. These are required and may be used in the XPath
+	 * mappings.
+	 *
+	 * @param prefix The prefix that will be used within XPath statements in the configuration.
+	 * @param uri The URI that this namespace maps on to.
 	 */
-	private InlineFormat getFormat(String inlineStyleName, String inlineStyleFormat) {
-		InlineFormat format;
-		if (inlineStyleFormat != null) {
-			format = new InlineFormat(inlineStyleFormat);
-		} else if (inlineStyleName != null) {
-			if ("NoCounts".equals(inlineStyleName)) {
-				format = InlineFormat.NoCounts;
-			} else if ("WithCount".equals(inlineStyleName)) {
-				format = InlineFormat.WithCount;
-			} else if ("WithParentCount".equals(inlineStyleName)) {
-				format = InlineFormat.WithParentCount;
-			} else if ("WithCountAndParentCount".equals(inlineStyleName)) {
-				format = InlineFormat.WithCountAndParentCount;
-			} else if ("Custom".equals(inlineStyleName)) {
-				format = new InlineFormat(inlineStyleFormat);
-			} else {
-				throw new IllegalStateException(
-								"Unknown format found, this means that the XSD is wrong as it's permitted a value that isn't supported.");
-			}
-		} else {
-			format = null;
+	@Override
+	public void startPrefixMapping(String prefix, String uri) throws SAXException {
+		try {
+			LOG.info("startPrefixMapping(Prefix={},Uri={})", prefix, uri);
+			String finalPrefix = (StringUtil.isNullOrEmpty(uri)) ? XMLConstants.DEFAULT_NS_PREFIX : prefix;
+			this.mappingConfiguration.addNamespaceMapping(finalPrefix, uri);
+		} catch (FileParserException fpe) {
+			throw getException(fpe, "Duplicate namespace mapping found in configuration");
 		}
-		return format;
 	}
 
 }

@@ -39,16 +39,17 @@ package com.locima.xml2csv.inputparser;
  */
 public class InlineFormat {
 
+	public static final InlineFormat NoCounts = new InlineFormat("%1$s");
+
+	public static final InlineFormat WithCount = new InlineFormat("%1$s_%2$d");
+
+	public static final InlineFormat WithCountAndParentCount = new InlineFormat("%1$s_%4$d_%2$d");
+	public static final InlineFormat WithParentCount = new InlineFormat("%1$s_%4$d");
 	private String format;
 
 	public InlineFormat(String format) {
 		this.format = format;
 	}
-
-	public static final InlineFormat NoCounts = new InlineFormat("%1$s");
-	public static final InlineFormat WithCount = new InlineFormat("%1$s_%2$d");
-	public static final InlineFormat WithParentCount = new InlineFormat("%1$s_%4$d");
-	public static final InlineFormat WithCountAndParentCount = new InlineFormat("%1$s_%4$d_%2$d");
 
 	public String format(String columnName, int iterationNumber, String parentName, int parentIterationNumber) {
 		return String.format(this.format, columnName, iterationNumber + 1, parentName, parentIterationNumber + 1);

@@ -60,16 +60,20 @@ public class Mapping implements IMapping {
 	@Override
 	public List<String> evaluate(XdmNode mappingRoot, boolean trimWhitespace) throws DataExtractorException {
 		LOG.trace("Extracting value for {} using {}", this.columnName, this.xPathExpr.getSource());
-		XPathSelector selector = this.xPathExpr.evaluate(mappingRoot);
 		List<String> values = new ArrayList<String>();
-		for (XdmItem item : selector) {
-			String value = item.getStringValue();
-			if ((value != null) && trimWhitespace) {
-				value = value.trim();
-			}
-			values.add(value);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Column {} value {} {} found after executing XPath {}", this.columnName, values.size(), value, this.xPathExpr.getSource());
+		
+		if (mappingRoot != null) {
+			XPathSelector selector = this.xPathExpr.evaluate(mappingRoot);
+			for (XdmItem item : selector) {
+				String value = item.getStringValue();
+				if ((value != null) && trimWhitespace) {
+					value = value.trim();
+				}
+				values.add(value);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Column {} value {} {} found after executing XPath {}", this.columnName, values.size(), value,
+									this.xPathExpr.getSource());
+				}
 			}
 		}
 		int instanceCount = values.size();
