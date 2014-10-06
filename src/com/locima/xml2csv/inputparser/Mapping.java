@@ -26,19 +26,23 @@ public class Mapping implements IMapping {
 	 */
 	private String columnName;
 
+	private InlineFormat inlineFormat = InlineFormat.WithCount;
+
+	/**
+	 * Tracks the number of instances found at once by this mapping. This is needed when doing inline mappings.
+	 */
+	private int maxInstanceCount;
+
+	private int minimumInstanceCount = 1;
+
 	/**
 	 * The XPath expression that is executed against an XML element to find a mapped value.
 	 */
 	private XPathValue xPathExpr;
 
 	/**
-	 * Tracks the number of instances found at once by this mapping.  This is needed when doing inline mappings.
-	 */
-	private int maxInstanceCount;
-
-	/**
 	 * Constructs a new instance.
-	 * 
+	 *
 	 * @param columnName specified the name of the column in the output that will be extracted from the XML. Must not be null or empty.
 	 * @param xPathExpression the XPath expression that will extract the data for the column. Must not be null.
 	 */
@@ -85,16 +89,23 @@ public class Mapping implements IMapping {
 		return values;
 	}
 
+	public String getColumnName() {
+		return this.columnName;
+	}
+
 	@Override
-	public List<String> getColumnNames() {
-		List<String> columnNames = new ArrayList<String>(1);
-		columnNames.add(this.columnName);
-		return columnNames;
+	public InlineFormat getInstanceFormat() {
+		return this.inlineFormat;
 	}
 
 	@Override
 	public int getMaxInstanceCount() {
-		return this.maxInstanceCount;
+		return Math.max(this.maxInstanceCount, this.minimumInstanceCount);
+	}
+
+	@Override
+	public void setInlineFormat(InlineFormat format) {
+		this.inlineFormat = (format == null) ? InlineFormat.NoCounts : format;
 	}
 
 	@Override
@@ -104,5 +115,16 @@ public class Mapping implements IMapping {
 		sb.append(")");
 		return sb.toString();
 	}
-	
+
+	@Override
+	public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
+		String mappingName = this.getColumnName();
+		int count = this.getMaxInstanceCount();
+		InlineFormat format = this.getInstanceFormat();
+		for (int mappingIterationCount = 0; mappingIterationCount < count; mappingIterationCount++) {
+			columnNames.add(format.format(mappingName, mappingIterationCount, parentName, parentCount));
+		}
+		return count;
+	}
+
 }

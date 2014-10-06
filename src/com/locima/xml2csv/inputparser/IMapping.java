@@ -23,17 +23,17 @@ public interface IMapping {
 	List<String> evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
 
 	/**
-	 * Get all the column names that this mapping will output.
-	 * 
-	 * @return a collection of at least one entry. Never returns null or an empty list.
-	 */
-	List<String> getColumnNames();
-
-	/**
 	 * Returns the most number of values found when executing this mapping. This is useful when processing "inline" fields.
 	 * 
 	 * @return the most number of values found when executing this mapping.
 	 */
 	int getMaxInstanceCount();
 
+	String getColumnName();
+	
+	InlineFormat getInstanceFormat();
+	
+	void setInlineFormat(InlineFormat format);
+
+	int getColumnNames(List<String> columnNames, String parentName, int parentCount);
 }

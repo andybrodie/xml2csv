@@ -22,7 +22,6 @@ import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
 import com.locima.xml2csv.StringUtil;
-import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.extractor.DataExtractorException;
 
@@ -40,6 +39,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	private XPathExecutable mappingRoot;
 
 	private int maxInstanceCount;
+
+	private int minimumInstanceCount = 1;
 
 	private String outputName;
 
@@ -125,8 +126,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public List<List<String>> evaluateToRecordList(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
 		/**
 		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
-		 * the document element (one root). 3. Execute this mapping for each of the roots. 4. Each execution results in a single call to om (one CSV
-		 * line).
+		 * the root node passed. 3. Execute this mapping for each of the root(s). 4. Each execution results in a single call to om (one CSV line).
 		 */
 		List<List<String>> outputLines = new ArrayList<List<String>>();
 		XPathExecutable rootXPath = getMappingRoots();
@@ -171,12 +171,46 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	@Override
-	public List<String> getColumnNames() {
-		List<String> colNames = new ArrayList<String>();
-		for (IMapping mapping : this) {
-			colNames.addAll(mapping.getColumnNames());
+	public String getColumnName() {
+		return this.outputName;
+	}
+
+	@Override
+	public int getColumnNames(List<String> columnNames) {
+		int nestedRepeats = getColumnNames(columnNames, null, 0);
+		return nestedRepeats;
+	}
+
+	/**
+	 * Recursive implementation of {@link #getColumnNames(List)}. This ensures that the parent iteration count is available.
+	 *
+	 * @param columnNames the list of column names that is being built up.
+	 * @param parentName the name of the parent mapping list (or <c>null</c> if this {@link MappingList} is a direct child of the
+	 *            {@link MappingConfiguration}.
+	 * @param parentCount the iteration of the parent mapping list that we're currently within.
+	 * @return the number of columns added by this invocation.
+	 */
+	@Override
+	public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
+		int columnCount = 0;
+		/* If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count
+		 * refers to the number of records output, not the number of fields (as a nested, in-line MappingList would
+		 * indicate.  Therefore, only process as in-line if nested.
+		 */
+		int repeats = (parentName != null) ? getMaxInstanceCount() : 1;
+		String mappingListName = getColumnName();
+		for (int mappingListIteration = 0; mappingListIteration < repeats; mappingListIteration++) {
+			for (IMapping mapping : this) {
+				columnCount += mapping.getColumnNames(columnNames, mappingListName, mappingListIteration);
+			}
 		}
-		return colNames;
+		return columnCount;
+	}
+
+	@Override
+	public InlineFormat getInstanceFormat() {
+		// Do I need this?
+		return null;
 	}
 
 	/**
@@ -190,13 +224,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	@Override
-	public Tuple<String, List<String>> getMappingsHeaders() {
-		return new Tuple<String, List<String>>(this.outputName, getColumnNames());
-	}
-
-	@Override
 	public int getMaxInstanceCount() {
-		return this.maxInstanceCount;
+		return Math.max(this.maxInstanceCount, this.minimumInstanceCount);
 	}
 
 	/**
@@ -209,6 +238,10 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return this.outputName;
 	}
 
+	public void put(String colName, String defaultNamespace, String xPathExpression) throws XMLException {
+		put(colName, defaultNamespace, xPathExpression, InlineFormat.NoCounts);
+	}
+
 	/**
 	 * Stores a new column definition in this set of mappings.
 	 *
@@ -217,7 +250,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @param xPathExpression the XPath expression to compile. Must not be null.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public void put(String colName, String defaultNamespace, String xPathExpression) throws XMLException {
+	public void put(String colName, String defaultNamespace, String xPathExpression, InlineFormat format) throws XMLException {
 		if (StringUtil.isNullOrEmpty(colName)) {
 			throw new ArgumentException("colName", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
@@ -225,7 +258,15 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 			throw new ArgumentException("xPathExpression", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
 		XPathExecutable xPath = createXPathExecutable(defaultNamespace, xPathExpression);
-		this.add(new Mapping(colName, new XPathValue(xPathExpression, xPath)));
+		Mapping newMapping = new Mapping(colName, new XPathValue(xPathExpression, xPath));
+		newMapping.setInlineFormat(format);
+
+		this.add(newMapping);
+	}
+
+	@Override
+	public void setInlineFormat(InlineFormat format) {
+		throw new IllegalStateException("BLAH!");
 	}
 
 	/**
@@ -259,7 +300,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public String toString() {
 
 		StringBuilder sb = new StringBuilder("MappingList(");
-		sb.append(this.getOutputName());
+		sb.append(getOutputName());
 		sb.append(")[");
 		for (IMapping mapping : this) {
 			sb.append(mapping.toString());

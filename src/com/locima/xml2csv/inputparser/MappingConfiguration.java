@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
 
@@ -13,6 +16,8 @@ import com.locima.xml2csv.ArgumentNullException;
  * Abstracts a list of mappings between XPath statements and Column Names with methods only relevant to this application.
  */
 public class MappingConfiguration implements Iterable<IMappingContainer> {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MappingConfiguration.class);
 
 	/**
 	 * The list of mappings maintained by this object.
@@ -65,9 +70,17 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	public Map<String, List<String>> getMappingsHeaders() {
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		for (IMappingContainer mapping : this.mappings) {
-			headers.put(mapping.getOutputName(), mapping.getColumnNames());
+			List<String> colNames = new ArrayList<String>();
+			int colCount = mapping.getColumnNames(colNames);
+			LOG.info("Found {} columns in mapping configuration for {}", colCount, this);
+			headers.put(mapping.getOutputName(), colNames);
 		}
 		return headers;
+	}
+
+	@Override
+	public Iterator<IMappingContainer> iterator() {
+		return this.mappings.iterator();
 	}
 
 	/**
@@ -81,15 +94,11 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 
 	/**
 	 * Returns the number of mappings contained in the configuration.
+	 * 
 	 * @return a natural number.
 	 */
 	public int size() {
 		return this.mappings.size();
 	}
 
-	@Override
-	public Iterator<IMappingContainer> iterator() {
-		return this.mappings.iterator();
-	}
-	
 }

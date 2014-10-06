@@ -145,7 +145,7 @@ public class OutputManager implements IOutputManager {
 				// Write field names to the first row of the file.
 				try {
 					writerFileWriter.write(collectionToString(entry.getValue(), ",", null));
-					writerFileWriter.write(System.getProperty("line.separator"));
+					writerFileWriter.write(LINE_SEPARATOR);
 				} catch (IOException ioe) {
 					close();
 					throw new OutputManagerException("Unable to write field names to " + writerName, ioe);

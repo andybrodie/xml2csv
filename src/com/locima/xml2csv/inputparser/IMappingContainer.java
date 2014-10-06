@@ -13,16 +13,6 @@ import com.locima.xml2csv.extractor.DataExtractorException;
 public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 
 	/**
-	 * Retrieves all "headers" associated with all the mappings.
-	 * <p>
-	 * The headings are all the output names mapped to the column names that they have. This is useful for initialising all the output files using
-	 * {@link com.locima.xml2csv.output.OutputManager#createFiles(Map)}
-	 *
-	 * @return a map, possibly empty, but never null, or output name to the list of column names.
-	 */
-	Tuple<String, List<String>> getMappingsHeaders();
-
-	/**
 	 * Returns an output name associated with this mapping container.
 	 * 
 	 * @return a string, or null if this mapping container is anonymous. Note that top-level mapping containers (i.e. those stored beneath
@@ -42,5 +32,7 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 	 */
 	List<List<String>> evaluateToRecordList(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
 
+	
+	int getColumnNames(List<String> columnNames);
 
 }

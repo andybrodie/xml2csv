@@ -11,6 +11,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.IMappingContainer;
+import com.locima.xml2csv.inputparser.InlineFormat;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
 import com.locima.xml2csv.inputparser.MappingList;
 
@@ -40,10 +41,11 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param xPath the XPath that should be executed to get the value of the column.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addField(String name, String xPath) throws SAXException {
+	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat) throws SAXException {
 		MappingList current = this.mappingStack.peek();
 		try {
-			current.put(name, this.defaultSchemaNamespace, xPath);
+			InlineFormat format = getFormat(inlineStyleName, inlineStyleFormat);
+			current.put(name, this.defaultSchemaNamespace, xPath, format);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field");
 		}
@@ -71,15 +73,15 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
-//	/**
-//	 * Returns the string value specified for an XSD boolean type as a Java boolean.
-//	 *
-//	 * @param value the value found in an XML attribute.
-//	 * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
-//	 */
-//	private boolean getBoolean(String value) {
-//		return ("true".equals(value) || "1".equals(value));
-//	}
+	// /**
+	// * Returns the string value specified for an XSD boolean type as a Java boolean.
+	// *
+	// * @param value the value found in an XML attribute.
+	// * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
+	// */
+	// private boolean getBoolean(String value) {
+	// return ("true".equals(value) || "1".equals(value));
+	// }
 
 	/**
 	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
@@ -145,9 +147,9 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 
 		if (MAPPING_QNAME.equals(qName)) {
-			addField(atts.getValue("name"), atts.getValue("xPath"));
+			addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"));
 		} else if (MAPPING_LIST_QNAME.equals(qName)) {
-			startMapping(atts.getValue("mappingRoot"), atts.getValue("name"));
+			startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
 		} else if (MAPPING_CONFIGURATION_QNAME.equals(qName)) {
 			setMappingSet(atts.getValue("inputSchema"));
 		} else {
@@ -162,7 +164,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param outputName The name of the output that this set of mappings should be written to.
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 */
-	private void startMapping(String mappingRoot, String outputName) throws SAXException {
+	private void startMappingList(String mappingRoot, String outputName) throws SAXException {
 		MappingList newMapping = new MappingList();
 		try {
 			newMapping.setMappingRoot(this.defaultSchemaNamespace, mappingRoot);
@@ -171,6 +173,38 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		newMapping.setName(outputName);
 		this.mappingStack.push(newMapping);
+	}
+
+	/**
+	 * Parse the inline style name or specified format in to an {@link InlineFormat} instance.
+	 * 
+	 * @param inlineStyleName the name of a specific style.
+	 * @param inlineStyleFormat if none of the built-in styles (specified by name) are suitable, this allows a custom style to be defined.
+	 * @return an inline format, or null if one could not be determined.
+	 */
+	private InlineFormat getFormat(String inlineStyleName, String inlineStyleFormat) {
+		InlineFormat format;
+		if (inlineStyleFormat != null) {
+			format = new InlineFormat(inlineStyleFormat);
+		} else if (inlineStyleName != null) {
+			if ("NoCounts".equals(inlineStyleName)) {
+				format = InlineFormat.NoCounts;
+			} else if ("WithCount".equals(inlineStyleName)) {
+				format = InlineFormat.WithCount;
+			} else if ("WithParentCount".equals(inlineStyleName)) {
+				format = InlineFormat.WithParentCount;
+			} else if ("WithCountAndParentCount".equals(inlineStyleName)) {
+				format = InlineFormat.WithCountAndParentCount;
+			} else if ("Custom".equals(inlineStyleName)) {
+				format = new InlineFormat(inlineStyleFormat);
+			} else {
+				throw new IllegalStateException(
+								"Unknown format found, this means that the XSD is wrong as it's permitted a value that isn't supported.");
+			}
+		} else {
+			format = null;
+		}
+		return format;
 	}
 
 }

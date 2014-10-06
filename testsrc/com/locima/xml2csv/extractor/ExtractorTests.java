@@ -21,7 +21,7 @@ public class ExtractorTests {
 	@Test
 	public void testInstanceCounts() throws Exception {
 		TemporaryFolder outputFolder =
-						testInstanceCounts("testsrc/com/locima/xml2csv/extractor/HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6, 1 },
+						testInstanceCounts("testsrc/com/locima/xml2csv/extractor/HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 },
 										"testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
 
 		assertCSVEquals(new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(),
@@ -43,10 +43,14 @@ public class ExtractorTests {
 		extractor.setTrimWhitespace(true);
 		extractor.setMappingConfiguration(config);
 
-		extractor.convert(new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml"), om);
+		File inputFile = new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
+
+		extractor.convert(inputFile, om);
+		om.createFiles(config.getMappingsHeaders());
+		extractor.convert(inputFile, om);
 		om.close();
 
-		assertMappingInstanceCountsCorrect(config,instanceCounts);
+		assertMappingInstanceCountsCorrect(config, instanceCounts);
 
 		return outputFolder;
 	}
