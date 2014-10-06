@@ -33,7 +33,5 @@ public interface IMapping {
 	
 	InlineFormat getInstanceFormat();
 	
-	void setInlineFormat(InlineFormat format);
-
 	int getColumnNames(List<String> columnNames, String parentName, int parentCount);
 }

@@ -143,10 +143,10 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 				if (item instanceof XdmNode) {
 					List<String> outputLine = new ArrayList<String>();
 					evaluate((XdmNode) item, outputLine, trimWhitespace);
-					outputLines.add(outputLine);
 					instanceCount++;
+					outputLines.add(outputLine);
 				} else {
-					LOG.warn("Expected XdmNode, got {}", item.getClass().getName());
+					LOG.warn("Expected to find only elements after executing XPath on mapping list, got {}", item.getClass().getName());
 				}
 			}
 		} else {
@@ -185,7 +185,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * Recursive implementation of {@link #getColumnNames(List)}. This ensures that the parent iteration count is available.
 	 *
 	 * @param columnNames the list of column names that is being built up.
-	 * @param parentName the name of the parent mapping list (or <c>null</c> if this {@link MappingList} is a direct child of the
+	 * @param parentName the name of the parent mapping list (or <code>null</code> if this {@link MappingList} is a direct child of the
 	 *            {@link MappingConfiguration}.
 	 * @param parentCount the iteration of the parent mapping list that we're currently within.
 	 * @return the number of columns added by this invocation.
@@ -193,9 +193,9 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	@Override
 	public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
 		int columnCount = 0;
-		/* If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count
-		 * refers to the number of records output, not the number of fields (as a nested, in-line MappingList would
-		 * indicate.  Therefore, only process as in-line if nested.
+		/*
+		 * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
+		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
 		 */
 		int repeats = (parentName != null) ? getMaxInstanceCount() : 1;
 		String mappingListName = getColumnName();
@@ -262,11 +262,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		newMapping.setInlineFormat(format);
 
 		this.add(newMapping);
-	}
-
-	@Override
-	public void setInlineFormat(InlineFormat format) {
-		throw new IllegalStateException("BLAH!");
 	}
 
 	/**

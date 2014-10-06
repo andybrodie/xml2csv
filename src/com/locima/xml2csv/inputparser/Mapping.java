@@ -103,7 +103,6 @@ public class Mapping implements IMapping {
 		return Math.max(this.maxInstanceCount, this.minimumInstanceCount);
 	}
 
-	@Override
 	public void setInlineFormat(InlineFormat format) {
 		this.inlineFormat = (format == null) ? InlineFormat.NoCounts : format;
 	}
