@@ -1,6 +1,6 @@
 package com.locima.xml2csv.extractor;
 
-import static com.locima.xml2csv.TestHelpers.assertCSVEquals;
+import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
 import static com.locima.xml2csv.TestHelpers.assertMappingInstanceCountsCorrect;
 import static com.locima.xml2csv.TestHelpers.loadMappingConfiguration;
 
@@ -24,7 +24,7 @@ public class ExtractorTests {
 						testInstanceCounts("testsrc/com/locima/xml2csv/extractor/HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 },
 										"testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
 
-		assertCSVEquals(new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(),
+		assertCsvEquals(new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(),
 						"HeavilyNestedInstance.csv"));
 	}
 

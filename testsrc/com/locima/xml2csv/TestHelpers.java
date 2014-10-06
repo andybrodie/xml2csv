@@ -31,7 +31,7 @@ public class TestHelpers {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TestHelpers.class);
 
-	public static void assertCSVEquals(File expectedFile, File actualFile) throws Exception {
+	public static void assertCsvEquals(File expectedFile, File actualFile) throws Exception {
 		String[] expected = loadFile(expectedFile);
 		String[] actual = loadFile(actualFile);
 

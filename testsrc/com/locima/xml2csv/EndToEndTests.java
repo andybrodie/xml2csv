@@ -1,6 +1,6 @@
 package com.locima.xml2csv;
 
-import static com.locima.xml2csv.TestHelpers.assertCSVEquals;
+import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
 import static com.locima.xml2csv.TestHelpers.processFiles;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -24,9 +24,9 @@ public class EndToEndTests {
 						processFiles("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfig.xml",
 										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml",
 										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml");
-		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput1.csv"),
+		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput1.csv"),
 						new File(outputFolder.getRoot(), "family.csv"));
-		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput2.csv"),
+		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput2.csv"),
 						new File(outputFolder.getRoot(), "people.csv"));
 
 	}
@@ -38,7 +38,7 @@ public class EndToEndTests {
 										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml",
 										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml");
 
-		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineOutput.csv"), new File(outputFolder.getRoot(),
+		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineOutput.csv"), new File(outputFolder.getRoot(),
 						"family.csv"));
 	}
 	
@@ -46,9 +46,9 @@ public class EndToEndTests {
 	public void testNamespaces() throws Exception {
 		TemporaryFolder outputFolder = processFiles("testsrc/com/locima/xml2csv/inputparser/xml/FamilyConfigWithNamespaces.xml",
 						"testsrc/com/locima/xml2csv/inputparser/xml/FamilyWithNamespaces.xml");
-		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/FamilyWithNamespaces.csv"),
+		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/FamilyWithNamespaces.csv"),
 						new File(outputFolder.getRoot(), "FamilyWithNamespaces.csv"));
-		assertCSVEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/FamilyMembersWithNamespaces.csv"),
+		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/FamilyMembersWithNamespaces.csv"),
 						new File(outputFolder.getRoot(), "FamilyMembersWithNamespaces.csv"));
 	}
 

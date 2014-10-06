@@ -26,11 +26,13 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 
-	private static final String MAPPING_CONFIGURATION_QNAME = "MappingConfiguration";
+	private static final String MAPPING_CONFIGURATION_NAME = "MappingConfiguration";
 
-	private static final String MAPPING_LIST_QNAME = "MappingList";
+	private static final String MAPPING_LIST_NAME = "MappingList";
 
-	private static final String MAPPING_QNAME = "Mapping";
+	private static final String MAPPING_NAME = "Mapping";
+	
+	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 
 	private Locator documentLocator;
 	private MappingConfiguration mappingConfiguration;
@@ -65,7 +67,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("endElement(URI={})(localName={})(qName={})", uri, localName, qName);
 		}
-		if ("MappingList".equals(qName)) {
+		if (MAPPING_NAMESPACE.equals(uri) && MAPPING_LIST_NAME.equals(localName)) {
 			IMappingContainer current = this.mappingListStack.pop();
 			if (this.mappingListStack.size() > 0) {
 				this.mappingListStack.peek().add(current);
@@ -175,14 +177,14 @@ public class ConfigContentHandler extends DefaultHandler {
 			}
 		}
 
-		if (MAPPING_QNAME.equals(qName)) {
+		if (MAPPING_NAMESPACE.equals(uri) && MAPPING_NAME.equals(localName)) {
 			addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"));
-		} else if (MAPPING_LIST_QNAME.equals(qName)) {
+		} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_LIST_NAME.equals(localName)) {
 			startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
-		} else if (MAPPING_CONFIGURATION_QNAME.equals(qName)) {
+		} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_CONFIGURATION_NAME.equals(localName)) {
 			LOG.info("Found start of MappingConfiguration");
 		} else {
-			LOG.warn("Ignoring element as I wasn't expecting it or wasn't using it.");
+			LOG.warn("Ignoring element ({}):{} as I wasn't expecting it or wasn't using it.", uri, localName);
 		}
 	}
 
