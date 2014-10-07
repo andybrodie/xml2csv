@@ -1,11 +1,7 @@
 package com.locima.xml2csv.output;
 
-import java.io.File;
-import java.io.Writer;
 import java.util.List;
 import java.util.Map;
-
-import com.locima.xml2csv.Tuple;
 
 /**
  * Provided ONLY for unit testing.
@@ -25,12 +21,6 @@ public interface IOutputManager {
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst creating the output files or writing to them.
 	 */
 	void createFiles(Map<String, List<String>> outputConfiguration) throws OutputManagerException;
-
-	/**
-	 * Retrieve all the writers managed by this instance.
-	 * @return a map between the output name and a tuple of the {@link File} that the output is written to and an open file writer to that file.
-	 */
-	Map<String, Tuple<File, Writer>> getWriterFiles();
 
 	/**
 	 * Sets the directory to which output files will be written.

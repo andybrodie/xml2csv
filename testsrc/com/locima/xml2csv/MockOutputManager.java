@@ -1,8 +1,7 @@
 package com.locima.xml2csv;
 
-import java.io.File;
 import static com.locima.xml2csv.TestHelpers.toFlatString;
-import java.io.Writer;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +36,6 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
-	public Map<String, Tuple<File, Writer>> getWriterFiles() {
-		return null;
-	}
-
-	@Override
 	public void setDirectory(String outputDirectoryName) throws OutputManagerException {
 	}
 
@@ -61,7 +55,7 @@ public class MockOutputManager implements IOutputManager {
 			LOG.trace("Expected \"{}\"", toFlatString(s.getSecond()));
 			LOG.trace("Actual \"{}\"", toFlatString(values));
 		}
-		 Assert.assertArrayEquals(s.getSecond(), values);
+		Assert.assertArrayEquals(s.getSecond(), values);
 	}
 
 }
