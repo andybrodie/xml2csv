@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<MappingConfiguration inputSchema="http://www.example.com/xml2csv/family"
-	xmlns="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<m:MappingConfiguration inputSchema="http://www.example.com/xml2csv/family"
+	xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<MappingList mappingRoot="/family" name="Family">
-		<Mapping name="Family" xPath="name" />
+	<m:MappingList mappingRoot="/family" name="Family">
+		<m:Mapping name="Family" xPath="name" />
 
 		<!-- Now add a set of columns containing all the members of the family. 
 			This represents a 1..n mapping between families and family members. -->
-		<MappingList mappingRoot="person" name="Person">
+		<m:MappingList mappingRoot="person" name="Person">
 
 			<!-- Include the properties of the family members -->
 			<!-- Name comes from the child element "name" under person -->
-			<Mapping name="Name" xPath="name" />
+			<m:Mapping name="Name" xPath="name" inlineStyle="WithParentCount" />
 			<!-- Age comes from the age attribute of the mappingRoot -->
-			<Mapping name="Age" xPath="@age" />
-		</MappingList>
+			<m:Mapping name="Age" xPath="@age" inlineStyle="WithParentCount" />
+		</m:MappingList>
 
-		<Mapping name="Address" xPath="address" />
+		<m:Mapping name="Address" xPath="address" />
 
-	</MappingList>
-</MappingConfiguration>
+	</m:MappingList>
+</m:MappingConfiguration>

@@ -113,17 +113,22 @@ public class TestHelpers {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
-		OutputManager om = new OutputManager();
-		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
-		om.createFiles(set.getMappingsHeaders());
-
 		XmlDataExtractor extractor = new XmlDataExtractor();
 		extractor.setTrimWhitespace(true);
 		extractor.setMappingConfiguration(set);
 
+		OutputManager om = new OutputManager();
+		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
+		om.createFiles(set.getMappingsHeaders());
+
 		for (String filename : inputFiles) {
-			File family1File = new File(filename);
-			extractor.convert(family1File, om);
+			File file = new File(filename);
+			extractor.convert(file, om);
+		}		
+		om.createFiles(set.getMappingsHeaders());
+		for (String filename : inputFiles) {
+			File file = new File(filename);
+			extractor.convert(file, om);
 		}
 
 		om.close();

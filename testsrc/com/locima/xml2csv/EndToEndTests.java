@@ -2,19 +2,11 @@ package com.locima.xml2csv;
 
 import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
 import static com.locima.xml2csv.TestHelpers.processFiles;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.locima.xml2csv.inputparser.IMappingContainer;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
-import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 
 public class EndToEndTests {
 
@@ -38,8 +30,7 @@ public class EndToEndTests {
 										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml",
 										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml");
 
-		assertCsvEquals("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineOutput.csv", outputFolder.getRoot(),
-						"family.csv");
+		assertCsvEquals("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineOutput.csv", outputFolder.getRoot(), "family.csv");
 	}
 
 	@Test

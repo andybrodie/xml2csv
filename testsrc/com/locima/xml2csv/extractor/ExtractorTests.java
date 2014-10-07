@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
-import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.OutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -39,25 +38,22 @@ public class ExtractorTests {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
-		OutputManager om = new OutputManager();
-		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
-		om.createFiles(config.getMappingsHeaders());
-
 		XmlDataExtractor extractor = new XmlDataExtractor();
 		extractor.setTrimWhitespace(true);
 		extractor.setMappingConfiguration(config);
 
 		File inputFile = new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
 
-		extractor.convert(inputFile, om);
+		extractor.convert(inputFile, null);
 
 		/*
 		 * Now each MappingList and Mapping knows the maximum number of iterations that can appear within a single mapping, Now start again to get the
 		 * correct column headers. This is just a temporary measure whilst we're adding inline support.
 		 */
-		
+
 		LOG.info("*** Starting against now we know the column counts");
-		
+		OutputManager om = new OutputManager();
+		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
 		om.createFiles(config.getMappingsHeaders());
 		extractor.convert(inputFile, om);
 		om.close();

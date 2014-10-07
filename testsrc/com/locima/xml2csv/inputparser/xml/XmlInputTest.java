@@ -71,7 +71,7 @@ public class XmlInputTest {
 		IMappingContainer mapping1 = set.getMappingsByName("FamilyWithNamespaces");
 		assertNotNull("Couldn't find family mapping", mapping1);
 		IMappingContainer mapping2 = set.getMappingsByName("FamilyMembersWithNamespaces");
-		assertNotNull("Couldn't find family mapping", mapping1);
+		assertNotNull("Couldn't find family mapping", mapping2);
 	}
 
 }

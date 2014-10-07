@@ -43,7 +43,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 *
 	 * @param name the name of the column
 	 * @param xPath the XPath that should be executed to get the value of the column.
-	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
+	 * @throws SAXException if an error occurs while parsing the  XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
@@ -117,13 +117,13 @@ public class ConfigContentHandler extends DefaultHandler {
 			format = new InlineFormat(inlineStyleFormat);
 		} else if (inlineStyleName != null) {
 			if ("NoCounts".equals(inlineStyleName)) {
-				format = InlineFormat.NoCounts;
+				format = InlineFormat.NO_COUNTS;
 			} else if ("WithCount".equals(inlineStyleName)) {
-				format = InlineFormat.WithCount;
+				format = InlineFormat.WITH_COUNT;
 			} else if ("WithParentCount".equals(inlineStyleName)) {
-				format = InlineFormat.WithParentCount;
+				format = InlineFormat.WITH_PARENT_COUNT;
 			} else if ("WithCountAndParentCount".equals(inlineStyleName)) {
-				format = InlineFormat.WithCountAndParentCount;
+				format = InlineFormat.WITH_COUNT_AND_PARENT_COUNT;
 			} else if ("Custom".equals(inlineStyleName)) {
 				format = new InlineFormat(inlineStyleFormat);
 			} else {
@@ -196,13 +196,14 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 */
 	private void startMappingList(String mappingRoot, String outputName) throws SAXException {
-		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
+		IMappingContainer parent = this.mappingListStack.size()>0 ? this.mappingListStack.peek() : null;
+		MappingList newMapping = new MappingList(parent, this.mappingConfiguration.getNamespaceMap());
 		try {
 			newMapping.setMappingRoot(mappingRoot);
 		} catch (XMLException e) {
 			throw getException(e, "Invalid XPath \"%s\" found in mapping root", mappingRoot);
 		}
-		newMapping.setName(outputName);
+		newMapping.setOutputName(outputName);
 		this.mappingListStack.push(newMapping);
 	}
 

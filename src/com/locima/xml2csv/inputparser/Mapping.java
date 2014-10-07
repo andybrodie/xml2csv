@@ -17,7 +17,7 @@ import com.locima.xml2csv.extractor.DataExtractorException;
 /**
  * Represents a single column to XPath mapping.
  */
-public class Mapping implements IMapping {
+public class Mapping implements ISingleMapping {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Mapping.class);
 
@@ -26,7 +26,7 @@ public class Mapping implements IMapping {
 	 */
 	private String columnName;
 
-	private InlineFormat inlineFormat = InlineFormat.WithCount;
+	private InlineFormat inlineFormat = InlineFormat.WITH_COUNT;
 
 	/**
 	 * Tracks the number of instances found at once by this mapping. This is needed when doing inline mappings.
@@ -100,7 +100,7 @@ public class Mapping implements IMapping {
 	}
 
 	@Override
-	public InlineFormat getInstanceFormat() {
+	public InlineFormat getInlineFormat() {
 		return this.inlineFormat;
 	}
 
@@ -110,7 +110,7 @@ public class Mapping implements IMapping {
 	}
 
 	public void setInlineFormat(InlineFormat format) {
-		this.inlineFormat = (format == null) ? InlineFormat.NoCounts : format;
+		this.inlineFormat = (format == null) ? InlineFormat.NO_COUNTS : format;
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public class Mapping implements IMapping {
 	public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
 		String mappingName = this.getColumnName();
 		int count = this.getMaxInstanceCount();
-		InlineFormat format = this.getInstanceFormat();
+		InlineFormat format = this.getInlineFormat();
 		for (int mappingIterationCount = 0; mappingIterationCount < count; mappingIterationCount++) {
 			columnNames.add(format.format(mappingName, mappingIterationCount, parentName, parentCount));
 		}

@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.sf.saxon.s9api.XdmNode;
 
-import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
@@ -12,17 +11,9 @@ import com.locima.xml2csv.extractor.DataExtractorException;
  */
 public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 
-	/**
-	 * Returns an output name associated with this mapping container.
-	 * 
-	 * @return a string, or null if this mapping container is anonymous. Note that top-level mapping containers (i.e. those stored beneath
-	 *         {@link MappingConfiguration} cannot be anonymous and must have a valid non-zero length string.
-	 */
-	String getOutputName();
-	
-	/**
+/**
 	 * Containers can produce either one record (via {@link IMapping#evaluate(XdmNode, boolean)) or multiple records via this method.
-	 * All nested mappings can only produce one record (which is part of a larger parent record), however top level mappings can 
+	 * All nested mappings can only produce one record (which is part of a larger parent record), however top level mappings can
 	 * produce multiple records using this method.
 	 * @param rootNode the root from which to evaluate all mappings within this container.
 	 * @param trimWhitespace if true, then leading and trailing whitespace will be removed from all data values.
@@ -32,7 +23,14 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 	 */
 	List<List<String>> evaluateToRecordList(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
 
-	
 	int getColumnNames(List<String> columnNames);
+
+	/**
+	 * Returns an output name associated with this mapping container.
+	 *
+	 * @return a string, or null if this mapping container is anonymous. Note that top-level mapping containers (i.e. those stored beneath
+	 *         {@link MappingConfiguration} cannot be anonymous and must have a valid non-zero length string.
+	 */
+	String getOutputName();
 
 }

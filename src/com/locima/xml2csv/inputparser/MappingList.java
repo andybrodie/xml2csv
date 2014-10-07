@@ -44,20 +44,25 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private Processor saxonProcessor;
 
+	private IMappingContainer parent;
+
 	/**
-	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
+	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map and no parent (top-level mapping).
 	 */
 	public MappingList() {
-		this(new HashMap<String, String>());
+		this(null, new HashMap<String, String>());
 	}
 
 	/**
 	 * Initialises a Saxon processor, using the supplied map of namespace prefix to URI mappings.
 	 *
-	 * @param namespaceMap a (possibly empty, but must not be null) map of prefix to URI mappings
+	 * @param parent the parent mapping container of this mapping list. If null then this mapping list is assumed to be a top-level mapping (i.e. it's
+	 *            parent is the {@link MappingConfiguration} object.
+	 * @param namespaceMap a (possibly empty, but must not be null) map of prefix to URI mappings.
 	 */
-	public MappingList(Map<String, String> namespaceMap) {
+	public MappingList(IMappingContainer parent, Map<String, String> namespaceMap) {
 		this.saxonProcessor = SaxonProcessorManager.getProcessor();
+		this.parent = parent;
 		this.namespaceMappings = namespaceMap;
 	}
 
@@ -145,10 +150,10 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 		// Add any blanks where maxInstanceCount is more than valuesSize
 		int maxInstances = getMaxInstanceCount();
-		if (instanceCount < maxInstances) {
+		if ((instanceCount < maxInstances) && (this.parent != null)) {
 			int columnCount = getChildColumnCount(this);
 			LOG.trace("Adding {} blank iterations of {} columns to make up to {} for {}", maxInstances - instanceCount, columnCount, maxInstances,
-							this.getColumnName());
+							this.getOutputName());
 			for (int i = instanceCount; i < maxInstances; i++) {
 				List<String> emptyValues = new ArrayList<String>();
 				for (int j = 0; j < columnCount; j++) {
@@ -163,24 +168,20 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return outputLines;
 	}
 
-	private static int getChildColumnCount(ArrayList<IMapping> mappings) {
+	private static int getChildColumnCount(List<IMapping> mappings) {
 		int count = 0;
 		for (IMapping child : mappings) {
-			if (child instanceof Mapping) {
-				count += child.getMaxInstanceCount();
-				// TODO FIX THIS HORRIBLE CODE THAT RELIES ON KNOWING THAT HTE ONLY IMPLEMENTATION OF IMAPPINGCONTAINER IS MAPPINGLIST!!!!
+			int childMaxInstanceCount = child.getMaxInstanceCount();
+			if (child instanceof ISingleMapping) {
+				count += childMaxInstanceCount;
 			} else if (child instanceof MappingList) {
 				MappingList childList = (MappingList) child;
-				count += child.getMaxInstanceCount() * getChildColumnCount(childList);
-
+				count += childMaxInstanceCount * getChildColumnCount(childList);
+			} else {
+				throw new IllegalStateException("Unexpected type of IMappingContainer found: " + child.getClass().getName());
 			}
 		}
 		return count;
-	}
-
-	@Override
-	public String getColumnName() {
-		return this.outputName;
 	}
 
 	@Override
@@ -206,19 +207,13 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
 		 */
 		int repeats = (parentName != null) ? getMaxInstanceCount() : 1;
-		String mappingListName = getColumnName();
+		String mappingListName = getOutputName();
 		for (int mappingListIteration = 0; mappingListIteration < repeats; mappingListIteration++) {
 			for (IMapping mapping : this) {
 				columnCount += mapping.getColumnNames(columnNames, mappingListName, mappingListIteration);
 			}
 		}
 		return columnCount;
-	}
-
-	@Override
-	public InlineFormat getInstanceFormat() {
-		// Do I need this?
-		return null;
 	}
 
 	/**
@@ -257,15 +252,15 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	public void put(String colName, String xPathExpression) throws XMLException {
-		put(colName, xPathExpression, InlineFormat.NoCounts);
+		put(colName, xPathExpression, InlineFormat.NO_COUNTS);
 	}
 
 	/**
 	 * Stores a new column definition in this set of mappings.
 	 *
 	 * @param colName the outputName of the column, must a string of length > 0.
-	 * @param defaultNamespace the default namespace URI.
 	 * @param xPathExpression the XPath expression to compile. Must not be null.
+	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
 	public void put(String colName, String xPathExpression, InlineFormat format) throws XMLException {
@@ -298,7 +293,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 *
 	 * @param newName the new outputName of the mapping. Must not be null or the empty string.
 	 */
-	public void setName(String newName) {
+	public void setOutputName(String newName) {
 		if (newName == null) {
 			throw new ArgumentNullException("newName");
 		}

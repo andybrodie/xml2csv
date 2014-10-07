@@ -11,7 +11,6 @@ xmlns:n="http://www.example.com/xml2csv/name">
 	</member:person>
 	<member:person age="2">
 		<n:name>Lincoln</n:name>
-		<n:name>Neale</n:name>
 		<name>IGNORED IN WRONG NAMESPACE</name>
 	</member:person>
 	<ignoredperson age="3">

@@ -9,7 +9,6 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPathFactory;
@@ -74,12 +73,12 @@ public class XmlExtractorTest {
 	@Test
 	public void testBasicMappingsWithRoot() throws Exception {
 		MappingList parents = new MappingList();
-		parents.setName("Parents");
+		parents.setOutputName("Parents");
 		parents.setMappingRoot("/root/parent");
 		parents.put("data", "data");
 
 		MappingList children = new MappingList();
-		children.setName("Children");
+		children.setOutputName("Children");
 		children.setMappingRoot("/root/parent/child");
 		children.put("data", "data");
 
@@ -117,7 +116,7 @@ public class XmlExtractorTest {
 	@Test
 	public void testMultipleMappingsWithRoot() throws Exception {
 		MappingList families = new MappingList();
-		families.setName("Families");
+		families.setOutputName("Families");
 		families.setMappingRoot("/families/family");
 		families.put("Name", "name");
 
@@ -125,7 +124,7 @@ public class XmlExtractorTest {
 		familyMembers.put("Name", "name");
 		familyMembers.put("Age", "age");
 		familyMembers.put("Address", "address");
-		familyMembers.setName("FamilyMembers");
+		familyMembers.setOutputName("FamilyMembers");
 		familyMembers.setMappingRoot("/families/family/member");
 
 		MappingConfiguration set = new MappingConfiguration();
@@ -165,7 +164,7 @@ public class XmlExtractorTest {
 		mappings.put("Name", "/person/name");
 		mappings.put("Age", "/person/age");
 		mappings.put("Address", "/person/address");
-		mappings.setName("Test");
+		mappings.setOutputName("Test");
 
 		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);
@@ -188,11 +187,11 @@ public class XmlExtractorTest {
 		prefixUriMap.put("a", "http://example.com/a");
 		prefixUriMap.put("b", "http://example.com/b");
 
-		MappingList mappings = new MappingList(prefixUriMap);
+		MappingList mappings = new MappingList(null, prefixUriMap);
 		mappings.put("Name", "/a:person/b:name");
 		mappings.put("Age", "/a:person/b:age");
 		mappings.put("Address", "/a:person/b:address");
-		mappings.setName("Test");
+		mappings.setOutputName("Test");
 
 		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);
@@ -216,7 +215,7 @@ public class XmlExtractorTest {
 		mappings.put("Name", "name");
 		mappings.put("Age", "age");
 		mappings.put("Address", "address");
-		mappings.setName("Test");
+		mappings.setOutputName("Test");
 		mappings.setMappingRoot("/personcollection/person");
 
 		MappingConfiguration s = new MappingConfiguration();

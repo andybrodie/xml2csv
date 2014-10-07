@@ -29,9 +29,15 @@ public interface IMapping {
 	 */
 	int getMaxInstanceCount();
 
-	String getColumnName();
-	
-	InlineFormat getInstanceFormat();
-	
+	/**
+	 * Retrieves the column names the will be output by this mapping and adds them to the passed <code>columnNames</code> list parameter.
+	 * 
+	 * @param columnNames the existing list of column names to append to. This will never be null.
+	 * @param parentName the name of the parent {@link IMappingContainer}. This may be required by this instance to retrieve the correct column names,
+	 *            depending on the {@link InlineFormat} used by this mapping.
+	 * @param parentCount the iteration count of the parent that we are currently evaluating. This may be required by this instance to retrieve the
+	 *            correct column names, depending on the {@link InlineFormat} used by this mapping.
+	 * @return the number of columns added by this execution.
+	 */
 	int getColumnNames(List<String> columnNames, String parentName, int parentCount);
 }

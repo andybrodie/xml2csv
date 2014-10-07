@@ -39,12 +39,12 @@ package com.locima.xml2csv.inputparser;
  */
 public class InlineFormat {
 
-	public static final InlineFormat NoCounts = new InlineFormat("%1$s");
+	public static final InlineFormat NO_COUNTS = new InlineFormat("%1$s");
 
-	public static final InlineFormat WithCount = new InlineFormat("%1$s_%2$d");
+	public static final InlineFormat WITH_COUNT = new InlineFormat("%1$s_%2$d");
 
-	public static final InlineFormat WithCountAndParentCount = new InlineFormat("%1$s_%4$d_%2$d");
-	public static final InlineFormat WithParentCount = new InlineFormat("%1$s_%4$d");
+	public static final InlineFormat WITH_COUNT_AND_PARENT_COUNT = new InlineFormat("%1$s_%4$d_%2$d");
+	public static final InlineFormat WITH_PARENT_COUNT = new InlineFormat("%1$s_%4$d");
 	private String format;
 
 	public InlineFormat(String format) {
