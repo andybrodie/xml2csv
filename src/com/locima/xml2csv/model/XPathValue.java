@@ -1,4 +1,4 @@
-package com.locima.xml2csv.inputparser;
+package com.locima.xml2csv.model;
 
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathExecutable;

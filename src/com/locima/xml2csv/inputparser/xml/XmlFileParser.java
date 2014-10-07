@@ -18,7 +18,7 @@ import org.xml.sax.XMLReader;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.IConfigParser;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.model.MappingConfiguration;
 
 /**
  * Reads configuration from an XML input file.

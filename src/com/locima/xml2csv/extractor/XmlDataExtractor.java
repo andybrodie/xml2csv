@@ -18,8 +18,8 @@ import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
-import com.locima.xml2csv.inputparser.IMappingContainer;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.model.IMappingContainer;
+import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 

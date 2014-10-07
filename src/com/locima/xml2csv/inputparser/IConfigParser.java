@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.model.MappingConfiguration;
 
 /**
  * Used for classes that can read input configuration files.

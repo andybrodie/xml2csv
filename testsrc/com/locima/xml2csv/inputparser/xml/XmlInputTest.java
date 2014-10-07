@@ -15,8 +15,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.inputparser.IMappingContainer;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.model.IMappingContainer;
+import com.locima.xml2csv.model.MappingConfiguration;
 
 public class XmlInputTest {
 

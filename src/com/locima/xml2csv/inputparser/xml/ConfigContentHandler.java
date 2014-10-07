@@ -14,10 +14,10 @@ import org.xml.sax.helpers.DefaultHandler;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
-import com.locima.xml2csv.inputparser.IMappingContainer;
-import com.locima.xml2csv.inputparser.InlineFormat;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
-import com.locima.xml2csv.inputparser.MappingList;
+import com.locima.xml2csv.model.IMappingContainer;
+import com.locima.xml2csv.model.InlineFormat;
+import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.MappingList;
 
 /**
  * The SAX Content Handler for input XML files.

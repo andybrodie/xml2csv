@@ -30,8 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.extractor.XmlDataExtractor;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
-import com.locima.xml2csv.inputparser.MappingList;
+import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.MappingList;
 
 public class XmlExtractorTest {
 

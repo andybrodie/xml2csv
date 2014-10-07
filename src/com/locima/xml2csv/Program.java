@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.IConfigParser;
-import com.locima.xml2csv.inputparser.MappingConfiguration;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
+import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.OutputManager;
 
 /**

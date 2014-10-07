@@ -1,4 +1,4 @@
-package com.locima.xml2csv.inputparser;
+package com.locima.xml2csv.model;
 
 import com.locima.xml2csv.ArgumentNullException;
 

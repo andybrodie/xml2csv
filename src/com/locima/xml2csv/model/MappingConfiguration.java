@@ -1,4 +1,4 @@
-package com.locima.xml2csv.inputparser;
+package com.locima.xml2csv.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.inputparser.FileParserException;
 
 /**
  * Abstracts a list of mappings between XPath statements and Column Names with methods only relevant to this application.

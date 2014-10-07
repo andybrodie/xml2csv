@@ -1,4 +1,4 @@
-package com.locima.xml2csv.inputparser;
+package com.locima.xml2csv.model;
 
 /**
  * Represents a single field mapping that retrieves one mapped value from an XML input.
