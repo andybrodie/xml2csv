@@ -1,7 +1,6 @@
 package com.locima.xml2csv.extractor;
 
 import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
-import static com.locima.xml2csv.TestHelpers.assertMappingInstanceCountsCorrect;
 import static com.locima.xml2csv.TestHelpers.loadMappingConfiguration;
 
 import java.io.File;
@@ -9,14 +8,19 @@ import java.io.IOException;
 
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.MappingConfiguration;
+import com.locima.xml2csv.inputparser.MappingList;
 import com.locima.xml2csv.output.OutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
 public class ExtractorTests {
+
+	private static final Logger LOG = LoggerFactory.getLogger(ExtractorTests.class);
 
 	@Test
 	public void testInstanceCounts() throws Exception {
@@ -46,16 +50,17 @@ public class ExtractorTests {
 		File inputFile = new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
 
 		extractor.convert(inputFile, om);
-		
-		/* Now each MappingList and Mapping knows the maximum number of iterations that can appear within a single mapping,
-		 * Now start again to get the correct column headers.
-		 * This is just a temporary measure whilst we're adding inline support.
+
+		/*
+		 * Now each MappingList and Mapping knows the maximum number of iterations that can appear within a single mapping, Now start again to get the
+		 * correct column headers. This is just a temporary measure whilst we're adding inline support.
 		 */
+		
+		LOG.info("*** Starting against now we know the column counts");
+		
 		om.createFiles(config.getMappingsHeaders());
 		extractor.convert(inputFile, om);
 		om.close();
-
-		assertMappingInstanceCountsCorrect(config, instanceCounts);
 
 		return outputFolder;
 	}

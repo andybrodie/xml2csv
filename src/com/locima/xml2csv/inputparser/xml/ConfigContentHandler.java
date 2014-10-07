@@ -31,7 +31,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String MAPPING_LIST_NAME = "MappingList";
 
 	private static final String MAPPING_NAME = "Mapping";
-	
+
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 
 	private Locator documentLocator;

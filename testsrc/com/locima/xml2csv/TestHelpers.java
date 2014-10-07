@@ -44,6 +44,14 @@ public class TestHelpers {
 		assertEquals("More lines in actual than expected.", expected.length, actual.length);
 	}
 
+	public static void assertCsvEquals(String expectedFileName, String actualFileName) throws Exception {
+		assertCsvEquals(new File(expectedFileName), new File(actualFileName));
+	}
+
+	public static void assertCsvEquals(String expectedFileName, File actualRootDirectory, String actualFileName) throws Exception {
+		assertCsvEquals(new File(expectedFileName), new File(actualRootDirectory, actualFileName));
+	}
+
 	public static void assertMappingInstanceCountsCorrect(MappingConfiguration config, int... instanceCounts) {
 		List<Integer> expectedInstanceCounts = new ArrayList<Integer>();
 		for (int instanceCount : instanceCounts) {

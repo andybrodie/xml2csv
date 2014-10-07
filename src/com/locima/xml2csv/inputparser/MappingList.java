@@ -65,7 +65,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * Given a default namespace URI and an XPath expression (that uses only the default namespace), create a compiled version of the XPath
 	 * expression.
 	 *
-	 * @param defaultNamespace the default namespace URI.
 	 * @param xPathExpression the XPath expression to compile
 	 * @return A compiled XPath expression.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
@@ -145,10 +144,16 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 
 		// Add any blanks where maxInstanceCount is more than valuesSize
-		if (instanceCount < getMaxInstanceCount()) {
-			LOG.trace("Adding {} blank fields to make up to {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount);
-			for (int i = instanceCount; i < instanceCount; i++) {
+		int maxInstances = getMaxInstanceCount();
+		if (instanceCount < maxInstances) {
+			int columnCount = getChildColumnCount(this);
+			LOG.trace("Adding {} blank iterations of {} columns to make up to {} for {}", maxInstances - instanceCount, columnCount, maxInstances,
+							this.getColumnName());
+			for (int i = instanceCount; i < maxInstances; i++) {
 				List<String> emptyValues = new ArrayList<String>();
+				for (int j = 0; j < columnCount; j++) {
+					emptyValues.add(StringUtil.EMPTY_STRING);
+				}
 				outputLines.add(emptyValues);
 			}
 		}
@@ -156,6 +161,21 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 		LOG.trace("Completed all mappings against documents");
 		return outputLines;
+	}
+
+	private static int getChildColumnCount(ArrayList<IMapping> mappings) {
+		int count = 0;
+		for (IMapping child : mappings) {
+			if (child instanceof Mapping) {
+				count += child.getMaxInstanceCount();
+				// TODO FIX THIS HORRIBLE CODE THAT RELIES ON KNOWING THAT HTE ONLY IMPLEMENTATION OF IMAPPINGCONTAINER IS MAPPINGLIST!!!!
+			} else if (child instanceof MappingList) {
+				MappingList childList = (MappingList) child;
+				count += child.getMaxInstanceCount() * getChildColumnCount(childList);
+
+			}
+		}
+		return count;
 	}
 
 	@Override

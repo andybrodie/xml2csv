@@ -61,7 +61,7 @@ public class Mapping implements IMapping {
 	public List<String> evaluate(XdmNode mappingRoot, boolean trimWhitespace) throws DataExtractorException {
 		LOG.trace("Extracting value for {} using {}", this.columnName, this.xPathExpr.getSource());
 		List<String> values = new ArrayList<String>();
-		
+
 		if (mappingRoot != null) {
 			XPathSelector selector = this.xPathExpr.evaluate(mappingRoot);
 			for (XdmItem item : selector) {
@@ -79,9 +79,11 @@ public class Mapping implements IMapping {
 		int instanceCount = values.size();
 
 		// Add any blanks where maxInstanceCount is more than valuesSize
-		if (instanceCount < this.maxInstanceCount) {
-			LOG.trace("Adding {} blank fields to make up to {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount);
-			for (int i = instanceCount; i < instanceCount; i++) {
+		int maxInstances = this.getMaxInstanceCount();
+		if (instanceCount < maxInstances) {
+			LOG.trace("Adding {} blank fields to make up to {} in mapping {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount,
+							this.getColumnName());
+			for (int i = instanceCount; i < maxInstances; i++) {
 				values.add(StringUtil.EMPTY_STRING);
 			}
 		}
