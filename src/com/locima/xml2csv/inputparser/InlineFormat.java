@@ -1,5 +1,7 @@
 package com.locima.xml2csv.inputparser;
 
+import com.locima.xml2csv.ArgumentNullException;
+
 /**
  * <p>
  * The fields in a formatting string are:
@@ -44,14 +46,35 @@ public class InlineFormat {
 	public static final InlineFormat WITH_COUNT = new InlineFormat("%1$s_%2$d");
 
 	public static final InlineFormat WITH_COUNT_AND_PARENT_COUNT = new InlineFormat("%1$s_%4$d_%2$d");
+	
 	public static final InlineFormat WITH_PARENT_COUNT = new InlineFormat("%1$s_%4$d");
+	
+	/**
+	 * The formatting string of this instance.
+	 */
 	private String format;
 
+	/**
+	 * Creates an inline format with a specific syntax (see {@link InlineFormat} for a description of that syntax).
+	 * @param format the string that defined the inline format.  Must not be null.
+	 */
 	public InlineFormat(String format) {
+		if (null == format) {
+			throw new ArgumentNullException("format");
+		}
 		this.format = format;
 	}
 
-	public String format(String columnName, int iterationNumber, String parentName, int parentIterationNumber) {
-		return String.format(this.format, columnName, iterationNumber + 1, parentName, parentIterationNumber + 1);
+	/**
+	 * Applies this inline format to the parameters passed to give a full column name.
+	 * @param baseColumnName the base column name of the mapping; e.g. <code>Name</code>, <code>Age</code> or <code>Address Line</code>
+	 * @param iterationNumber a number, starting at 0, that indicates the index of the value we've found, then encountering multiple
+	 * values for a single mapping.
+	 * @param parentName the name of the parent of this mapping, typically {@link IMappingContainer#getOutputName()}.
+	 * @param parentIterationNumber a number, starting at 0, that indicates the index of the value of the parent. 
+	 * @return a formatted string, used as a column name.
+	 */
+	public String format(String baseColumnName, int iterationNumber, String parentName, int parentIterationNumber) {
+		return String.format(this.format, baseColumnName, iterationNumber + 1, parentName, parentIterationNumber + 1);
 	}
 }

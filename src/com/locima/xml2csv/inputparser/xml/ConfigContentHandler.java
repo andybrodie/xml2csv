@@ -41,9 +41,11 @@ public class ConfigContentHandler extends DefaultHandler {
 	/**
 	 * Adds a column mapping to the current MappingList instance being defined.
 	 *
-	 * @param name the name of the column
+	 * @param name the name of the column.
 	 * @param xPath the XPath that should be executed to get the value of the column.
-	 * @throws SAXException if an error occurs while parsing the  XPath expression found (will wrap {@link XMLException}.
+	 * @param inlineStyleName the name of one of the built-in styles (see {@link InlineFormat} public members.
+	 * @param inlineStyleFormat a bespoke style to use for this mapping.
+	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
@@ -55,6 +57,10 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
+	/**
+	 * Checks to ensure that the {@link #mappingListStack} is empty.
+	 * @throws SAXException if {@link #mappingListStack} is not empty.
+	 */
 	@Override
 	public void endDocument() throws SAXException {
 		if (!this.mappingListStack.empty()) {
@@ -62,6 +68,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
+	
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (LOG.isTraceEnabled()) {
@@ -196,7 +203,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 */
 	private void startMappingList(String mappingRoot, String outputName) throws SAXException {
-		IMappingContainer parent = this.mappingListStack.size()>0 ? this.mappingListStack.peek() : null;
+		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
 		MappingList newMapping = new MappingList(parent, this.mappingConfiguration.getNamespaceMap());
 		try {
 			newMapping.setMappingRoot(mappingRoot);
@@ -213,6 +220,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 *
 	 * @param prefix The prefix that will be used within XPath statements in the configuration.
 	 * @param uri The URI that this namespace maps on to.
+	 * @throws SAXException if a duplicate namespace prefix was found within the configuration file. (Will contain a nested
+	 * {@link FileParserException}.)
 	 */
 	@Override
 	public void startPrefixMapping(String prefix, String uri) throws SAXException {

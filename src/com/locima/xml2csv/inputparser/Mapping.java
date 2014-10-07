@@ -26,7 +26,7 @@ public class Mapping implements ISingleMapping {
 	 */
 	private String columnName;
 
-	private InlineFormat inlineFormat = InlineFormat.WITH_COUNT;
+	private InlineFormat inlineFormat;
 
 	/**
 	 * Tracks the number of instances found at once by this mapping. This is needed when doing inline mappings.
@@ -43,10 +43,11 @@ public class Mapping implements ISingleMapping {
 	/**
 	 * Constructs a new instance.
 	 *
+	 * @param inlineFormat the inline format that will be used to render the column name when multiple instances are found.
 	 * @param columnName specified the name of the column in the output that will be extracted from the XML. Must not be null or empty.
 	 * @param xPathExpression the XPath expression that will extract the data for the column. Must not be null.
 	 */
-	public Mapping(String columnName, XPathValue xPathExpression) {
+	public Mapping(String columnName, XPathValue xPathExpression, InlineFormat inlineFormat) {
 		if (StringUtil.isNullOrEmpty(columnName)) {
 			throw new ArgumentException("columnName", "must be non-null and greater than zero length.");
 		}
@@ -55,6 +56,7 @@ public class Mapping implements ISingleMapping {
 		}
 		this.columnName = columnName;
 		this.xPathExpr = xPathExpression;
+		this.inlineFormat = inlineFormat == null ? InlineFormat.NO_COUNTS : inlineFormat;
 	}
 
 	@Override
@@ -95,6 +97,10 @@ public class Mapping implements ISingleMapping {
 		return values;
 	}
 
+	/**
+	 * Retrieves the column name that this mapping will render.
+	 * @return the base name of the column. 
+	 */
 	public String getColumnName() {
 		return this.columnName;
 	}
@@ -107,10 +113,6 @@ public class Mapping implements ISingleMapping {
 	@Override
 	public int getMaxInstanceCount() {
 		return Math.max(this.maxInstanceCount, this.minimumInstanceCount);
-	}
-
-	public void setInlineFormat(InlineFormat format) {
-		this.inlineFormat = (format == null) ? InlineFormat.NO_COUNTS : format;
 	}
 
 	@Override

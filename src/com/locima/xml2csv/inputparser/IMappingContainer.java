@@ -23,6 +23,11 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 	 */
 	List<List<String>> evaluateToRecordList(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException;
 
+	/**
+	 * Retrieve all the column names of the {@link Mapping} instances contained within this instance.
+	 * @param columnNames a list of column names that this method will append to.
+	 * @return the number of columns added to <code>columnNames</code>.
+	 */
 	int getColumnNames(List<String> columnNames);
 
 	/**

@@ -130,6 +130,13 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		return this.mappings.size();
 	}
 
+	
+	/**
+	 * Retrieve the namespace prefix to URI map that's associated with this configuration.
+	 * <p>
+	 * These are applied to all the XPath statements in mappings and mapping roots.
+	 * @return a possibly empty map which mappings a namespace prefix to a URI.
+	 */
 	public Map<String, String> getNamespaceMap() {
 		return this.namespaceMappings;
 	}

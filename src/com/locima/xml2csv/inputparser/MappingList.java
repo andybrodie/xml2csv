@@ -130,7 +130,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		int instanceCount = 0;
 		if (rootXPath != null) {
 			XPathSelector rootIterator;
-			rootIterator = getRootIterator(rootNode, rootXPath);
+			rootIterator = getNodeIterator(rootNode, rootXPath);
 			for (XdmItem item : rootIterator) {
 				if (item instanceof XdmNode) {
 					List<String> outputLine = new ArrayList<String>();
@@ -168,6 +168,16 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return outputLines;
 	}
 
+	/**
+	 * Retrieve the number of columns that will be rendered within this mapping container.
+	 * <p>
+	 * Recursively called for child mapping lists.
+	 * <p>
+	 * Used to work out how many empty columns are required in a record when no values are present.
+	 * 
+	 * @param mappings The list of mappings (typically a {@link MappingList} instance) the count the columns within.
+	 * @return the number of columns found.
+	 */
 	private static int getChildColumnCount(List<IMapping> mappings) {
 		int count = 0;
 		for (IMapping child : mappings) {
@@ -241,16 +251,31 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return this.outputName;
 	}
 
-	private XPathSelector getRootIterator(XdmNode rootNode, XPathExecutable rootXPath) throws DataExtractorException {
-		XPathSelector rootIterator = rootXPath.load();
+	/**
+	 * Retrieves an iterator over the results of executing the passed xpath against the rootNode specified.
+	 * 
+	 * @param rootNode the root node to execute the mapping on.
+	 * @param xPath the XPath to execute against the root node passed.
+	 * @return an iterator over the results.
+	 * @throws DataExtractorException if an error occurs executing the XPath.
+	 */
+	private XPathSelector getNodeIterator(XdmNode rootNode, XPathExecutable xPath) throws DataExtractorException {
+		XPathSelector nodeIterator = xPath.load();
 		try {
-			rootIterator.setContextItem(rootNode);
+			nodeIterator.setContextItem(rootNode);
 		} catch (SaxonApiException e) {
-			throw new DataExtractorException(e, "Error evaluating XPath %s", rootXPath);
+			throw new DataExtractorException(e, "Error evaluating XPath %s", xPath);
 		}
-		return rootIterator;
+		return nodeIterator;
 	}
 
+	/**
+	 * See {@link #put(String, String, InlineFormat)} with a default value of {@link InlineFormat#NO_COUNTS} for the inline format.
+	 * 
+	 * @param colName the outputName of the column, must a string of length > 0.
+	 * @param xPathExpression the XPath expression to compile. Must not be null.
+	 * @throws XMLException if any errors occur
+	 */
 	public void put(String colName, String xPathExpression) throws XMLException {
 		put(colName, xPathExpression, InlineFormat.NO_COUNTS);
 	}
@@ -271,8 +296,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 			throw new ArgumentException("xPathExpression", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
 		XPathExecutable xPath = createXPathExecutable(xPathExpression);
-		Mapping newMapping = new Mapping(colName, new XPathValue(xPathExpression, xPath));
-		newMapping.setInlineFormat(format);
+		Mapping newMapping = new Mapping(colName, new XPathValue(xPathExpression, xPath), format);
 
 		this.add(newMapping);
 	}
