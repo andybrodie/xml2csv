@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="xml2csv" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<path id="ivy.lib.path">
+		<fileset dir="c:\apps\java\apache-ivy-2.4.0-rc1" includes="ivy-2.4.0-rc1.jar" />
+	</path>
+	<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
+	<property environment="env" />
+	<property name="junit.output.dir" value="junit" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.7" />
+	<property name="source" value="1.7" />
+	<property name="LIB" value="lib" />
+	<path id="JUnit 4.libraryclasspath">
+		<pathelement location="${LIB}/junit-4.11.jar" />
+		<pathelement location="${LIB}/hamcrest-core-1.3.jar" />
+	</path>
+	<path id="xml2csv.build.classpath">
+		<fileset dir="${LIB}">
+			<include name="Saxon-HE-9.5.1-6.jar" />
+			<include name="xercesImpl-2.11.0.jar" />
+			<include name="commons-cli-1.2.jar" />
+			<include name="slf4j-api-1.7.7.jar" />
+		</fileset>
+		<path refid="JUnit 4.libraryclasspath" />
+	</path>
+	<path id="xml2csv.execute.classpath">
+		<path refid="xml2csv.build.classpath"/>
+		<!-- Make sure that you include ALL jar files, otherwise we're taking responsibility for knowing
+		     all the transitive dependendies of Jars we depend on. --> 
+		<fileset dir="${LIB}">
+			<include name="**/*.jar"/>
+		</fileset>
+		<!-- Don't forget to include our own bin directory -->
+		<pathelement location="bin" />
+	</path>
+	<target name="init">
+		<mkdir dir="bin" />
+		<!-- Copy all the non-compiled resources from the source directory to bin -->
+		<copy includeemptydirs="false" todir="bin">
+			<fileset dir="src">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+		<!-- Includes all the non-compiled resources from testsrc.  One day we want to split this out to a separate bin -->
+		<copy includeemptydirs="false" todir="bin">
+			<fileset dir="testsrc">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+		<!-- Copy all the property file (by definition these aren't compilable) -->
+		<copy includeemptydirs="false" todir="bin">
+			<fileset dir="properties">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+	<target name="resolve" description="--> retrieve dependencies with ivy">
+		<ivy:retrieve />
+	</target>
+	
+	<!-- Cleaning targets -->
+	<target name="clean" description="Deletes all the built artifacts">
+		<delete dir="bin" />
+	</target>
+	<target name="clean.ivy" description="Deletes the dependencies downloaded by Ivy">
+		<delete dir="${LIB}" />
+	</target>
+	<target depends="clean, clean.ivy" name="cleanall" description="Deletes all built artifacts and downloaded depedencies" />
+	<target depends="build-subprojects,build-project" name="build" />
+	<target name="build-subprojects" />
+	<target depends="init,resolve" name="build-project">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+			<src path="src" />
+			<src path="testsrc" />
+			<src path="properties" />
+			<classpath refid="xml2csv.build.classpath" />
+		</javac>
+	</target>
+	<target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects" />
+	<target name="com.aviva.ust.extractor">
+		<mkdir dir="${junit.output.dir}" />
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<classpath refid="xml2csv.execute.classpath" />
+		</junit>
+	</target>
+	<target name="test" depends="build">
+		<mkdir dir="${junit.output.dir}" />
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<batchtest todir="${junit.output.dir}">
+				<fileset dir="testsrc">
+					<include name="**/*Tests.java"/>
+				</fileset>
+			</batchtest>
+			<classpath refid="xml2csv.execute.classpath" />
+		</junit>
+	</target>
+	<target name="junitreport">
+		<junitreport todir="${junit.output.dir}">
+			<fileset dir="${junit.output.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${junit.output.dir}" />
+		</junitreport>
+	</target>
+</project>

@@ -1,6 +1,5 @@
 package com.locima.xml2csv;
 
-
 import java.io.File;
 import java.util.List;
 
@@ -17,6 +16,7 @@ import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.IConfigParser;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManager;
 
 /**
@@ -32,8 +32,12 @@ public class Program {
 	public static final String OPT_TRIM_WHITESPACE = "w";
 	public static final String OPT_XML_DIR = "x";
 
+	public static final int VERSION_MAJOR = 0;
+	public static final int VERSION_MINOR = 1;
+
 	/**
 	 * Entry point for the command line execution.
+	 *
 	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
@@ -56,24 +60,34 @@ public class Program {
 		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
 		configParser.load(inputConfigFiles);
-		MappingConfiguration mappings = configParser.getMappings();
+		MappingConfiguration mappingConfig = configParser.getMappings();
 
 		// Create headers for all the output files
-		OutputManager outputMgr = new OutputManager();
+		IOutputManager outputMgr = new OutputManager();
 		outputMgr.setDirectory(outputDirectory);
 		try {
-			outputMgr.createFiles(mappings.getMappingsHeaders());
+			outputMgr.createFiles(mappingConfig.getMappingsHeaders());
 
 			// Parse the input XML files
 			XmlDataExtractor xde = new XmlDataExtractor();
 			xde.setTrimWhitespace(trimWhitespace);
-			xde.setMappingConfiguration(mappings);
+			xde.setMappingConfiguration(mappingConfig);
 
 			// Iterate over all files and write out all the records to the output, managed by the OutputManager
 			List<File> xmlFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);
 			for (File xmlFile : xmlFiles) {
 				xde.convert(xmlFile, outputMgr);
 			}
+
+			// If there's any inlined elements, run the whole lot again. Yes, this is very inefficient, but it works for now!
+			if (mappingConfig.containsInline()) {
+				LOG.info("Found inline element, therefore reprocessing with inline values supported.");
+				outputMgr.createFiles(mappingConfig.getMappingsHeaders());
+				for (File xmlFile : xmlFiles) {
+					xde.convert(xmlFile, outputMgr);
+				}
+			}
+
 		} finally {
 			// No matter what happens, attempt to close all the OutputManager resources
 			outputMgr.close();
@@ -86,18 +100,19 @@ public class Program {
 	 * @param args command line arguments
 	 */
 	public void execute(String[] args) {
-		CONSOLE.info("Initialised");
+		CONSOLE.info("xml2csv v{}.{}", VERSION_MAJOR, VERSION_MINOR);
 
 		try {
-			LOG.trace("Parsing command line arguments");
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("Parsing command line arguments {}", StringUtil.toString(args));
+			}
 			CommandLine cmdLine = getOptions(args);
-			LOG.trace("Arguments valid, proceeding");
+			LOG.trace("Arguments verified ok");
 
 			execute(cmdLine.getOptionValue(OPT_SQL_DIR), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR),
 							(boolean) cmdLine.getParsedOptionValue(OPT_TRIM_WHITESPACE));
-
 			CONSOLE.info("Completed succesfully.");
-		} catch (final ProgramException pe) {
+		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program
 			CONSOLE.error("Program termininating due to error, details follow.", pe);
 		} catch (ParseException pe) {

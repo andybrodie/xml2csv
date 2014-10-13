@@ -18,7 +18,7 @@ import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
 
-public class XmlInputTest {
+public class XmlInputTests {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

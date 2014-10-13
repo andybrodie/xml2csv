@@ -43,4 +43,10 @@ public class EndToEndTests {
 						"FamilyMembersWithNamespaces.csv");
 	}
 
+	@Test
+	public void testProgram() throws Exception {
+//		Program p = new Program();
+//		p.execute(configDirectory, xmlInputDirectory, outputDirectory, true);
+	}
+
 }

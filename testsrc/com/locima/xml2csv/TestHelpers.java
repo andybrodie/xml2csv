@@ -44,12 +44,12 @@ public class TestHelpers {
 		assertEquals("More lines in actual than expected.", expected.length, actual.length);
 	}
 
-	public static void assertCsvEquals(String expectedFileName, String actualFileName) throws Exception {
-		assertCsvEquals(new File(expectedFileName), new File(actualFileName));
-	}
-
 	public static void assertCsvEquals(String expectedFileName, File actualRootDirectory, String actualFileName) throws Exception {
 		assertCsvEquals(new File(expectedFileName), new File(actualRootDirectory, actualFileName));
+	}
+
+	public static void assertCsvEquals(String expectedFileName, String actualFileName) throws Exception {
+		assertCsvEquals(new File(expectedFileName), new File(actualFileName));
 	}
 
 	public static void assertMappingInstanceCountsCorrect(MappingConfiguration config, int... instanceCounts) {
@@ -107,7 +107,7 @@ public class TestHelpers {
 	}
 
 	public static TemporaryFolder processFiles(String configurationFile, String... inputFiles) throws XMLException, DataExtractorException,
-	OutputManagerException, FileParserException, IOException {
+					OutputManagerException, FileParserException, IOException {
 		MappingConfiguration set = loadMappingConfiguration(configurationFile);
 
 		TemporaryFolder outputFolder = new TemporaryFolder();
@@ -124,7 +124,7 @@ public class TestHelpers {
 		for (String filename : inputFiles) {
 			File file = new File(filename);
 			extractor.convert(file, om);
-		}		
+		}
 		om.createFiles(set.getMappingsHeaders());
 		for (String filename : inputFiles) {
 			File file = new File(filename);

@@ -21,7 +21,7 @@ import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
-public class OutputManagerTest {
+public class OutputManagerTests {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

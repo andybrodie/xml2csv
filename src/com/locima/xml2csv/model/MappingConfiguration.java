@@ -75,6 +75,42 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 	/**
+	 * Returns true if this mapping configuration has encountered any mapping lists or mappings with multiple values.
+	 *
+	 * @return true if this mapping configuration has encountered any mapping lists or mappings with multiple values.
+	 */
+	public boolean containsInline() {
+		for (IMappingContainer container : this) {
+			if (containsInline(container)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns true if this {@link IMapping} instance passed contains any mapping lists or mappings with multiple values.
+	 *
+	 * @param mapping the mapping to search for multiple values.
+	 * @return true if this {@link IMapping} instance passed contains any mapping lists or mappings with multiple values.
+	 */
+	private boolean containsInline(IMapping mapping) {
+		if (mapping.getMaxInstanceCount() > 1) {
+			return true;
+		}	
+		boolean foundOne = false;
+		if (mapping instanceof IMappingContainer) {
+			for (IMapping childMapping : ((IMappingContainer) mapping)) {
+				if (containsInline(childMapping)) {
+					foundOne = true;
+					break;
+				}
+			}
+		}
+		return foundOne;
+	}
+
+	/**
 	 * Get a specific set of mappings by name. Generally used for unit testing but might be handy one day.
 	 *
 	 * @param name the name of the mapping set to return
@@ -108,6 +144,17 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		return headers;
 	}
 
+	/**
+	 * Retrieve the namespace prefix to URI map that's associated with this configuration.
+	 * <p>
+	 * These are applied to all the XPath statements in mappings and mapping roots.
+	 *
+	 * @return a possibly empty map which mappings a namespace prefix to a URI.
+	 */
+	public Map<String, String> getNamespaceMap() {
+		return this.namespaceMappings;
+	}
+
 	@Override
 	public Iterator<IMappingContainer> iterator() {
 		return this.mappings.iterator();
@@ -129,16 +176,5 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public int size() {
 		return this.mappings.size();
-	}
-
-	
-	/**
-	 * Retrieve the namespace prefix to URI map that's associated with this configuration.
-	 * <p>
-	 * These are applied to all the XPath statements in mappings and mapping roots.
-	 * @return a possibly empty map which mappings a namespace prefix to a URI.
-	 */
-	public Map<String, String> getNamespaceMap() {
-		return this.namespaceMappings;
 	}
 }

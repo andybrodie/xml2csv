@@ -33,9 +33,9 @@ import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.MappingList;
 
-public class XmlExtractorTest {
+public class XmlExtractorTests {
 
-	private static final Logger LOG = LoggerFactory.getLogger(XmlExtractorTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(XmlExtractorTests.class);
 
 	private static String getJaxpImplementationInfo(String componentName, Class<?> componentClass) {
 		CodeSource source = componentClass.getProtectionDomain().getCodeSource();

@@ -97,7 +97,7 @@ public class OutputManager implements IOutputManager {
 	 * @param wrapper a string to write before and after all the values. May be null (which means no wrapper written).
 	 * @return a String, possibly empty, but never null.
 	 */
-	private String collectionToString(List<?> fields, String fieldSeparator, String wrapper) {
+	public static String collectionToString(List<?> fields, String fieldSeparator, String wrapper) {
 		if (null == fields) {
 			return null;
 		}
