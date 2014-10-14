@@ -1,6 +1,7 @@
 package com.locima.xml2csv;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.cli.BasicParser;
@@ -45,21 +46,45 @@ public class Program {
 	}
 
 	/**
-	 * Entry point for code-based execution.
+	 * Entry point for code-based execution that just has directory names for configuration and input.
 	 *
-	 * @param configDirectory The directory from which configuration files should be read that define the mappings from XML to CSV.
-	 * @param xmlInputDirectory The directory from which XML files should be read.
-	 * @param outputDirectory The directory to which output CSV files should be written.
+	 * @param configDirectoryName The directory from which configuration files should be read that define the mappings from XML to CSV.
+	 * @param xmlInputDirectoryName The directory from which XML files should be read.
+	 * @param outputDirectoryName The directory to which output CSV files should be written.
 	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configDirectory, String xmlInputDirectory, String outputDirectory, boolean trimWhitespace) throws ProgramException {
-		LOG.info("Finding all the input configuration files.");
-		List<File> inputConfigFiles = FileUtility.getFilesInDirectory(configDirectory);
+	public void execute(String configDirectoryName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace)
+					throws ProgramException {
+		try {
+			File configDirectory = FileUtility.getDirectory(configDirectoryName, FileUtility.CAN_READ, false);
+			File xmlInputDirectory = FileUtility.getDirectory(xmlInputDirectoryName, FileUtility.CAN_READ, false);
+			File outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
+
+			List<File> configFiles = FileUtility.getFilesInDirectory(configDirectory);
+			List<File> xmlInputFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);
+			execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace);
+		} catch (IOException ioe) {
+			// Only occurs from calls to FileUtility.getDirectory above
+			throw new ProgramException(ioe, "There was a problem with a directory you specified: " + ioe.getMessage());
+		}
+
+	}
+
+	/**
+	 * Entry point for code-based execution with all required inputs precisely defined.
+	 *
+	 * @param configFiles A ist of configuration files that define the mappings from XML to CSV.  Must not be null.
+	 * @param xmlInputFiles A list of XML input files that should be processed against the <code>configFiles</code>.  Must not be null.
+	 * @param outputDirectory The directory to which output CSV files should be written.  Assumes to exist and be writeable.
+	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
+	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
+	 */
+	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean trimWhitespace) throws ProgramException {
 
 		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
-		configParser.load(inputConfigFiles);
+		configParser.load(configFiles);
 		MappingConfiguration mappingConfig = configParser.getMappings();
 
 		// Create headers for all the output files
@@ -74,8 +99,7 @@ public class Program {
 			xde.setMappingConfiguration(mappingConfig);
 
 			// Iterate over all files and write out all the records to the output, managed by the OutputManager
-			List<File> xmlFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);
-			for (File xmlFile : xmlFiles) {
+			for (File xmlFile : xmlInputFiles) {
 				xde.convert(xmlFile, outputMgr);
 			}
 
@@ -83,7 +107,7 @@ public class Program {
 			if (mappingConfig.containsInline()) {
 				LOG.info("Found inline element, therefore reprocessing with inline values supported.");
 				outputMgr.createFiles(mappingConfig.getMappingsHeaders());
-				for (File xmlFile : xmlFiles) {
+				for (File xmlFile : xmlInputFiles) {
 					xde.convert(xmlFile, outputMgr);
 				}
 			}

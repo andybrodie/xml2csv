@@ -172,13 +172,24 @@ public class OutputManager implements IOutputManager {
 	@Override
 	public void setDirectory(String outputDirectoryName) throws OutputManagerException {
 		File dir = new File(outputDirectoryName);
-		if (!dir.isDirectory()) {
-			throw new OutputManagerException("Output directory specified is not a directory: %1$s", outputDirectoryName);
+		this.setDirectory(dir);
+	}
+
+	/**
+	 * Sets the directory to which output files will be written.
+	 *
+	 * @param outputDirectory the output directory.
+	 * @throws OutputManagerException If the directory does not exist
+	 */
+	@Override
+	public void setDirectory(File outputDirectory) throws OutputManagerException {
+		if (!outputDirectory.isDirectory()) {
+			throw new OutputManagerException("Output directory specified is not a directory: %1$s", outputDirectory.getAbsolutePath());
 		}
-		if (!dir.canWrite()) {
-			throw new OutputManagerException("Output directory is not writeable: %1$s", outputDirectoryName);
+		if (!outputDirectory.canWrite()) {
+			throw new OutputManagerException("Output directory is not writeable: %1$s", outputDirectory.getAbsolutePath());
 		}
-		this.outputDirectory = dir;
+		this.outputDirectory = outputDirectory;
 		LOG.info("Configured output directory as {}", this.outputDirectory.getAbsolutePath());
 	}
 

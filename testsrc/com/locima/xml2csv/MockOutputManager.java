@@ -2,6 +2,7 @@ package com.locima.xml2csv;
 
 import static com.locima.xml2csv.TestHelpers.toFlatString;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,12 @@ public class MockOutputManager implements IOutputManager {
 			LOG.trace("Actual \"{}\"", toFlatString(values));
 		}
 		Assert.assertArrayEquals(s.getSecond(), values);
+	}
+
+	@Override
+	public void setDirectory(File outputDirectory) throws OutputManagerException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

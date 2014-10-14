@@ -51,7 +51,7 @@ public class ExtractorTests {
 		 * correct column headers. This is just a temporary measure whilst we're adding inline support.
 		 */
 
-		LOG.info("*** Starting against now we know the column counts");
+		LOG.info("*** Starting again now we know the column counts");
 		OutputManager om = new OutputManager();
 		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
 		om.createFiles(config.getMappingsHeaders());

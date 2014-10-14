@@ -1,5 +1,6 @@
 package com.locima.xml2csv.output;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -25,10 +26,18 @@ public interface IOutputManager {
 	/**
 	 * Sets the directory to which output files will be written.
 	 *
-	 * @param outputDirectoryName the name of the output directory.
-	 * @throws OutputManagerException If the directory does not exist
+	 * @param outputDirectoryName the name of the output directory. Directory must exist and be writeable.
+	 * @throws OutputManagerException If the directory does not exist.
 	 */
 	void setDirectory(String outputDirectoryName) throws OutputManagerException;
+
+	/**
+	 * Sets the directory to which output files will be written.
+	 *
+	 * @param outputDirectory the output directory. Must exist and be writeable.
+	 * @throws OutputManagerException If the directory does not exist.
+	 */
+	void setDirectory(File outputDirectory) throws OutputManagerException;
 
 	/**
 	 * Writes a set of values out to the specified writer.
