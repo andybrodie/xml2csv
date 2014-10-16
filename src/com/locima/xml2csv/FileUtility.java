@@ -130,7 +130,7 @@ public class FileUtility {
 		File[] listOfFiles = directory.listFiles();
 		for (File file : listOfFiles) {
 			if (file.isFile()) {
-				if (filter.include(file)) {
+				if (filter == null || filter.include(file)) {
 					LOG.trace("Adding {} to list.  Total size is now {}", file.getName(), files.size());
 					files.add(file);
 				} else {
