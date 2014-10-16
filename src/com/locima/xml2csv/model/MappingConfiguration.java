@@ -29,6 +29,11 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	private Map<String, String> namespaceMappings = new HashMap<String, String>();
 
 	/**
+	 * The default inline behaviour (when multiple values for fields are found) for all mappings (unless overridden).
+	 */
+	private MultiValueBehaviour defaultInlineBehaviour;
+
+	/**
 	 * Adds a child set of mappings to this mappings set.
 	 *
 	 * @param maps a set of mappings, must not be null and must have a unique {@link MappingList#getOutputName()} value.
@@ -97,7 +102,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	private boolean containsInline(IMapping mapping) {
 		if (mapping.getMaxInstanceCount() > 1) {
 			return true;
-		}	
+		}
 		boolean foundOne = false;
 		if (mapping instanceof IMappingContainer) {
 			for (IMapping childMapping : ((IMappingContainer) mapping)) {
@@ -176,5 +181,23 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public int size() {
 		return this.mappings.size();
+	}
+
+	/**
+	 * Sets the default inline behaviour for all child mappings of this configuration. If {@link MultiValueBehaviour#INHERIT} is specified then it will be
+	 * substitued for {@link MultiValueBehaviour#IGNORE} as there is nowhere to inherit from.
+	 * 
+	 * @param defaultInlineBehaviour the default inline behaviour for child mappings.
+	 */
+	public void setDefaultInlineBehaviour(MultiValueBehaviour defaultInlineBehaviour) {
+		this.defaultInlineBehaviour = (defaultInlineBehaviour == MultiValueBehaviour.INHERIT) ? MultiValueBehaviour.IGNORE : defaultInlineBehaviour;
+	}
+
+	/**
+	 * Gets the default inline behaviour for this configuration.
+	 * @return never returns null.
+	 */
+	public MultiValueBehaviour getDefaultInlineBehaviour() {
+		return this.defaultInlineBehaviour;
 	}
 }

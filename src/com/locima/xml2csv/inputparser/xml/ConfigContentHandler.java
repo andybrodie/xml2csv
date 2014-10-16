@@ -18,11 +18,14 @@ import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.InlineFormat;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.MappingList;
+import com.locima.xml2csv.model.MultiValueBehaviour;
 
 /**
  * The SAX Content Handler for input XML files.
  */
 public class ConfigContentHandler extends DefaultHandler {
+
+	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 
@@ -45,13 +48,21 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param xPath the XPath that should be executed to get the value of the column.
 	 * @param inlineStyleName the name of one of the built-in styles (see {@link InlineFormat} public members.
 	 * @param inlineStyleFormat a bespoke style to use for this mapping.
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat) throws SAXException {
+	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat, String multiValueBehaviour) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
 		try {
 			InlineFormat format = getFormat(inlineStyleName, inlineStyleFormat);
-			current.put(name, xPath, format);
+			String columnName;
+			if (StringUtil.isNullOrEmpty(name)) {
+				LOG.debug("No name was specified for mapping, so XPath value is used instead {}", xPath);
+				columnName = xPath.replace('/', '_');
+			} else {
+				columnName = name;
+			}
+			current.put(columnName, xPath, format, parseInlineBehaviour(multiValueBehaviour));
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field");
 		}
@@ -59,6 +70,7 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	/**
 	 * Checks to ensure that the {@link #mappingListStack} is empty.
+	 *
 	 * @throws SAXException if {@link #mappingListStack} is not empty.
 	 */
 	@Override
@@ -68,7 +80,6 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
-	
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (LOG.isTraceEnabled()) {
@@ -83,16 +94,6 @@ public class ConfigContentHandler extends DefaultHandler {
 			}
 		}
 	}
-
-	// /**
-	// * Returns the string value specified for an XSD boolean type as a Java boolean.
-	// *
-	// * @param value the value found in an XML attribute.
-	// * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
-	// */
-	// private boolean getBoolean(String value) {
-	// return ("true".equals(value) || "1".equals(value));
-	// }
 
 	/**
 	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
@@ -110,6 +111,16 @@ public class ConfigContentHandler extends DefaultHandler {
 		SAXException se = new SAXException(de);
 		return se;
 	}
+
+	// /**
+	// * Returns the string value specified for an XSD boolean type as a Java boolean.
+	// *
+	// * @param value the value found in an XML attribute.
+	// * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
+	// */
+	// private boolean getBoolean(String value) {
+	// return ("true".equals(value) || "1".equals(value));
+	// }
 
 	/**
 	 * Parse the inline style name or specified format in to an {@link InlineFormat} instance.
@@ -152,6 +163,21 @@ public class ConfigContentHandler extends DefaultHandler {
 		return this.mappingConfiguration;
 	}
 
+	/**
+	 * Parses a string representation of inline behaviour to an instance of {@link MultiValueBehaviour}.
+	 *
+	 * @param inlineBehaviour the inline behaviour (if null or empty then {@link MultiValueBehaviour#INHERIT} is used.
+	 * @return an inline behaviour. Never returns null.
+	 */
+	public MultiValueBehaviour parseInlineBehaviour(String inlineBehaviour) {
+		if (StringUtil.isNullOrEmpty(inlineBehaviour)) {
+			return MultiValueBehaviour.INHERIT;
+		} else {
+			String upperCaseVersion = inlineBehaviour.toUpperCase();
+			return MultiValueBehaviour.valueOf(upperCaseVersion);
+		}
+	}
+
 	@Override
 	public void setDocumentLocator(Locator locator) {
 		this.documentLocator = locator;
@@ -185,13 +211,25 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 
 		if (MAPPING_NAMESPACE.equals(uri) && MAPPING_NAME.equals(localName)) {
-			addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"));
+			addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"),
+							atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 		} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_LIST_NAME.equals(localName)) {
 			startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
 		} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_CONFIGURATION_NAME.equals(localName)) {
-			LOG.info("Found start of MappingConfiguration");
+			startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 		} else {
 			LOG.warn("Ignoring element ({}):{} as I wasn't expecting it or wasn't using it.", uri, localName);
+		}
+	}
+
+	/**
+	 * Configures the inline behaviour (the instance of {@link MappingConfiguration} is already initialised on {@link #startDocument()}.
+	 *
+	 * @param inlineBehaviour the inline behaviour to observe, by default, for all child mappings.
+	 */
+	private void startMappingConfiguration(String inlineBehaviour) {
+		if (!StringUtil.isNullOrEmpty(inlineBehaviour)) {
+			this.mappingConfiguration.setDefaultInlineBehaviour(parseInlineBehaviour(inlineBehaviour));
 		}
 	}
 
@@ -221,7 +259,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param prefix The prefix that will be used within XPath statements in the configuration.
 	 * @param uri The URI that this namespace maps on to.
 	 * @throws SAXException if a duplicate namespace prefix was found within the configuration file. (Will contain a nested
-	 * {@link FileParserException}.)
+	 *             {@link FileParserException}.)
 	 */
 	@Override
 	public void startPrefixMapping(String prefix, String uri) throws SAXException {

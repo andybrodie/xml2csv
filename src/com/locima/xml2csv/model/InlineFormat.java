@@ -32,10 +32,6 @@ import com.locima.xml2csv.ArgumentNullException;
  * <td>5</td>
  * <td></td>
  * </tr>
- * <tr>
- * <td></td>
- * <td></td>
- * </tr>
  * </tbody>
  * </table>
  */

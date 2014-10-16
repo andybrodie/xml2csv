@@ -2,11 +2,14 @@ package com.locima.xml2csv;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -23,18 +26,23 @@ import com.locima.xml2csv.output.OutputManager;
 /**
  * Main entry point and logic for the program.
  */
+// CHECKSTYLE:OFF Class Data Abstraction Coupling. This is the entry point where all program logic is brought together.
 public class Program {
+	// CHECKSTYLE:ON
 
 	private static final Logger CONSOLE = LoggerFactory.getLogger("Console");
-	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 
+	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
+	public static final int CONSOLE_WIDTH = 80;
+	public static final String OPT_HELP = "h";
 	public static final String OPT_OUT_DIR = "o";
-	public static final String OPT_SQL_DIR = "s";
+	public static final String OPT_CONFIG_FILE = "c";
 	public static final String OPT_TRIM_WHITESPACE = "w";
 	public static final String OPT_XML_DIR = "x";
-
 	public static final int VERSION_MAJOR = 0;
 	public static final int VERSION_MINOR = 1;
+	private static final String HEADER = String.format("xml2csv v%d.%d converts XML files in to CSV files according to a set of specified rules.",
+					VERSION_MAJOR, VERSION_MINOR);
 
 	/**
 	 * Entry point for the command line execution.
@@ -46,37 +54,11 @@ public class Program {
 	}
 
 	/**
-	 * Entry point for code-based execution that just has directory names for configuration and input.
-	 *
-	 * @param configDirectoryName The directory from which configuration files should be read that define the mappings from XML to CSV.
-	 * @param xmlInputDirectoryName The directory from which XML files should be read.
-	 * @param outputDirectoryName The directory to which output CSV files should be written.
-	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
-	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
-	 */
-	public void execute(String configDirectoryName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace)
-					throws ProgramException {
-		try {
-			File configDirectory = FileUtility.getDirectory(configDirectoryName, FileUtility.CAN_READ, false);
-			File xmlInputDirectory = FileUtility.getDirectory(xmlInputDirectoryName, FileUtility.CAN_READ, false);
-			File outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
-
-			List<File> configFiles = FileUtility.getFilesInDirectory(configDirectory);
-			List<File> xmlInputFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);
-			execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace);
-		} catch (IOException ioe) {
-			// Only occurs from calls to FileUtility.getDirectory above
-			throw new ProgramException(ioe, "There was a problem with a directory you specified: " + ioe.getMessage());
-		}
-
-	}
-
-	/**
 	 * Entry point for code-based execution with all required inputs precisely defined.
 	 *
-	 * @param configFiles A ist of configuration files that define the mappings from XML to CSV.  Must not be null.
-	 * @param xmlInputFiles A list of XML input files that should be processed against the <code>configFiles</code>.  Must not be null.
-	 * @param outputDirectory The directory to which output CSV files should be written.  Assumes to exist and be writeable.
+	 * @param configFiles A ist of configuration files that define the mappings from XML to CSV. Must not be null.
+	 * @param xmlInputFiles A list of XML input files that should be processed against the <code>configFiles</code>. Must not be null.
+	 * @param outputDirectory The directory to which output CSV files should be written. Assumes to exist and be writeable.
 	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
@@ -119,47 +101,89 @@ public class Program {
 	}
 
 	/**
+	 * Entry point for code-based execution that just has directory names for configuration and input.
+	 *
+	 * @param configFileName the configuration file name.
+	 * @param xmlInputDirectoryName The directory from which XML files should be read.
+	 * @param outputDirectoryName The directory to which output CSV files should be written.
+	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
+	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
+	 */
+	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace)
+					throws ProgramException {
+		try {
+			File xmlInputDirectory = FileUtility.getDirectory(xmlInputDirectoryName, FileUtility.CAN_READ, false);
+			File outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
+
+			List<File> configFiles = new ArrayList<File>();
+			configFiles.add(FileUtility.getFile(configFileName, FileUtility.CAN_READ));
+			List<File> xmlInputFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);
+			execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace);
+		} catch (IOException ioe) {
+			// Only occurs from calls to FileUtility.getDirectory above
+			throw new ProgramException(ioe, "There was a problem with a directory you specified: " + ioe.getMessage());
+		}
+
+	}
+
+	/**
 	 * Main logic for the utility.
 	 *
 	 * @param args command line arguments
 	 */
 	public void execute(String[] args) {
-		CONSOLE.info("xml2csv v{}.{}", VERSION_MAJOR, VERSION_MINOR);
+
+		Options options = getOptions();
 
 		try {
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("Parsing command line arguments {}", StringUtil.toString(args));
 			}
-			CommandLine cmdLine = getOptions(args);
+			CommandLineParser parser = new BasicParser();
+			CommandLine cmdLine = parser.parse(options, args);
+			if (cmdLine.hasOption(OPT_HELP)) {
+				HelpFormatter formatter = new HelpFormatter();
+				formatter.printHelp(new PrintWriter(System.out, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
+			}
 			LOG.trace("Arguments verified ok");
-
-			execute(cmdLine.getOptionValue(OPT_SQL_DIR), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR),
-							(boolean) cmdLine.getParsedOptionValue(OPT_TRIM_WHITESPACE));
+			String trimWhitespaceValue = cmdLine.getOptionValue(OPT_TRIM_WHITESPACE);
+			boolean trimWhitespace = Boolean.parseBoolean(trimWhitespaceValue);
+			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR), trimWhitespace);
 			CONSOLE.info("Completed succesfully.");
 		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program
 			CONSOLE.error("Program termininating due to error, details follow.", pe);
 		} catch (ParseException pe) {
 			// Thrown when the command line arguments are invalid
-			CONSOLE.error("Invalid arguments specified: " + pe.getMessage());
+			System.err.println("Invalid arguments specified: " + pe.getMessage());
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
 		}
 	}
 
 	/**
-	 * Parse the command line arguments in to a proper set of specified options using Apache Commons CLI 1.2.
+	 * Generates the options that define the command line arguments to this program.
 	 *
-	 * @param args command line arguments
 	 * @return parsed command line arguments
-	 * @throws ParseException if there's a problem with parsing
 	 */
-	public CommandLine getOptions(String[] args) throws ParseException {
+	public Options getOptions() {
 		Options options = new Options();
-		options.addOption(new Option(OPT_SQL_DIR, "sqlDir", true, "The directory containing the SQL files that define what outputs are required."));
-		options.addOption(new Option(OPT_XML_DIR, "xmlDir", true, "The directory containing the XML files from which data will be extracted."));
-		options.addOption(new Option(OPT_OUT_DIR, "outDir", true, "The directory to which the output CSV files will be written."));
-		options.addOption(new Option(OPT_TRIM_WHITESPACE, "trimWhitespace", false,
-						"If set then all whitespace at the front and end of values will be removed."));
-		CommandLineParser parser = new BasicParser();
-		return parser.parse(options, args);
+		Option option = new Option(OPT_CONFIG_FILE, "configFile", true, "A single file containing the configuration to use.");
+		option.setRequired(true);
+		options.addOption(option);
+		option = new Option(OPT_XML_DIR, "xmlDir", true, "The directory containing the XML files from which data will be extracted.");
+		option.setRequired(true);
+		options.addOption(option);
+		option =
+						new Option(OPT_OUT_DIR, "outDir", true, "The directory to which the output CSV files will be written.  "
+										+ "If not specified, current working directory will be used.");
+		options.addOption(option);
+		option =
+						new Option(OPT_TRIM_WHITESPACE, "preserveWhitespace", false,
+										"If specified then whitespace will not be removed from either end of values found.");
+		options.addOption(option);
+		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
+		options.addOption(option);
+		return options;
 	}
 }

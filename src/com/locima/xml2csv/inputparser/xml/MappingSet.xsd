@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://locima.com/xml2csv/MappingConfiguration"
-	xmlns:tns="http://locima.com/xml2csv/MappingConfiguration"
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://locima.com/xml2csv/MappingConfiguration" xmlns:tns="http://locima.com/xml2csv/MappingConfiguration"
 	elementFormDefault="qualified" attributeFormDefault="unqualified">
 
 	<element name="MappingConfiguration" type="tns:MappingConfiguration" />
@@ -9,14 +8,19 @@
 		<annotation>
 			<documentation>
 				Root element of a mapping set document. This contains
-				a set of mapping elements that define the mappings between the input
-				XML documents and their output CSV equivalents.
+				a set of mapping elements that define the mappings between the input XML
+				documents and their output CSV equivalents.
 			</documentation>
 		</annotation>
 		<sequence minOccurs="1" maxOccurs="unbounded">
-			<element name="MappingList" type="tns:MappingList" />
+			<sequence minOccurs="0" maxOccurs="unbounded">
+				<element name="InputFilter" type="tns:InputFilter" />
+			</sequence>
+			<sequence minOccurs="1" maxOccurs="unbounded">
+				<element name="MappingList" type="tns:MappingList" />
+			</sequence>
 		</sequence>
-		<attribute name="inputSchema" type="anyURI" />
+		<attribute name="InlineBehaviour" type="tns:InlineBehaviour" />
 	</complexType>
 
 	<complexType name="MappingList">
@@ -32,7 +36,8 @@
 				<documentation>XPath expression, relative to the parent mapping (or
 					document element if parent is MappingConfiguration), of the root
 					node for
-					these mappings. If omitted, document element is assumed. An
+					these
+					mappings. If omitted, document element is assumed. An
 					expression that returns multiple nodes will result in multiple rows
 					in the output file.
 				</documentation>
@@ -41,10 +46,9 @@
 		<attribute name="name" type="string" use="required">
 			<annotation>
 				<documentation>Specifies the name of this mapping output.
-					This is
-					used either as the basis of a filename (if inline is false) or
-					a
-					column name prefix (if inline is true).
+					This is used either as the basis of a filename (if inline is false) or
+					a column name
+					prefix (if inline is true).
 				</documentation>
 			</annotation>
 		</attribute>
@@ -56,11 +60,45 @@
 				XPath expression (relative to the parent Mapping's mappingRoot).
 			</documentation>
 		</annotation>
-		<attribute name="xPath" type="string" />
-		<attribute name="name" type="string" />
-		<attribute name="inlineStyle" type="tns:InlineStyle" />
-		<attribute name="inlineFormat" type="string" />
+		<attribute name="xPath" type="string" use="required" />
+		<attribute name="name" type="string" use="optional">
+			<annotation>
+				<documentation>The name of the field, specified in the first row of the output file. If ommitted
+					then the value of the xPath element will be used,
+					replacing and forward slash (/) characters with underscores.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="onInlineDetected" type="tns:InlineBehaviour" use="optional" default="Warn" />
+		<attribute name="inlineStyle" type="tns:InlineStyle" use="optional" />
+		<attribute name="inlineFormat" type="string" use="optional" />
 	</complexType>
+
+	<complexType name="InputFilter">
+		<annotation>
+			<documentation>
+				Used to filter XML input documents so they are processed by this mapping. If no input filters are specified then
+				all documents are
+				processed.
+			</documentation>
+		</annotation>
+		<attribute name="fileNameRegex" type="string" use="optional">
+			<annotation>
+				<documentation>
+					Enter a regular expression, which must match the absolutely path name of the XML input file, if it is to be processed.
+				</documentation>
+			</annotation>
+		</attribute>
+
+	</complexType>
+
+	<simpleType name="InlineBehaviour">
+		<restriction base="string">
+			<enumeration value="Warn" />
+			<enumeration value="Error" />
+			<enumeration value="Ignore" />
+		</restriction>
+	</simpleType>
 
 	<simpleType name="InlineStyle" final="restriction">
 		<restriction base="string">

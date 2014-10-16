@@ -32,6 +32,32 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private static final long serialVersionUID = -3781997484476001198L;
 
+	/**
+	 * Retrieve the number of columns that will be rendered within this mapping container.
+	 * <p>
+	 * Recursively called for child mapping lists.
+	 * <p>
+	 * Used to work out how many empty columns are required in a record when no values are present.
+	 *
+	 * @param mappings The list of mappings (typically a {@link MappingList} instance) the count the columns within.
+	 * @return the number of columns found.
+	 */
+	private static int getChildColumnCount(List<IMapping> mappings) {
+		int count = 0;
+		for (IMapping child : mappings) {
+			int childMaxInstanceCount = child.getMaxInstanceCount();
+			if (child instanceof ISingleMapping) {
+				count += childMaxInstanceCount;
+			} else if (child instanceof MappingList) {
+				MappingList childList = (MappingList) child;
+				count += childMaxInstanceCount * getChildColumnCount(childList);
+			} else {
+				throw new IllegalStateException("Unexpected type of IMappingContainer found: " + child.getClass().getName());
+			}
+		}
+		return count;
+	}
+
 	private XPathExecutable mappingRoot;
 
 	private int maxInstanceCount;
@@ -42,9 +68,9 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private String outputName;
 
-	private Processor saxonProcessor;
-
 	private IMappingContainer parent;
+
+	private Processor saxonProcessor;
 
 	/**
 	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map and no parent (top-level mapping).
@@ -153,7 +179,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		if ((instanceCount < maxInstances) && (this.parent != null)) {
 			int columnCount = getChildColumnCount(this);
 			LOG.trace("Adding {} blank iterations of {} columns to make up to {} for {}", maxInstances - instanceCount, columnCount, maxInstances,
-							this.getOutputName());
+							getOutputName());
 			for (int i = instanceCount; i < maxInstances; i++) {
 				List<String> emptyValues = new ArrayList<String>();
 				for (int j = 0; j < columnCount; j++) {
@@ -166,32 +192,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 		LOG.trace("Completed all mappings against documents");
 		return outputLines;
-	}
-
-	/**
-	 * Retrieve the number of columns that will be rendered within this mapping container.
-	 * <p>
-	 * Recursively called for child mapping lists.
-	 * <p>
-	 * Used to work out how many empty columns are required in a record when no values are present.
-	 * 
-	 * @param mappings The list of mappings (typically a {@link MappingList} instance) the count the columns within.
-	 * @return the number of columns found.
-	 */
-	private static int getChildColumnCount(List<IMapping> mappings) {
-		int count = 0;
-		for (IMapping child : mappings) {
-			int childMaxInstanceCount = child.getMaxInstanceCount();
-			if (child instanceof ISingleMapping) {
-				count += childMaxInstanceCount;
-			} else if (child instanceof MappingList) {
-				MappingList childList = (MappingList) child;
-				count += childMaxInstanceCount * getChildColumnCount(childList);
-			} else {
-				throw new IllegalStateException("Unexpected type of IMappingContainer found: " + child.getClass().getName());
-			}
-		}
-		return count;
 	}
 
 	@Override
@@ -242,18 +242,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	/**
-	 * Retrieves the output outputName of this set of mappings.
-	 *
-	 * @return the outputName of this set of mappings. Will never be null or the empty string.
-	 */
-	@Override
-	public String getOutputName() {
-		return this.outputName;
-	}
-
-	/**
 	 * Retrieves an iterator over the results of executing the passed xpath against the rootNode specified.
-	 * 
+	 *
 	 * @param rootNode the root node to execute the mapping on.
 	 * @param xPath the XPath to execute against the root node passed.
 	 * @return an iterator over the results.
@@ -270,14 +260,24 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	/**
+	 * Retrieves the output outputName of this set of mappings.
+	 *
+	 * @return the outputName of this set of mappings. Will never be null or the empty string.
+	 */
+	@Override
+	public String getOutputName() {
+		return this.outputName;
+	}
+
+	/**
 	 * See {@link #put(String, String, InlineFormat)} with a default value of {@link InlineFormat#NO_COUNTS} for the inline format.
-	 * 
+	 *
 	 * @param colName the outputName of the column, must a string of length > 0.
 	 * @param xPathExpression the XPath expression to compile. Must not be null.
 	 * @throws XMLException if any errors occur
 	 */
 	public void put(String colName, String xPathExpression) throws XMLException {
-		put(colName, xPathExpression, InlineFormat.NO_COUNTS);
+		put(colName, xPathExpression, InlineFormat.NO_COUNTS, MultiValueBehaviour.INHERIT);
 	}
 
 	/**
@@ -286,9 +286,10 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @param colName the outputName of the column, must a string of length > 0.
 	 * @param xPathExpression the XPath expression to compile. Must not be null.
 	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public void put(String colName, String xPathExpression, InlineFormat format) throws XMLException {
+	public void put(String colName, String xPathExpression, InlineFormat format, MultiValueBehaviour multiValueBehaviour) throws XMLException {
 		if (StringUtil.isNullOrEmpty(colName)) {
 			throw new ArgumentException("colName", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
@@ -296,7 +297,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 			throw new ArgumentException("xPathExpression", StringUtil.NULL_OR_EMPTY_MESSAGE);
 		}
 		XPathExecutable xPath = createXPathExecutable(xPathExpression);
-		Mapping newMapping = new Mapping(colName, new XPathValue(xPathExpression, xPath), format);
+		Mapping newMapping = new Mapping(colName, new XPathValue(xPathExpression, xPath), format, multiValueBehaviour);
 
 		this.add(newMapping);
 	}
