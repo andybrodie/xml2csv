@@ -112,8 +112,10 @@ public class XmlFileParser implements IConfigParser {
 				String fileUrl = convertToFileURL(f.getAbsolutePath());
 				xmlReader.parse(fileUrl);
 			}
-		} catch (ParserConfigurationException | IOException ex) {
-			throw new XMLException(ex, "XML parser failed while parsing input configuration file.");
+		} catch (ParserConfigurationException pce) {
+			throw new XMLException(pce, "XML parser failed while parsing input configuration file.");
+		} catch (IOException ioe) {
+			throw new XMLException(ioe, "XML parser failed while parsing input configuration file.");
 		} catch (SAXException se) {
 			if (se.getCause() instanceof XMLException) {
 				throw (XMLException) se.getCause();

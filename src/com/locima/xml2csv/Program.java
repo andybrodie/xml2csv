@@ -71,7 +71,7 @@ public class Program {
 
 		// Create headers for all the output files
 		IOutputManager outputMgr = new OutputManager();
-		outputMgr.setDirectory(outputDirectory);
+		outputMgr.setOutputDirectory(outputDirectory);
 		try {
 			outputMgr.createFiles(mappingConfig.getMappingsHeaders());
 

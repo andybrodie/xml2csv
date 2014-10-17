@@ -37,7 +37,7 @@ public interface IOutputManager {
 	 * @param outputDirectory the output directory. Must exist and be writeable.
 	 * @throws OutputManagerException If the directory does not exist.
 	 */
-	void setDirectory(File outputDirectory) throws OutputManagerException;
+	void setOutputDirectory(File outputDirectory) throws OutputManagerException;
 
 	/**
 	 * Writes a set of values out to the specified writer.

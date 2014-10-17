@@ -156,7 +156,7 @@ public class OutputManager implements IOutputManager {
 			throw new OutputManagerException(fileNotFoundException, "Unable to create output file %s", writerFile.getAbsolutePath());
 		} catch (UnsupportedEncodingException uee) {
 			// This should never happen as we're hard-coding a known supported encoding in Java
-			throw new AssertionError("Unexpected unsupported encoding exception: " + encoding, uee);
+			throw new IllegalStateException("Unexpected unsupported encoding exception: " + encoding, uee);
 		}
 		this.createdFiles = true;
 		LOG.info("Successfully created {} writers in {}", outputConfiguration.size(), this.outputDirectory.getAbsolutePath());
@@ -172,7 +172,7 @@ public class OutputManager implements IOutputManager {
 	@Override
 	public void setDirectory(String outputDirectoryName) throws OutputManagerException {
 		File dir = new File(outputDirectoryName);
-		this.setDirectory(dir);
+		this.setOutputDirectory(dir);
 	}
 
 	/**
@@ -182,14 +182,14 @@ public class OutputManager implements IOutputManager {
 	 * @throws OutputManagerException If the directory does not exist
 	 */
 	@Override
-	public void setDirectory(File outputDirectory) throws OutputManagerException {
+	public void setOutputDirectory(File outputDirectory) throws OutputManagerException {
+		this.outputDirectory = outputDirectory;
 		if (!outputDirectory.isDirectory()) {
 			throw new OutputManagerException("Output directory specified is not a directory: %1$s", outputDirectory.getAbsolutePath());
 		}
 		if (!outputDirectory.canWrite()) {
 			throw new OutputManagerException("Output directory is not writeable: %1$s", outputDirectory.getAbsolutePath());
 		}
-		this.outputDirectory = outputDirectory;
 		LOG.info("Configured output directory as {}", this.outputDirectory.getAbsolutePath());
 	}
 

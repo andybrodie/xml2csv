@@ -1,20 +1,12 @@
 package com.locima.xml2csv;
 
 import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
-import static com.locima.xml2csv.TestHelpers.loadMappingConfiguration;
 import static com.locima.xml2csv.TestHelpers.processFiles;
 
 import java.io.File;
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.locima.xml2csv.extractor.XmlDataExtractor;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.output.OutputManager;
 
 public class EndToEndTests {
 

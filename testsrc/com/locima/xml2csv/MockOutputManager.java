@@ -60,7 +60,7 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
-	public void setDirectory(File outputDirectory) throws OutputManagerException {
+	public void setOutputDirectory(File outputDirectory) throws OutputManagerException {
 		// TODO Auto-generated method stub
 		
 	}
