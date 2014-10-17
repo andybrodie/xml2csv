@@ -4,17 +4,12 @@ Licensed under the Microsoft Public License (http://www.microsoft.com/en-us/open
 
 This product includes the following third party software:
 
-Apache Log4j 2.0 (https://logging.apache.org/log4j/1.2/license.html)
-	Licensed under the Apache Software License v2.0 (http://logging.apache.org/log4j/2.x/license.html)	
-
 Apache Commons CLI (http://commons.apache.org/proper/commons-cli/)
 	Licensed under the Apache License Version 2.0 (http://www.apache.org/licenses/)
 
-Saxon 9 HE (http://saxon.sourceforge.net/)
-	Licensed under Mozilla Public License 1.0 (https://www.mozilla.org/MPL/1.0/)
-	
-SLF4J (http://slf4j.org/)
-	Licensed under the MIT licence (http://slf4j.org/license.html) 
+Apache Xerces 11.2 (http://xerces.apache.org/)
+	Licensed under Apache License Version 2.0 (http://xerces.apache.org/xml-commons/licenses.html)Logback (http://logback.qos.ch/)
+	Licensed under the Eclipse Public License (http://logback.qos.ch/license.html) 
 
 Jar-in-Jar-Loader (http://www.eclipse.org)
 	Licensed under the Eclipse Public License 1.0 (http://www.eclipse.org/org/documents/epl-v10.php)
@@ -22,5 +17,8 @@ Jar-in-Jar-Loader (http://www.eclipse.org)
 Junit 4.0 (http://junit.org/) 
 	Licensed under Eclipse Public License Version 1.0 (http://junit.org/license.html)
 	
-Xerces 11.2 (http://xerces.apache.org/)
-	Licensed under Apache License Version 2.0 (http://xerces.apache.org/xml-commons/licenses.html)
+Saxon 9 HE (http://saxon.sourceforge.net/)
+	Licensed under Mozilla Public License 1.0 (https://www.mozilla.org/MPL/1.0/)
+	
+SLF4J (http://slf4j.org/)
+	Licensed under the MIT licence (http://slf4j.org/license.html)
