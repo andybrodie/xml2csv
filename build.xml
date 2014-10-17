@@ -101,29 +101,27 @@
 			<report format="frames" todir="${junit.output.dir}" />
 		</junitreport>
 	</target>
-    <target name="create-runnable-jar" description="Create Runnable Jar for Project xml2csv with Eclipse Jar-in-Jar Loader">
-        <jar destfile="C:/Users/Andy/Projects/xml2csv/xml2csv.jar">
-            <manifest>
-                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
-                <attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.Program"/>
-                <attribute name="Class-Path" value="."/>
-                <attribute name="Rsrc-Class-Path" value="./ junit.jar org.hamcrest.core_1.3.0.v201303031735.jar commons-cli-1.2.jar hamcrest-core-1.3.jar junit-4.11.jar log4j-core-2.0.2.jar Saxon-HE-9.5.1-6.jar xercesImpl-2.11.0.jar log4j-1.2.17.jar slf4j-log4j12-1.7.7.jar xml-apis-1.4.01.jar slf4j-api-1.7.7.jar"/>
-            </manifest>
-            <zipfileset src="jar-in-jar-loader.zip"/>
-            <fileset dir="C:/Users/Andy/Projects/xml2csv/bin"/>
-            <zipfileset dir="C:\Apps\eclipse\plugins\org.junit_4.11.0.v201303080030" includes="junit.jar"/>
-            <zipfileset dir="C:\Apps\eclipse\plugins" includes="org.hamcrest.core_1.3.0.v201303031735.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="commons-cli-1.2.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="hamcrest-core-1.3.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="junit-4.11.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="log4j-core-2.0.2.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="Saxon-HE-9.5.1-6.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="xercesImpl-2.11.0.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="log4j-1.2.17.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="slf4j-log4j12-1.7.7.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="xml-apis-1.4.01.jar"/>
-            <zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="slf4j-api-1.7.7.jar"/>
-        </jar>
-    </target>
+	<target name="create-runnable-jar" description="Create Runnable Jar for Project xml2csv with Eclipse Jar-in-Jar Loader">
+		<delete file="xml2csv.jar" />
+		<jar destfile="C:/Users/Andy/Projects/xml2csv/xml2csv.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
+				<attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.Program" />
+				<attribute name="Class-Path" value="." />
+				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar hamcrest-core-1.3.jar junit-4.11.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar"/>
+			</manifest>
+			<zipfileset src="jar-in-jar-loader.zip" />
+			<fileset dir="C:/Users/Andy/Projects/xml2csv/bin" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="commons-cli-1.2.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="hamcrest-core-1.3.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="junit-4.11.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="logback-classic-1.1.2.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="logback-core-1.1.2.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="Saxon-HE-9.5.1-6.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="slf4j-api-1.7.6.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="xercesImpl-2.11.0.jar" />
+			<zipfileset dir="C:\Users\Andy\Projects\xml2csv\lib" includes="xml-apis-1.4.01.jar" />
+		</jar>
+	</target>
 
 </project>

@@ -145,7 +145,7 @@ public class Program {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp(new PrintWriter(System.out, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
 			}
-			LOG.trace("Arguments verified ok");
+			LOG.trace("Arguments verified.");
 			String trimWhitespaceValue = cmdLine.getOptionValue(OPT_TRIM_WHITESPACE);
 			boolean trimWhitespace = Boolean.parseBoolean(trimWhitespaceValue);
 			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR), trimWhitespace);
