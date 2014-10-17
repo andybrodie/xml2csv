@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="xml2csv" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property environment="env" />
 	<path id="ivy.lib.path">
-		<fileset dir="d:\BRODIA1\apps\apache-ivy-2.4.0-rc1" includes="ivy-2.4.0-rc1.jar" />
+		<fileset dir="${env.IVY_HOME}" includes="ivy-2.4.0-rc1.jar" />
 	</path>
 	<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
-	<property environment="env" />
 	<property name="junit.output.dir" value="junit" />
 	<property name="debuglevel" value="source,lines,vars" />
 	<property name="target" value="1.7" />
