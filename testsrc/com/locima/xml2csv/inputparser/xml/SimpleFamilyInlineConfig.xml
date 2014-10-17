@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<m:MappingConfiguration inputSchema="http://www.example.com/xml2csv/family"
+<m:MappingConfiguration
 	xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<m:MappingList mappingRoot="/family" name="Family">
