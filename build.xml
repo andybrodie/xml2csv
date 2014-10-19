@@ -94,14 +94,33 @@
 			<report format="frames" todir="${junit.output.dir}" />
 		</junitreport>
 	</target>
-	<target name="create-runnable-jar" description="Create Runnable Jar for Project xml2csv with Eclipse Jar-in-Jar Loader">
-		<delete file="xml2csv.jar" />
-		<jar destfile="xml2csv.jar">
+	<target name="build-jar" description="Create runnable jar which requires external dependencies">
+		<!-- convert classpath to a flat list/string for use in manifest task -->
+		<pathconvert property="mf.classpath" pathsep=" ">
+			<path refid="xml2csv.execute.classpath" />
+			<mapper>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*" to="lib/*" />
+				</chainedmapper>
+			</mapper>
+		</pathconvert>
+		<tstamp />
+		<jar destfile="xml2csv.jar" manifest="bin/META-INF/MANIFEST.MF">
+			<manifest>
+				<attribute name="Class-Path" value="${mf.classpath}" />
+			</manifest>
+			<fileset dir="bin" />
+		</jar>
+	</target>
+	<target name="build-standalone-jar" description="Create standalone runnable jar">
+		<delete file="xml2csv-standalone.jar" />
+		<jar destfile="xml2csv-standalone.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
 				<attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.Program" />
 				<attribute name="Class-Path" value="." />
-				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar hamcrest-core-1.3.jar junit-4.11.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar"/>
+				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar hamcrest-core-1.3.jar junit-4.11.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar" />
 			</manifest>
 			<zipfileset src="jar-in-jar-loader.zip" />
 			<fileset dir="bin" />
