@@ -106,7 +106,7 @@ public class Mapping implements ISingleMapping {
 
 	/**
 	 * Retrieves the column name that this mapping will render.
-	 * 
+	 *
 	 * @return the base name of the column.
 	 */
 	@Override
