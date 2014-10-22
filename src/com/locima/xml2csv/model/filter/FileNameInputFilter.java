@@ -1,4 +1,4 @@
-package com.locima.xml2csv.model;
+package com.locima.xml2csv.model.filter;
 
 import java.io.File;
 import java.util.regex.Pattern;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Performs no matching based on the XML content.
  */
-public class FileNameInputFilter extends IdentityFilter {
+public class FileNameInputFilter extends FilterContainer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FileNameInputFilter.class);
 	private Pattern pattern;
@@ -23,7 +23,9 @@ public class FileNameInputFilter extends IdentityFilter {
 	 * @param regex the regular expression that will be used to match. Must not be null.
 	 * @throws PatternSyntaxException if the regular expression passed by <code>regex</code> is invalid.
 	 */
+	//CHECKSTYLE:OFF I don't care if PatternSyntaxException is a runtime exception, it's pertinent!
 	public FileNameInputFilter(String regex) throws PatternSyntaxException {
+	//CHECKSTYLE:ON
 		this.pattern = Pattern.compile(regex);
 	}
 

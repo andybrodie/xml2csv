@@ -17,7 +17,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.SaxonProcessorManager;
+import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.IOutputManager;
@@ -97,7 +97,7 @@ public class XmlDataExtractor {
 	 * Initialise the internal Saxon Processor.
 	 */
 	public XmlDataExtractor() {
-		this.saxonProcessor = SaxonProcessorManager.getProcessor();
+		this.saxonProcessor = XmlUtil.getProcessor();
 	}
 
 	/**
@@ -144,7 +144,7 @@ public class XmlDataExtractor {
 			}
 		}
 	}
-	
+
 	/**
 	 * Configure this extractor with the set of mappingConfiguration specified.
 	 *

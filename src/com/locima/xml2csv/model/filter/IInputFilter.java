@@ -1,4 +1,4 @@
-package com.locima.xml2csv.model;
+package com.locima.xml2csv.model.filter;
 
 import java.io.File;
 

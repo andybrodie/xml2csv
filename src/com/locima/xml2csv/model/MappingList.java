@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.SaxonProcessorManager;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
@@ -70,8 +68,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private IMappingContainer parent;
 
-	private Processor saxonProcessor;
-
 	/**
 	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map and no parent (top-level mapping).
 	 */
@@ -87,7 +83,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @param namespaceMap a (possibly empty, but must not be null) map of prefix to URI mappings.
 	 */
 	public MappingList(IMappingContainer parent, Map<String, String> namespaceMap) {
-		this.saxonProcessor = SaxonProcessorManager.getProcessor();
 		this.parent = parent;
 		this.namespaceMappings = namespaceMap;
 	}

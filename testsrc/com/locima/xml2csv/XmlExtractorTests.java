@@ -63,7 +63,7 @@ public class XmlExtractorTests {
 
 	@Before
 	public void setUp() throws Exception {
-		this.saxonProcessor = SaxonProcessorManager.getProcessor();
+		this.saxonProcessor = XmlUtil.getProcessor();
 	}
 
 	@After
@@ -250,7 +250,7 @@ public class XmlExtractorTests {
 		LOG.info(getJaxpImplementationInfo("DocumentBuilderFactory", DocumentBuilderFactory.newInstance().getClass()));
 		LOG.info(getJaxpImplementationInfo("XPathFactory", xPathFactory.getClass()));
 
-		Processor processor = SaxonProcessorManager.getProcessor();
+		Processor processor = XmlUtil.getProcessor();
 		XPathCompiler xPathCompiler = processor.newXPathCompiler();
 		xPathCompiler.declareNamespace("", "http://example.com/a");
 		xPathCompiler.declareNamespace("b", "http://example.com/b");

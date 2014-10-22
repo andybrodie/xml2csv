@@ -1,7 +1,5 @@
 package com.locima.xml2csv.inputparser.xml;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 import java.util.regex.PatternSyntaxException;
 
@@ -14,25 +12,25 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
-import com.locima.xml2csv.model.FileNameInputFilter;
-import com.locima.xml2csv.model.IInputFilter;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.InlineFormat;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.MappingList;
 import com.locima.xml2csv.model.MultiValueBehaviour;
-import com.locima.xml2csv.model.XPathInputFilter;
+import com.locima.xml2csv.model.filter.FileNameInputFilter;
+import com.locima.xml2csv.model.filter.IInputFilter;
+import com.locima.xml2csv.model.filter.XPathInputFilter;
 
 /**
  * The SAX Content Handler for input XML files.
  */
 public class ConfigContentHandler extends DefaultHandler {
 
-	private static final String INPUTFILTER_NAME = "InputFilter";
-
+	private static final String FILENAME_INPUTFILTER_NAME = "FileNameInputFilter";
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 
 	private static final String MAPPING_CONFIGURATION_NAME = "MappingConfiguration";
@@ -42,12 +40,31 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String MAPPING_NAME = "Mapping";
 
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
+
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
+	private static final String XPATH_INPUTFILTER_NAME = "XPathInputFilter";
 
 	private Locator documentLocator;
 	private Stack<IInputFilter> inputFilterStack;
 	private MappingConfiguration mappingConfiguration;
 	private Stack<MappingList> mappingListStack;
+
+	/**
+	 * Adds a filter to either the mapping configuration (if a top level filter) or the current parent filter (from {@link #inputFilterStack}.
+	 *
+	 * @param filter the filter to add, must not be null.
+	 */
+	private void addFilter(IInputFilter filter) {
+		if (filter == null) {
+			throw new ArgumentNullException("filter");
+		}
+		if (this.inputFilterStack.isEmpty()) {
+			this.mappingConfiguration.addInputFilter(filter);
+		} else {
+			this.inputFilterStack.peek().addNestedFilter(filter);
+		}
+		this.inputFilterStack.push(filter);
+	}
 
 	/**
 	 * Adds a column mapping to the current MappingList instance being defined.
@@ -97,7 +114,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (MAPPING_NAMESPACE.equals(uri)) {
 			if (MAPPING_LIST_NAME.equals(localName)) {
 				endMappingList();
-			} else if (INPUTFILTER_NAME.equals(localName)) {
+			} else if (FILENAME_INPUTFILTER_NAME.equals(localName)) {
 				endInputFilter();
 			}
 		}
@@ -107,7 +124,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * Closes off this input filter definition by popping the {@link #inputFilterStack}.
 	 */
 	private void endInputFilter() {
-		IInputFilter current = this.inputFilterStack.pop();
+		this.inputFilterStack.pop();
 	}
 
 	/**
@@ -121,6 +138,16 @@ public class ConfigContentHandler extends DefaultHandler {
 			this.mappingConfiguration.addMappings(current);
 		}
 	}
+
+	// /**
+	// * Returns the string value specified for an XSD boolean type as a Java boolean.
+	// *
+	// * @param value the value found in an XML attribute.
+	// * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
+	// */
+	// private boolean getBoolean(String value) {
+	// return ("true".equals(value) || "1".equals(value));
+	// }
 
 	/**
 	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
@@ -138,16 +165,6 @@ public class ConfigContentHandler extends DefaultHandler {
 		SAXException se = new SAXException(de);
 		return se;
 	}
-
-	// /**
-	// * Returns the string value specified for an XSD boolean type as a Java boolean.
-	// *
-	// * @param value the value found in an XML attribute.
-	// * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
-	// */
-	// private boolean getBoolean(String value) {
-	// return ("true".equals(value) || "1".equals(value));
-	// }
 
 	/**
 	 * Parse the inline style name or specified format in to an {@link InlineFormat} instance.
@@ -243,8 +260,10 @@ public class ConfigContentHandler extends DefaultHandler {
 								atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 			} else if (MAPPING_LIST_NAME.equals(localName)) {
 				startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
-			} else if (INPUTFILTER_NAME.equals(localName)) {
-				startFilter(atts.getValue("xPath"), atts.getValue("fileNameRegex"));
+			} else if (FILENAME_INPUTFILTER_NAME.equals(localName)) {
+				startFileNameFilter(atts.getValue("fileNameRegex"));
+			} else if (XPATH_INPUTFILTER_NAME.equals(localName)) {
+				startXPathFilter(atts.getValue("xPath"));
 			} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_CONFIGURATION_NAME.equals(localName)) {
 				startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 			} else {
@@ -258,32 +277,15 @@ public class ConfigContentHandler extends DefaultHandler {
 	/**
 	 * Adds filters to the mapping configuration.
 	 *
-	 * @param xPath an XPath value to match within the document. May be null.
 	 * @param fileNameRegex a regular expression to match against the filename. May be null.
 	 * @throws SAXException If any errors occur whilst adding the filters.
 	 */
-	private void startFilter(String xPath, String fileNameRegex) throws SAXException {
-		List<IInputFilter> filters = new ArrayList<IInputFilter>();
-		if (!StringUtil.isNullOrEmpty(xPath)) {
-			try {
-				filters.add(new XPathInputFilter(this.mappingConfiguration.getNamespaceMap(), xPath));
-			} catch (XMLException e) {
-				throw getException(e, "Unable to parse XPath {} specified for input filter.");
-			}
-		}
-		
-		THIS IS WRONG.  WRONG WRONG WRONG.  NEED TO CREATE TWO SEPARATE ELEMENTS FOR DIFFERENT FILTER TYPES.
-		
-		if (StringUtil.isNullOrEmpty(fileNameRegex)) {
-			try {
-				filters.add(new FileNameInputFilter(fileNameRegex));
-			} catch (PatternSyntaxException pse) {
-				throw getException(pse, "Invalid Regular Expression {} specified for input filter.", fileNameRegex);
-			}
-		}
-		IFilterContainer container = this.inputFilterStack.isEmpty() ? this.mappingConfiguration : this.inputFilterStack.peek();
-		for (IInputFilter filter : filters) {
-			container.addFilter(filter);
+	private void startFileNameFilter(String fileNameRegex) throws SAXException {
+		try {
+			IInputFilter filter = new FileNameInputFilter(fileNameRegex);
+			addFilter(filter);
+		} catch (PatternSyntaxException pse) {
+			throw getException(pse, "Invalid Regular Expression {} specified for input filter.", fileNameRegex);
 		}
 	}
 
@@ -334,6 +336,21 @@ public class ConfigContentHandler extends DefaultHandler {
 			this.mappingConfiguration.addNamespaceMapping(finalPrefix, uri);
 		} catch (FileParserException fpe) {
 			throw getException(fpe, "Duplicate namespace mapping found in configuration");
+		}
+	}
+
+	/**
+	 * Adds filters to the mapping configuration.
+	 *
+	 * @param xPath an XPath value to match within the document. May be null.
+	 * @throws SAXException If any errors occur whilst adding the filters.
+	 */
+	private void startXPathFilter(String xPath) throws SAXException {
+		try {
+			IInputFilter filter = new XPathInputFilter(this.mappingConfiguration.getNamespaceMap(), xPath);
+			addFilter(filter);
+		} catch (XMLException e) {
+			throw getException(e, "Unable to parse XPath {} specified for input filter.");
 		}
 	}
 

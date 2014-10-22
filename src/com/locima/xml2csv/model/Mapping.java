@@ -36,14 +36,14 @@ public class Mapping implements ISingleMapping {
 	private int minimumInstanceCount = 1;
 
 	/**
-	 * The XPath expression that is executed against an XML element to find a mapped value.
-	 */
-	private XPathValue xPathExpr;
-
-	/**
 	 * The overridden inline behaviour (when multiple values for fields are found) for this mapping.
 	 */
 	private MultiValueBehaviour multiValueBehaviour;
+
+	/**
+	 * The XPath expression that is executed against an XML element to find a mapped value.
+	 */
+	private XPathValue xPathExpr;
 
 	/**
 	 * Constructs a new instance.
@@ -88,10 +88,10 @@ public class Mapping implements ISingleMapping {
 		int instanceCount = values.size();
 
 		// Add any blanks where maxInstanceCount is more than valuesSize
-		int maxInstances = this.getMaxInstanceCount();
+		int maxInstances = getMaxInstanceCount();
 		if (instanceCount < maxInstances) {
 			LOG.trace("Adding {} blank fields to make up to {} in mapping {}", this.maxInstanceCount - instanceCount, this.maxInstanceCount,
-							this.getColumnName());
+							getColumnName());
 			for (int i = instanceCount; i < maxInstances; i++) {
 				values.add(StringUtil.EMPTY_STRING);
 			}
@@ -106,10 +106,23 @@ public class Mapping implements ISingleMapping {
 
 	/**
 	 * Retrieves the column name that this mapping will render.
-	 * @return the base name of the column. 
+	 * 
+	 * @return the base name of the column.
 	 */
+	@Override
 	public String getColumnName() {
 		return this.columnName;
+	}
+
+	@Override
+	public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
+		String mappingName = getColumnName();
+		int count = getMaxInstanceCount();
+		InlineFormat format = getInlineFormat();
+		for (int mappingIterationCount = 0; mappingIterationCount < count; mappingIterationCount++) {
+			columnNames.add(format.format(mappingName, mappingIterationCount, parentName, parentCount));
+		}
+		return count;
 	}
 
 	@Override
@@ -128,17 +141,6 @@ public class Mapping implements ISingleMapping {
 		sb.append(this.columnName);
 		sb.append(")");
 		return sb.toString();
-	}
-
-	@Override
-	public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
-		String mappingName = this.getColumnName();
-		int count = this.getMaxInstanceCount();
-		InlineFormat format = this.getInlineFormat();
-		for (int mappingIterationCount = 0; mappingIterationCount < count; mappingIterationCount++) {
-			columnNames.add(format.format(mappingName, mappingIterationCount, parentName, parentCount));
-		}
-		return count;
 	}
 
 }
