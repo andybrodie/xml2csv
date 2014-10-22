@@ -123,14 +123,14 @@ public class FileUtility {
 	 * @param filter A filter that all files must match if they are to be included. If null, no filtering is applied.
 	 * @return A (possibly empty) list of files.
 	 */
-	public static List<File> getFilesInDirectory(File directory, IFileFilter filter) {
+	public static List<File> getFilesInDirectory(File directory, Object filter) {
 		LOG.debug("Retrieving all files in {}", directory.getAbsolutePath());
 		List<File> files = new ArrayList<File>();
 
 		File[] listOfFiles = directory.listFiles();
 		for (File file : listOfFiles) {
 			if (file.isFile()) {
-				if (filter == null || filter.include(file)) {
+				if (filter == null) {
 					LOG.trace("Adding {} to list.  Total size is now {}", file.getName(), files.size());
 					files.add(file);
 				} else {
