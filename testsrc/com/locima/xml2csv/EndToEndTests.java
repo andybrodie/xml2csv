@@ -13,33 +13,39 @@ public class EndToEndTests {
 	@Test
 	public void testEndToEnd() throws Exception {
 		TemporaryFolder outputFolder =
-						processFiles("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfig.xml",
-										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml",
-										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml");
-		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput1.csv"),
-						new File(outputFolder.getRoot(), "family.csv"));
-		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput2.csv"),
-						new File(outputFolder.getRoot(), "people.csv"));
+						processFiles("SimpleFamilyConfig.xml",
+										"SimpleFamily1.xml",
+										"SimpleFamily2.xml");
+		assertCsvEquals("SimpleFamilyOutput1.csv",
+						outputFolder.getRoot(), "family.csv");
+		assertCsvEquals("SimpleFamilyOutput2.csv",
+						outputFolder.getRoot(), "people.csv");
 
 	}
 
 	@Test
 	public void testEndToEndWithInline() throws Exception {
 		TemporaryFolder outputFolder =
-						processFiles("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineConfig.xml",
-										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml",
-										"testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml");
+						processFiles("SimpleFamilyInlineConfig.xml",
+										"SimpleFamily1.xml",
+										"SimpleFamily2.xml");
 
-		assertCsvEquals("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyInlineOutput.csv", outputFolder.getRoot(), "family.csv");
+		assertCsvEquals("SimpleFamilyInlineOutput.csv", outputFolder.getRoot(), "family.csv");
 	}
 
 	@Test
 	public void testNamespaces() throws Exception {
 		TemporaryFolder outputFolder =
-						processFiles("testsrc/com/locima/xml2csv/inputparser/xml/FamilyConfigWithNamespaces.xml",
-										"testsrc/com/locima/xml2csv/inputparser/xml/FamilyWithNamespaces.xml");
-		assertCsvEquals("testsrc/com/locima/xml2csv/inputparser/xml/FamilyWithNamespaces.csv", outputFolder.getRoot(), "FamilyWithNamespaces.csv");
-		assertCsvEquals("testsrc/com/locima/xml2csv/inputparser/xml/FamilyMembersWithNamespaces.csv", outputFolder.getRoot(),
+						processFiles("FamilyConfigWithNamespaces.xml",
+										"FamilyWithNamespaces.xml");
+		assertCsvEquals("FamilyWithNamespaces.csv", outputFolder.getRoot(), "FamilyWithNamespaces.csv");
+		assertCsvEquals("FamilyMembersWithNamespaces.csv", outputFolder.getRoot(),
 						"FamilyMembersWithNamespaces.csv");
+	}
+
+	@Test
+	public void testPeople() throws Exception {
+		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
+		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
 	}
 }

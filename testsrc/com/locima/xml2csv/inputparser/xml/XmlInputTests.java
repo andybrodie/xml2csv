@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
@@ -34,12 +35,12 @@ public class XmlInputTests {
 	@After
 	public void tearDown() throws Exception {
 	}
-
+	
 	@Test
 	public void test() throws Exception {
 		XmlFileParser parser = new XmlFileParser();
 		List<File> files = new ArrayList<File>();
-		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfig.xml"));
+		files.add(TestHelpers.createFile("SimpleFamilyConfig.xml"));
 		parser.load(files);
 		MappingConfiguration set = parser.getMappings();
 		assertNotNull("MappingSet was null, should be non-null", set);
@@ -53,7 +54,7 @@ public class XmlInputTests {
 	public void testBadInline() throws Exception {
 		XmlFileParser parser = new XmlFileParser();
 		List<File> files = new ArrayList<File>();
-		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfigBadInline.xml"));
+		files.add(TestHelpers.createFile("SimpleFamilyConfigBadInline.xml"));
 		this.thrown.expect(XMLException.class);
 		parser.load(files);
 	}
@@ -62,7 +63,7 @@ public class XmlInputTests {
 	public void testNamespaces() throws Exception {
 		XmlFileParser parser = new XmlFileParser();
 		List<File> files = new ArrayList<File>();
-		files.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/FamilyConfigWithNamespaces.xml"));
+		files.add(TestHelpers.createFile("FamilyConfigWithNamespaces.xml"));
 		parser.load(files);
 		MappingConfiguration set = parser.getMappings();
 		assertNotNull("MappingSet was null, should be non-null", set);

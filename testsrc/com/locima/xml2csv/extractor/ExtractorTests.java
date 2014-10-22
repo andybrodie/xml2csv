@@ -11,6 +11,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.model.MappingConfiguration;
@@ -24,10 +25,10 @@ public class ExtractorTests {
 	@Test
 	public void testInstanceCounts() throws Exception {
 		TemporaryFolder outputFolder =
-						testInstanceCounts("testsrc/com/locima/xml2csv/extractor/HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 },
-										"testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
+						testInstanceCounts("HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 },
+										"HeavilyNestedInstance.xml");
 
-		assertCsvEquals(new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(),
+		assertCsvEquals(TestHelpers.createFile("HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(),
 						"HeavilyNestedInstance.csv"));
 	}
 
@@ -42,7 +43,7 @@ public class ExtractorTests {
 		extractor.setTrimWhitespace(true);
 		extractor.setMappingConfiguration(config);
 
-		File inputFile = new File("testsrc/com/locima/xml2csv/extractor/HeavilyNestedInstance.xml");
+		File inputFile = TestHelpers.createFile("HeavilyNestedInstance.xml");
 
 		extractor.convert(inputFile, null);
 

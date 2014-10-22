@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<family>
+	<address>10 Church Road</address>
+	<name>Smith</name>
+	<person age="32">
+		<name>
+			Robert
+		</name>
+	</person>
+	<person age="34">
+		<name>
+			John
+		</name>
+	</person>
+	<person age="2">
+		<name>Charlotte</name>
+	</person>
+	<ignoredperson age="3">
+		<name>Ignored as parent is not mapped</name>
+		<person age="999">
+			<name>Also ignored as ancestor is not mapped.</name>
+		</person>
+	</ignoredperson>
+</family>

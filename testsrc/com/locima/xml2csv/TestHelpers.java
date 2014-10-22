@@ -30,6 +30,8 @@ import com.locima.xml2csv.output.OutputManagerException;
 public class TestHelpers {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TestHelpers.class);
+	
+	public static final String RES_DIR = "testdata";
 
 	public static void assertCsvEquals(File expectedFile, File actualFile) throws Exception {
 		String[] expected = loadFile(expectedFile);
@@ -45,11 +47,11 @@ public class TestHelpers {
 	}
 
 	public static void assertCsvEquals(String expectedFileName, File actualRootDirectory, String actualFileName) throws Exception {
-		assertCsvEquals(new File(expectedFileName), new File(actualRootDirectory, actualFileName));
+		assertCsvEquals(new File(RES_DIR, expectedFileName), new File(actualRootDirectory, actualFileName));
 	}
 
 	public static void assertCsvEquals(String expectedFileName, String actualFileName) throws Exception {
-		assertCsvEquals(new File(expectedFileName), new File(actualFileName));
+		assertCsvEquals(new File(RES_DIR,expectedFileName), new File(actualFileName));
 	}
 
 	public static void assertMappingInstanceCountsCorrect(MappingConfiguration config, int... instanceCounts) {
@@ -100,13 +102,13 @@ public class TestHelpers {
 	public static MappingConfiguration loadMappingConfiguration(String configurationFile) throws XMLException, FileParserException, IOException {
 		XmlFileParser parser = new XmlFileParser();
 		List<File> files = new ArrayList<File>();
-		files.add(new File(configurationFile));
+		files.add(new File(RES_DIR, configurationFile));
 		parser.load(files);
 		MappingConfiguration mappingConfig = parser.getMappings();
 		return mappingConfig;
 	}
 
-	public static TemporaryFolder processFiles(String configurationFile, String... inputFiles) throws XMLException, DataExtractorException,
+	public static TemporaryFolder processFiles(String configurationFile, String... inputFileNames) throws XMLException, DataExtractorException,
 					OutputManagerException, FileParserException, IOException {
 		MappingConfiguration set = loadMappingConfiguration(configurationFile);
 
@@ -121,13 +123,16 @@ public class TestHelpers {
 		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
 		om.createFiles(set.getMappingsHeaders());
 
-		for (String filename : inputFiles) {
-			File file = new File(filename);
+		List<File> inputFiles = new ArrayList<File>();
+		for (String fileName : inputFileNames) {
+			inputFiles.add(new File(RES_DIR, fileName));
+		}
+		
+		for (File file : inputFiles) {
 			extractor.convert(file, om);
 		}
 		om.createFiles(set.getMappingsHeaders());
-		for (String filename : inputFiles) {
-			File file = new File(filename);
+		for (File file : inputFiles) {
 			extractor.convert(file, om);
 		}
 
@@ -159,6 +164,10 @@ public class TestHelpers {
 			buf = buf.delete(buf.length() - 2, buf.length());
 		}
 		return buf.toString();
+	}
+
+	public static File createFile(String relativeFilename) {
+		return new File(RES_DIR, relativeFilename);
 	}
 
 }

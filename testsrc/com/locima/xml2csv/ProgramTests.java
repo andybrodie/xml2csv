@@ -28,21 +28,21 @@ public class ProgramTests {
 	public void test() throws Exception {
 		Program p = new Program();
 		List<File> configFiles = new ArrayList<File>();
-		configFiles.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyConfig.xml"));
+		configFiles.add(TestHelpers.createFile("SimpleFamilyConfig.xml"));
 
 		List<File> inputFiles = new ArrayList<File>();
-		inputFiles.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily1.xml"));
-		inputFiles.add(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamily2.xml"));
+		inputFiles.add(TestHelpers.createFile("SimpleFamily1.xml"));
+		inputFiles.add(TestHelpers.createFile("SimpleFamily2.xml"));
 
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
 		p.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), true);
 		
-		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput1.csv"),
-						new File(outputFolder.getRoot(), "family.csv"));
-		assertCsvEquals(new File("testsrc/com/locima/xml2csv/inputparser/xml/SimpleFamilyOutput2.csv"),
-						new File(outputFolder.getRoot(), "people.csv"));
+		assertCsvEquals("SimpleFamilyOutput1.csv",
+						outputFolder.getRoot(), "family.csv");
+		assertCsvEquals("SimpleFamilyOutput2.csv",
+						outputFolder.getRoot(), "people.csv");
 	}
 
 }

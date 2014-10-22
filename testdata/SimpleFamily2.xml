@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<family>
+	<address>54 Main Avenue</address>
+	<name>Jones</name>
+	<person age="39">
+		<name>Emma</name>
+	</person>
+	<person age="16">
+		<name>Lucas</name>
+	</person>
+	<person age="13">
+		<name>Jenny</name>
+	</person>
+	<person age="11">
+		<name>Mog</name>
+	</person>
+	<person age="9">
+		<name>Stefan</name>
+	</person>
+</family>
