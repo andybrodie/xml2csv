@@ -38,7 +38,7 @@ public class Program {
 	public static final String OPT_OUT_DIR = "o";
 	public static final String OPT_CONFIG_FILE = "c";
 	public static final String OPT_TRIM_WHITESPACE = "w";
-	public static final String OPT_XML_DIR = "x";
+	public static final String OPT_XML_DIR = "i";
 	public static final int VERSION_MAJOR = 0;
 	public static final int VERSION_MINOR = 1;
 	private static final String HEADER = String.format("xml2csv v%d.%d converts XML files in to CSV files according to a set of specified rules.",
@@ -171,7 +171,7 @@ public class Program {
 		Option option = new Option(OPT_CONFIG_FILE, "configFile", true, "A single file containing the configuration to use.");
 		option.setRequired(true);
 		options.addOption(option);
-		option = new Option(OPT_XML_DIR, "xmlDir", true, "The directory containing the XML files from which data will be extracted.");
+		option = new Option(OPT_XML_DIR, "inputDir", true, "The directory containing the XML files from which data will be extracted.");
 		option.setRequired(true);
 		options.addOption(option);
 		option =

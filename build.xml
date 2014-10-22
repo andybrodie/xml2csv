@@ -94,7 +94,7 @@
 			<report format="frames" todir="${junit.output.dir}" />
 		</junitreport>
 	</target>
-	<target name="build-jar" description="Create runnable jar which requires external dependencies">
+	<target name="build-jar" description="Create runnable jar which requires external dependencies" depends="build">
 		<!-- convert classpath to a flat list/string for use in manifest task -->
 		<pathconvert property="mf.classpath" pathsep=" ">
 			<path refid="xml2csv.execute.classpath" />
@@ -113,8 +113,7 @@
 			<fileset dir="bin" />
 		</jar>
 	</target>
-	<target name="build-standalone-jar" description="Create standalone runnable jar">
-		<delete file="xml2csv-standalone.jar" />
+	<target name="build-standalone-jar" description="Create standalone runnable jar" depends="build">
 		<jar destfile="xml2csv-standalone.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
