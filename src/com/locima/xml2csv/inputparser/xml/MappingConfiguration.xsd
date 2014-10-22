@@ -78,10 +78,19 @@
 		<annotation>
 			<documentation>
 				Used to filter XML input documents so they are processed by this mapping. If no input filters are specified then
-				all documents are
-				processed.
+				all documents are processed.
 			</documentation>
 		</annotation>
+		<sequence minOccurs="0" maxOccurs="unbounded">
+			<element name="InputFilter" type="tns:InputFilter">
+				<annotation>
+					<documentation>
+						Used to nest filters. All nested filters for an "AND" boolean logic clause with their ancestors. Sibling filters apply an "OR"
+						logic.
+					</documentation>
+				</annotation>
+			</element>
+		</sequence>
 		<attribute name="fileNameRegex" type="string" use="optional">
 			<annotation>
 				<documentation>
@@ -89,7 +98,13 @@
 				</documentation>
 			</annotation>
 		</attribute>
-
+		<attribute name="xPath" type="string" use="optional">
+			<annotation>
+				<documentation>
+					An XPath expression that must evaluate to true, or a non-empty node set for the mappings to be executed.
+				</documentation>
+			</annotation>
+		</attribute>
 	</complexType>
 
 	<simpleType name="InlineBehaviour">
