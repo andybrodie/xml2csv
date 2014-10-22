@@ -7,7 +7,6 @@ import java.util.Map;
 
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmItem;
@@ -21,6 +20,7 @@ import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.SaxonProcessorManager;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
@@ -101,21 +101,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
 	private XPathExecutable createXPathExecutable(String xPathExpression) throws XMLException {
-		// Need to construct a new compiler because the set of namespaces is (potentially) unique to the expression.
-		// We could cache a set of compilers, but I doubt it's worth it.
-		XPathCompiler xPathCompiler = this.saxonProcessor.newXPathCompiler();
-		for (Map.Entry<String, String> entry : this.namespaceMappings.entrySet()) {
-			String prefix = entry.getKey();
-			String uri = entry.getValue();
-			xPathCompiler.declareNamespace(prefix, uri);
-		}
-
-		try {
-			XPathExecutable xPath = xPathCompiler.compile(xPathExpression);
-			return xPath;
-		} catch (SaxonApiException e) {
-			throw new XMLException(e, "Unable to compile invalid XPath: %s", xPathExpression);
-		}
+		return XmlUtil.createXPathExecutable(this.namespaceMappings, xPathExpression);
 	}
 
 	@Override

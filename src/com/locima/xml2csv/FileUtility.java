@@ -9,6 +9,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.model.IInputFilter;
+
 /**
  * Contains useful File system based utilities.
  */

@@ -26,6 +26,9 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	private List<IMappingContainer> mappings = new ArrayList<IMappingContainer>();
 
+	/**
+	 * The map of XML namespace prefix to namespace URIs used by any {@link MappingList} or {@link Mapping} contained within this configuration.
+	 */
 	private Map<String, String> namespaceMappings = new HashMap<String, String>();
 
 	/**
@@ -184,8 +187,8 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 	/**
-	 * Sets the default inline behaviour for all child mappings of this configuration. If {@link MultiValueBehaviour#INHERIT} is specified then it will be
-	 * substitued for {@link MultiValueBehaviour#IGNORE} as there is nowhere to inherit from.
+	 * Sets the default inline behaviour for all child mappings of this configuration. If {@link MultiValueBehaviour#INHERIT} is specified then it
+	 * will be substitued for {@link MultiValueBehaviour#IGNORE} as there is nowhere to inherit from.
 	 * 
 	 * @param defaultInlineBehaviour the default inline behaviour for child mappings.
 	 */
@@ -195,6 +198,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 
 	/**
 	 * Gets the default inline behaviour for this configuration.
+	 * 
 	 * @return never returns null.
 	 */
 	public MultiValueBehaviour getDefaultInlineBehaviour() {

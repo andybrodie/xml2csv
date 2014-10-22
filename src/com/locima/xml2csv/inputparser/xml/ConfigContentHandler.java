@@ -1,6 +1,9 @@
 package com.locima.xml2csv.inputparser.xml;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
+import java.util.regex.PatternSyntaxException;
 
 import javax.xml.XMLConstants;
 
@@ -14,18 +17,21 @@ import org.xml.sax.helpers.DefaultHandler;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.inputparser.FileParserException;
+import com.locima.xml2csv.model.FileNameInputFilter;
+import com.locima.xml2csv.model.IInputFilter;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.InlineFormat;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.MappingList;
 import com.locima.xml2csv.model.MultiValueBehaviour;
+import com.locima.xml2csv.model.XPathInputFilter;
 
 /**
  * The SAX Content Handler for input XML files.
  */
 public class ConfigContentHandler extends DefaultHandler {
 
-	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
+	private static final String INPUTFILTER_NAME = "InputFilter";
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 
@@ -36,8 +42,10 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String MAPPING_NAME = "Mapping";
 
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
+	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
 
 	private Locator documentLocator;
+	private Stack<IInputFilter> inputFilterStack;
 	private MappingConfiguration mappingConfiguration;
 	private Stack<MappingList> mappingListStack;
 
@@ -51,7 +59,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat, String multiValueBehaviour) throws SAXException {
+	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat, String multiValueBehaviour)
+					throws SAXException {
 		MappingList current = this.mappingListStack.peek();
 		try {
 			InlineFormat format = getFormat(inlineStyleName, inlineStyleFormat);
@@ -85,13 +94,31 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("endElement(URI={})(localName={})(qName={})", uri, localName, qName);
 		}
-		if (MAPPING_NAMESPACE.equals(uri) && MAPPING_LIST_NAME.equals(localName)) {
-			IMappingContainer current = this.mappingListStack.pop();
-			if (this.mappingListStack.size() > 0) {
-				this.mappingListStack.peek().add(current);
-			} else {
-				this.mappingConfiguration.addMappings(current);
+		if (MAPPING_NAMESPACE.equals(uri)) {
+			if (MAPPING_LIST_NAME.equals(localName)) {
+				endMappingList();
+			} else if (INPUTFILTER_NAME.equals(localName)) {
+				endInputFilter();
 			}
+		}
+	}
+
+	/**
+	 * Closes off this input filter definition by popping the {@link #inputFilterStack}.
+	 */
+	private void endInputFilter() {
+		IInputFilter current = this.inputFilterStack.pop();
+	}
+
+	/**
+	 * Closes off a mapping list, managing the stack of them (to supported nested MappingList occurrences.
+	 */
+	private void endMappingList() {
+		IMappingContainer current = this.mappingListStack.pop();
+		if (this.mappingListStack.size() > 0) {
+			this.mappingListStack.peek().add(current);
+		} else {
+			this.mappingConfiguration.addMappings(current);
 		}
 	}
 
@@ -210,15 +237,53 @@ public class ConfigContentHandler extends DefaultHandler {
 			}
 		}
 
-		if (MAPPING_NAMESPACE.equals(uri) && MAPPING_NAME.equals(localName)) {
-			addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"),
-							atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
-		} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_LIST_NAME.equals(localName)) {
-			startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
-		} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_CONFIGURATION_NAME.equals(localName)) {
-			startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+		if (MAPPING_NAMESPACE.equals(uri)) {
+			if (MAPPING_NAME.equals(localName)) {
+				addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"),
+								atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+			} else if (MAPPING_LIST_NAME.equals(localName)) {
+				startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
+			} else if (INPUTFILTER_NAME.equals(localName)) {
+				startFilter(atts.getValue("xPath"), atts.getValue("fileNameRegex"));
+			} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_CONFIGURATION_NAME.equals(localName)) {
+				startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+			} else {
+				LOG.warn("Ignoring element ({}):{} as it isn't supported in this version of xml2csv", uri, localName);
+			}
 		} else {
-			LOG.warn("Ignoring element ({}):{} as I wasn't expecting it or wasn't using it.", uri, localName);
+			LOG.warn("Ignoring element ({}):{} as it is outside of of the mapping namespace {}", uri, localName, MAPPING_NAMESPACE);
+		}
+	}
+
+	/**
+	 * Adds filters to the mapping configuration.
+	 *
+	 * @param xPath an XPath value to match within the document. May be null.
+	 * @param fileNameRegex a regular expression to match against the filename. May be null.
+	 * @throws SAXException If any errors occur whilst adding the filters.
+	 */
+	private void startFilter(String xPath, String fileNameRegex) throws SAXException {
+		List<IInputFilter> filters = new ArrayList<IInputFilter>();
+		if (!StringUtil.isNullOrEmpty(xPath)) {
+			try {
+				filters.add(new XPathInputFilter(this.mappingConfiguration.getNamespaceMap(), xPath));
+			} catch (XMLException e) {
+				throw getException(e, "Unable to parse XPath {} specified for input filter.");
+			}
+		}
+		
+		THIS IS WRONG.  WRONG WRONG WRONG.  NEED TO CREATE TWO SEPARATE ELEMENTS FOR DIFFERENT FILTER TYPES.
+		
+		if (StringUtil.isNullOrEmpty(fileNameRegex)) {
+			try {
+				filters.add(new FileNameInputFilter(fileNameRegex));
+			} catch (PatternSyntaxException pse) {
+				throw getException(pse, "Invalid Regular Expression {} specified for input filter.", fileNameRegex);
+			}
+		}
+		IFilterContainer container = this.inputFilterStack.isEmpty() ? this.mappingConfiguration : this.inputFilterStack.peek();
+		for (IInputFilter filter : filters) {
+			container.addFilter(filter);
 		}
 	}
 
