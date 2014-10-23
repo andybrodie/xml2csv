@@ -24,15 +24,11 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.extractor.DataExtractorException;
-import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.model.IMapping;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.output.OutputManager;
-import com.locima.xml2csv.output.OutputManagerException;
 
 public class TestHelpers {
 
