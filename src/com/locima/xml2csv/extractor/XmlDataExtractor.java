@@ -1,14 +1,10 @@
 package com.locima.xml2csv.extractor;
 
-import java.io.File;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 import java.util.RandomAccess;
 
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
@@ -17,7 +13,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.IOutputManager;
@@ -86,45 +81,14 @@ public class XmlDataExtractor {
 
 	private MappingConfiguration mappingConfiguration;
 
-	private Processor saxonProcessor;
-
 	/**
 	 * Is set, then all whitespace will be trimmed from the beginning and end of element and attribute values.
 	 */
 	private boolean trimWhitespace;
 
 	/**
-	 * Initialise the internal Saxon Processor.
-	 */
-	public XmlDataExtractor() {
-		this.saxonProcessor = XmlUtil.getProcessor();
-	}
-
-	/**
-	 * Extracts data from the <code>xmlFile</code> passed and pushes that data to the <code>om</code>.
-	 *
-	 * @param xmlFile The XML file to read data from, must be a valid file.
-	 * @param om The output manager to write data to, must be a valid instance.
-	 * @throws DataExtractorException If an error occurs during extraction of data from the XML.
-	 * @throws OutputManagerException If an error occurs writing the data out.
-	 */
-	public void convert(File xmlFile, IOutputManager om) throws DataExtractorException, OutputManagerException {
-		try {
-			DocumentBuilder db = this.saxonProcessor.newDocumentBuilder();
-			LOG.info("Loading and parsing XML file {}", xmlFile.getName());
-			XdmNode document = db.build(xmlFile);
-			LOG.debug("XML file loaded succesfully");
-			convert(document, om);
-		} catch (SaxonApiException e) {
-			throw new DataExtractorException(e, "Unable to read XML file %s", xmlFile);
-		}
-	}
-
-	/**
 	 * Executes the mappingConfiguration set by {@link #setMappingConfiguration(MappingConfiguration)} against a document <code>xmlDoc</code> and
 	 * passes the results to <code>outputManager</code>.
-	 * <p>
-	 * Typically called by {@link #convert(File, IOutputManager)} once the XML file is loaded.
 	 *
 	 * @param xmlDoc The XML document to extract information from.
 	 * @param outputManager The output manager to send the extracted data to. May be null if no output is required.

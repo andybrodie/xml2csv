@@ -1,16 +1,26 @@
 package com.locima.xml2csv;
 
+import java.io.File;
 import java.util.Map;
 
+import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XdmNode;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
  * Utility methods to make dealing with Saxon easier.
  */
 public class XmlUtil {
+
+	private static final Logger LOG = LoggerFactory.getLogger(XmlUtil.class);
 
 	/**
 	 * Managed a singleton Saxon Processor instance.
@@ -23,8 +33,8 @@ public class XmlUtil {
 
 	/**
 	 * Creates an Saxon executable XPath expression based on the XPath and a set of namespace prefix to URI mappings.
-	 * 
-	 * @param namespaceMappings A mapping of namespace prefix to URI mappings.
+	 *
+	 * @param namespaceMappings A mapping of namespace prefix to URI mappings. May be null if there are no namespaces involved.
 	 * @param xPathExpression An XPath expression to compile. Must be valid XPath.
 	 * @return a Saxon executable XPath expression, never null.
 	 * @throws XMLException If there are any problems compiling <code>xPathExpression</code>.
@@ -33,10 +43,12 @@ public class XmlUtil {
 		// Need to construct a new compiler because the set of namespaces is (potentially) unique to the expression.
 		// We could cache a set of compilers, but I doubt it's worth it.
 		XPathCompiler xPathCompiler = XmlUtil.getProcessor().newXPathCompiler();
-		for (Map.Entry<String, String> entry : namespaceMappings.entrySet()) {
-			String prefix = entry.getKey();
-			String uri = entry.getValue();
-			xPathCompiler.declareNamespace(prefix, uri);
+		if (namespaceMappings != null) {
+			for (Map.Entry<String, String> entry : namespaceMappings.entrySet()) {
+				String prefix = entry.getKey();
+				String uri = entry.getValue();
+				xPathCompiler.declareNamespace(prefix, uri);
+			}
 		}
 
 		try {
@@ -57,8 +69,28 @@ public class XmlUtil {
 	}
 
 	/**
+	 * Loads the XML file specified and returns as a Saxon XML document.
+	 *
+	 * @param xmlFile The XML file to read data from, must be a valid file.
+	 * @return The loaded XML document, never returns null.
+	 * @throws DataExtractorException If an error occurs during extraction of data from the XML.
+	 */
+	public static XdmNode loadXmlFile(File xmlFile) throws DataExtractorException {
+		try {
+			DocumentBuilder db = getProcessor().newDocumentBuilder();
+			LOG.debug("Loading and parsing XML file {}", xmlFile.getAbsolutePath());
+			XdmNode document = db.build(xmlFile);
+			LOG.info("XML file {} loaded succesfully", xmlFile.getAbsolutePath());
+			return document;
+		} catch (SaxonApiException e) {
+			throw new DataExtractorException(e, "Unable to read XML file %s", xmlFile.getAbsolutePath());
+		}
+	}
+
+	/**
 	 * Prevents instantiation.
 	 */
 	private XmlUtil() {
 	}
+
 }

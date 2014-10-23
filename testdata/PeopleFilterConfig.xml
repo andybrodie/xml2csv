@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<m:Filters>
+		<m:FileNameInputFilter fileNameRegex="Person[12]\.xml">
+			<m:XPathInputFilter xPath="/people/person[@lastname='Smith']"/>
+		</m:FileNameInputFilter>
+	</m:Filters>
 
-	<m:MappingList mappingRoot="/people/person" name="People">
+	<m:MappingList mappingRoot="/people/person" name="PeopleFiltered">
 		<m:Mapping name="Last Name" xPath="@lastname" />
 		<m:Mapping name="First Name" xPath="firstname" />
 		<m:Mapping name="Age" xPath="age" />

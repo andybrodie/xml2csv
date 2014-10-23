@@ -46,9 +46,9 @@ public class XPathInputFilter extends FilterContainer {
 			XdmValue value = selector.evaluate();
 			match = !(value instanceof XdmEmptySequence);
 			if (match) {
-				LOG.trace("Match succeeded on matching {} against {}", this.xPath);
+				LOG.debug("Match succeeded on {}", this.xPath.getSource());
 			} else {
-				LOG.trace("Match failed to match {}", this.xPath);
+				LOG.debug("Match failed on {}", this.xPath.getSource());
 
 			}
 		} catch (SaxonApiException sae) {

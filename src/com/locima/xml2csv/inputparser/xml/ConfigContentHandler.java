@@ -30,19 +30,19 @@ import com.locima.xml2csv.model.filter.XPathInputFilter;
  */
 public class ConfigContentHandler extends DefaultHandler {
 
-	private static final String FILENAME_INPUTFILTER_NAME = "FileNameInputFilter";
+	/**
+	 * All of the valid element names that will be processed. This is used to make the {@link #startElement(String, String, String, Attributes)} code
+	 * a bit more elegant using a switch statement.
+	 */
+	private static enum ElementNames {
+		FileNameInputFilter, Filters, Mapping, MappingConfiguration, MappingList, XPathInputFilter
+	}
+
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
-
-	private static final String MAPPING_CONFIGURATION_NAME = "MappingConfiguration";
-
-	private static final String MAPPING_LIST_NAME = "MappingList";
-
-	private static final String MAPPING_NAME = "Mapping";
 
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
-	private static final String XPATH_INPUTFILTER_NAME = "XPathInputFilter";
 
 	private Locator documentLocator;
 	private Stack<IInputFilter> inputFilterStack;
@@ -111,13 +111,42 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("endElement(URI={})(localName={})(qName={})", uri, localName, qName);
 		}
+
 		if (MAPPING_NAMESPACE.equals(uri)) {
-			if (MAPPING_LIST_NAME.equals(localName)) {
-				endMappingList();
-			} else if (FILENAME_INPUTFILTER_NAME.equals(localName)) {
-				endInputFilter();
+			ElementNames elementName = getElementNameEnum(localName);
+			switch (elementName) {
+				case FileNameInputFilter:
+					endInputFilter();
+					break;
+				case Filters:
+					endFilters();
+					break;
+				case Mapping:
+					break;
+				case MappingConfiguration:
+					break;
+				case MappingList:
+					endMappingList();
+					break;
+				case XPathInputFilter:
+					endInputFilter();
+					break;
+				default:
+					break;
 			}
 		}
+	}
+
+	/**
+	 * Clears down the stack for filters.
+	 * 
+	 * @throws SAXException if the input filter stack isn't empty. Indicates a bug in xml2csv.
+	 */
+	private void endFilters() throws SAXException {
+		if (!this.inputFilterStack.empty()) {
+			throw getException(null, "Input filter stack is not empty.  Bug in xml2csv.");
+		}
+		this.inputFilterStack = null;
 	}
 
 	/**
@@ -139,15 +168,24 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
-	// /**
-	// * Returns the string value specified for an XSD boolean type as a Java boolean.
-	// *
-	// * @param value the value found in an XML attribute.
-	// * @return <code>true</code> if the values <code>true</code> or <code>1</code> are passed, false otherwise.
-	// */
-	// private boolean getBoolean(String value) {
-	// return ("true".equals(value) || "1".equals(value));
-	// }
+	/**
+	 * Given an element's local name (namespace URI checking is left to the caller), return an enum value that can be used in switch statements to
+	 * branch logic depending on the input.
+	 * 
+	 * @param localName the local name of the element.
+	 * @return an enum representation of the element's name
+	 * @throws SAXException if the element is not recognised (indicates a bug in xml2csv).
+	 */
+	private ElementNames getElementNameEnum(String localName) throws SAXException {
+		ElementNames elementName;
+		try {
+			elementName = Enum.valueOf(ElementNames.class, localName);
+			return elementName;
+		} catch (IllegalArgumentException iae) {
+			throw getException(iae, "Unexpected element name found.  This is a bug in xml2csv because the schema validation "
+							+ "should have caught this already");
+		}
+	}
 
 	/**
 	 * Creates an exception to be thrown by this content handler, ensuring that formatting is consistent and including locator information.
@@ -230,7 +268,6 @@ public class ConfigContentHandler extends DefaultHandler {
 	@Override
 	public void startDocument() throws SAXException {
 		this.mappingConfiguration = new MappingConfiguration();
-		this.mappingListStack = new Stack<MappingList>();
 	}
 
 	/**
@@ -254,20 +291,31 @@ public class ConfigContentHandler extends DefaultHandler {
 			}
 		}
 
+		ElementNames elementName = getElementNameEnum(localName);
+
 		if (MAPPING_NAMESPACE.equals(uri)) {
-			if (MAPPING_NAME.equals(localName)) {
-				addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"),
-								atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
-			} else if (MAPPING_LIST_NAME.equals(localName)) {
-				startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
-			} else if (FILENAME_INPUTFILTER_NAME.equals(localName)) {
-				startFileNameFilter(atts.getValue("fileNameRegex"));
-			} else if (XPATH_INPUTFILTER_NAME.equals(localName)) {
-				startXPathFilter(atts.getValue("xPath"));
-			} else if (MAPPING_NAMESPACE.equals(uri) && MAPPING_CONFIGURATION_NAME.equals(localName)) {
-				startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
-			} else {
-				LOG.warn("Ignoring element ({}):{} as it isn't supported in this version of xml2csv", uri, localName);
+			switch (elementName) {
+				case Mapping:
+					addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"),
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+					break;
+				case MappingList:
+					startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
+					break;
+				case MappingConfiguration:
+					startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+					break;
+				case Filters:
+					startFilters();
+					break;
+				case XPathInputFilter:
+					startXPathFilter(atts.getValue("xPath"));
+					break;
+				case FileNameInputFilter:
+					startFileNameFilter(atts.getValue("fileNameRegex"));
+					break;
+				default:
+					LOG.warn("Ignoring element ({}):{} as it isn't supported in this version of xml2csv", uri, localName);
 			}
 		} else {
 			LOG.warn("Ignoring element ({}):{} as it is outside of of the mapping namespace {}", uri, localName, MAPPING_NAMESPACE);
@@ -290,6 +338,18 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
+	 * When a new set of filters are found, ensure that stack is empty.
+	 * 
+	 * @throws SAXException if {@link #inputFilterStack} isn't null.
+	 */
+	private void startFilters() throws SAXException {
+		if (this.inputFilterStack != null) {
+			throw getException(null, "New Filter set found, but existing filter set not tidied up.  Bug in xml2csv");
+		}
+		this.inputFilterStack = new Stack<IInputFilter>();
+	}
+
+	/**
 	 * Configures the inline behaviour (the instance of {@link MappingConfiguration} is already initialised on {@link #startDocument()}.
 	 *
 	 * @param inlineBehaviour the inline behaviour to observe, by default, for all child mappings.
@@ -298,6 +358,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (!StringUtil.isNullOrEmpty(inlineBehaviour)) {
 			this.mappingConfiguration.setDefaultInlineBehaviour(parseInlineBehaviour(inlineBehaviour));
 		}
+		this.mappingListStack = new Stack<MappingList>();
 	}
 
 	/**

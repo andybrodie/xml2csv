@@ -35,4 +35,10 @@ public class EndToEndTests {
 		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
 		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
 	}
+	
+	@Test
+	public void testFilters() throws Exception {
+		TemporaryFolder outputFolder = processFiles("PeopleFilterConfig.xml", "Person1.xml", "Person2.xml", "Person3.xml");
+		assertCsvEquals("PeopleFiltered.csv", outputFolder.getRoot(), "PeopleFiltered.csv");
+	}
 }

@@ -1,4 +1,4 @@
-package com.locima.xml2csv;
+package com.locima.xml2csv.output;
 
 import static com.locima.xml2csv.TestHelpers.toFlatString;
 
@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 

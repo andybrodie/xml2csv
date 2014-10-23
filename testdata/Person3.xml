@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<people>
+	<person lastname="Smith">
+		<firstname>Charlotte</firstname>
+		<age>2</age>
+	</person>
+</people>

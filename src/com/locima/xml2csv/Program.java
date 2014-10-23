@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.saxon.s9api.XdmNode;
+
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -76,13 +78,22 @@ public class Program {
 			outputMgr.createFiles(mappingConfig.getMappingsHeaders());
 
 			// Parse the input XML files
-			XmlDataExtractor xde = new XmlDataExtractor();
-			xde.setTrimWhitespace(trimWhitespace);
-			xde.setMappingConfiguration(mappingConfig);
+			XmlDataExtractor extractor = new XmlDataExtractor();
+			extractor.setTrimWhitespace(trimWhitespace);
+			extractor.setMappingConfiguration(mappingConfig);
 
-			// Iterate over all files and write out all the records to the output, managed by the OutputManager
+			// Iterate over all files that pass filters and write out all the records to the output, managed by the OutputManager
 			for (File xmlFile : xmlInputFiles) {
-				xde.convert(xmlFile, outputMgr);
+				if (mappingConfig.include(xmlFile)) {
+					XdmNode docToConvert = XmlUtil.loadXmlFile(xmlFile);
+					if (mappingConfig.include(docToConvert)) {
+						extractor.convert(docToConvert, outputMgr);
+					} else {
+						LOG.debug("Excluding {} due to document content filters", xmlFile.getAbsolutePath());
+					}
+				} else {
+					LOG.debug("Excluding {} due to file filters", xmlFile.getAbsolutePath());
+				}
 			}
 
 			// If there's any inlined elements, run the whole lot again. Yes, this is very inefficient, but it works for now!
@@ -90,7 +101,8 @@ public class Program {
 				LOG.info("Found inline element, therefore reprocessing with inline values supported.");
 				outputMgr.createFiles(mappingConfig.getMappingsHeaders());
 				for (File xmlFile : xmlInputFiles) {
-					xde.convert(xmlFile, outputMgr);
+					XdmNode docToConvert = XmlUtil.loadXmlFile(xmlFile);
+					extractor.convert(docToConvert, outputMgr);
 				}
 			}
 

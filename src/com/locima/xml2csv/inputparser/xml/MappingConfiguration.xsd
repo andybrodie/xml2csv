@@ -12,7 +12,7 @@
 				documents and their output CSV equivalents.
 			</documentation>
 		</annotation>
-		<sequence minOccurs="1" maxOccurs="unbounded">
+		<sequence minOccurs="1" maxOccurs="1">
 			<sequence minOccurs="0" maxOccurs="1">
 				<element name="Filters" type="tns:Filters" />
 			</sequence>
@@ -103,6 +103,10 @@
 	</complexType>
 
 	<complexType name="FileNameInputFilter">
+		<choice minOccurs="0" maxOccurs="unbounded">
+			<element name="FileNameInputFilter" type="tns:FileNameInputFilter" />
+			<element name="XPathInputFilter" type="tns:XPathInputFilter" />
+		</choice>
 		<attribute name="fileNameRegex" type="string" use="optional">
 			<annotation>
 				<documentation>
@@ -113,6 +117,10 @@
 	</complexType>
 
 	<complexType name="XPathInputFilter">
+		<choice minOccurs="0" maxOccurs="unbounded">
+			<element name="FileNameInputFilter" type="tns:FileNameInputFilter" />
+			<element name="XPathInputFilter" type="tns:XPathInputFilter" />
+		</choice>
 		<attribute name="xPath" type="string" use="optional">
 			<annotation>
 				<documentation>

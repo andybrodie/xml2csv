@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.OutputManager;
@@ -45,7 +46,7 @@ public class ExtractorTests {
 
 		File inputFile = TestHelpers.createFile("HeavilyNestedInstance.xml");
 
-		extractor.convert(inputFile, null);
+		extractor.convert(XmlUtil.loadXmlFile(inputFile), null);
 
 		/*
 		 * Now each MappingList and Mapping knows the maximum number of iterations that can appear within a single mapping, Now start again to get the
@@ -56,7 +57,7 @@ public class ExtractorTests {
 		OutputManager om = new OutputManager();
 		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
 		om.createFiles(config.getMappingsHeaders());
-		extractor.convert(inputFile, om);
+		extractor.convert(XmlUtil.loadXmlFile(inputFile), om);
 		om.close();
 
 		return outputFolder;

@@ -1,10 +1,13 @@
 package com.locima.xml2csv.model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.extractor.DataExtractorException;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.model.filter.FilterContainer;
 import com.locima.xml2csv.model.filter.IInputFilter;
@@ -223,5 +227,26 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public int size() {
 		return this.mappings.size();
+	}
+
+	/**
+	 * Returns true if this mapping configuration is interested in processing the passed XML file.
+	 * 
+	 * @param xmlFile the XML file to test. Must not be null.
+	 * @return true if the file should be processed, false otherwise.
+	 */
+	public boolean include(File xmlFile) {
+		return this.filterContainer.include(xmlFile);
+	}
+
+	/**
+	 * Returns true if this mapping configuration is interested in processing the passed XML document.
+	 * 
+	 * @param xmlDoc the XML document to test. Must not be null.
+	 * @return true if the document should be processed, false otherwise.
+	 * @throws DataExtractorException if there was a problem executing the filter.
+	 */
+	public boolean include(XdmNode xmlDoc) throws DataExtractorException {
+		return this.filterContainer.include(xmlDoc);
 	}
 }
