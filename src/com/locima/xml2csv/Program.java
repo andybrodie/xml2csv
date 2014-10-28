@@ -40,6 +40,7 @@ public class Program {
 	public static final String OPT_OUT_DIR = "o";
 	public static final String OPT_TRIM_WHITESPACE = "w";
 	public static final String OPT_XML_DIR = "i";
+	public static final String OPT_APPEND_OUTPUT = "a";
 
 	/**
 	 * Entry point for the command line execution.
@@ -54,12 +55,11 @@ public class Program {
 	/**
 	 * Logback unfortunately starts logging debugging information to the console if you don't configure it.
 	 * <p>
-	 * This sucks for the user (who shouldn't need to have to learn how to configure logback).
-	 * Also I don't want to tightly-couple my code to logback, so if the user isn't hasn't tried to get logging working, then
-	 * let's get it to quietly STFU. 
+	 * This sucks for the user (who shouldn't need to have to learn how to configure logback). Also I don't want to tightly-couple my code to logback,
+	 * so if the user isn't hasn't tried to get logging working, then let's get it to quietly STFU.
 	 */
 	private static void shutLogbackUp() {
-				
+
 	}
 
 	/**
@@ -69,9 +69,11 @@ public class Program {
 	 * @param xmlInputFiles A list of XML input files that should be processed against the <code>configFiles</code>. Must not be null.
 	 * @param outputDirectory The directory to which output CSV files should be written. Assumes to exist and be writeable.
 	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
+	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean trimWhitespace) throws ProgramException {
+	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean trimWhitespace, boolean appendOutput)
+					throws ProgramException {
 
 		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
@@ -82,7 +84,7 @@ public class Program {
 		IOutputManager outputMgr = new OutputManager();
 		outputMgr.setOutputDirectory(outputDirectory);
 		try {
-			outputMgr.createFiles(mappingConfig.getMappingsHeaders());
+			outputMgr.createFiles(mappingConfig.getMappingsHeaders(), appendOutput);
 
 			// Parse the input XML files
 			XmlDataExtractor extractor = new XmlDataExtractor();
@@ -106,7 +108,7 @@ public class Program {
 			// If there's any inlined elements, run the whole lot again. Yes, this is very inefficient, but it works for now!
 			if (mappingConfig.containsInline()) {
 				LOG.info("Found inline element, therefore reprocessing with inline values supported.");
-				outputMgr.createFiles(mappingConfig.getMappingsHeaders());
+				outputMgr.createFiles(mappingConfig.getMappingsHeaders(), appendOutput);
 				for (File xmlFile : xmlInputFiles) {
 					XdmNode docToConvert = XmlUtil.loadXmlFile(xmlFile);
 					extractor.convert(docToConvert, outputMgr);
@@ -114,8 +116,8 @@ public class Program {
 			}
 
 		} finally {
-			/* No matter what happens, attempt to close all the OutputManager resources so at least
-			 * we won't leave resources open.
+			/*
+			 * No matter what happens, attempt to close all the OutputManager resources so at least we won't leave resources open.
 			 */
 			outputMgr.close();
 		}
@@ -128,9 +130,10 @@ public class Program {
 	 * @param xmlInputDirectoryName The directory from which XML files should be read.
 	 * @param outputDirectoryName The directory to which output CSV files should be written.
 	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
+	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace)
+	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace, boolean appendOutput)
 					throws ProgramException {
 		File xmlInputDirectory;
 		try {
@@ -152,7 +155,7 @@ public class Program {
 			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
 		}
 		List<File> xmlInputFiles = FileUtility.getFiles(xmlInputDirectory, false);
-		execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace);
+		execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace, appendOutput);
 	}
 
 	/**
@@ -177,7 +180,10 @@ public class Program {
 			LOG.trace("Arguments verified.");
 			String trimWhitespaceValue = cmdLine.getOptionValue(OPT_TRIM_WHITESPACE);
 			boolean trimWhitespace = Boolean.parseBoolean(trimWhitespaceValue);
-			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR), trimWhitespace);
+			String appendOutputValue = cmdLine.getOptionValue(OPT_APPEND_OUTPUT);
+			boolean appendOutput = Boolean.parseBoolean(appendOutputValue);
+			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR),
+							trimWhitespace, appendOutput);
 			System.out.println("Completed succesfully.");
 		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program
@@ -219,6 +225,7 @@ public class Program {
 		options.addOption(option);
 		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
 		options.addOption(option);
+		option = new Option(OPT_APPEND_OUTPUT, "append-output", false, "If specified, all output will be appended to any existing output files.");
 		return options;
 	}
 }

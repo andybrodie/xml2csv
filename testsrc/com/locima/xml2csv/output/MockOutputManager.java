@@ -34,7 +34,7 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
-	public void createFiles(Map<String, List<String>> headers) throws OutputManagerException {
+	public void createFiles(Map<String, List<String>> headers, boolean appendOutput) throws OutputManagerException {
 	}
 
 	@Override

@@ -56,7 +56,7 @@ public class ExtractorTests {
 		LOG.info("*** Starting again now we know the column counts");
 		OutputManager om = new OutputManager();
 		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
-		om.createFiles(config.getMappingsHeaders());
+		om.createFiles(config.getMappingsHeaders(), false);
 		extractor.convert(XmlUtil.loadXmlFile(inputFile), om);
 		om.close();
 

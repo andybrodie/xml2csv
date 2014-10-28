@@ -1,5 +1,7 @@
 package com.locima.xml2csv.output;
 
+import static com.locima.xml2csv.TestHelpers.createFile;
+import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -16,10 +18,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.locima.xml2csv.output.IOutputManager;
-import com.locima.xml2csv.output.OutputManager;
-import com.locima.xml2csv.output.OutputManagerException;
 
 public class OutputManagerTests {
 
@@ -53,10 +51,30 @@ public class OutputManagerTests {
 	}
 
 	@Test
+	public void testAppendOutput() throws Exception {
+		IOutputManager om = new OutputManager();
+		File testOutputDir = this.testOutputDir.newFolder();
+		om.setDirectory(testOutputDir.getAbsolutePath());
+		Map<String, List<String>> config = addOMConfig(null, "test", "col1", "col2", "col3");
+		addOMConfig(config, "test2", "colA", "colB", "colC");
+		om.createFiles(config, false);
+		om.writeRecords("test", Arrays.asList(new String[] { "1", "2", "3" }));
+		om.writeRecords("test2", Arrays.asList(new String[] { "A", "B", "C" }));
+		om.close();
+		om.createFiles(config, true);
+		om.writeRecords("test", Arrays.asList(new String[] { "1", "2", "3" }));
+		om.writeRecords("test2", Arrays.asList(new String[] { "A", "B", "C" }));
+		om.close();
+		
+		assertCsvEquals("OutputManagerAppendTest1.csv", testOutputDir, "test.csv");
+		assertCsvEquals("OutputManagerAppendTest2.csv", testOutputDir, "test2.csv");
+	}
+
+	@Test
 	public void testClose() throws IOException, OutputManagerException {
 		OutputManager om = createTempOutputManager();
 		Map<String, List<String>> outputConfiguration = new LinkedHashMap<String, List<String>>();
-		om.createFiles(outputConfiguration);
+		om.createFiles(outputConfiguration, false);
 		om.close();
 	}
 
@@ -65,7 +83,7 @@ public class OutputManagerTests {
 		OutputManager om = createTempOutputManager();
 		Map<String, List<String>> config = addOMConfig(null, "test", "col1", "col2", "col3");
 		addOMConfig(config, "test2", "colA", "colB", "colC");
-		om.createFiles(config);
+		om.createFiles(config, false);
 		om.close();
 	}
 
@@ -83,7 +101,7 @@ public class OutputManagerTests {
 		IOutputManager om = createTempOutputManager();
 		Map<String, List<String>> config = addOMConfig(null, "test", "col1", "col2", "col3");
 		addOMConfig(config, "test2", "colA", "colB", "colC");
-		om.createFiles(config);
+		om.createFiles(config, false);
 		om.writeRecords("test", Arrays.asList(new String[] { "1", "2", "3" }));
 		om.writeRecords("test2", Arrays.asList(new String[] { "A", "B", "C" }));
 		om.close();

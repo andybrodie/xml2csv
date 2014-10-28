@@ -123,10 +123,11 @@ public class OutputManager implements IOutputManager {
 	 * 
 	 * @param outputConfiguration a map of output names (used for file names within the output directory) and the columns or fields that will be
 	 *            present in each one.
+	 * @param appendOutput true if output should be appended to existing files, false if new files should overwrite existing ones.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst creating the output files or writing to them.
 	 */
 	@Override
-	public void createFiles(Map<String, List<String>> outputConfiguration) throws OutputManagerException {
+	public void createFiles(Map<String, List<String>> outputConfiguration, boolean appendOutput) throws OutputManagerException {
 		this.writers = new HashMap<String, Tuple<File, Writer>>();
 		final String encoding = "UTF8";
 
@@ -134,21 +135,30 @@ public class OutputManager implements IOutputManager {
 		LOG.info("Creating {} writers in {}", outputConfiguration.size(), this.outputDirectory.getAbsolutePath());
 		try {
 			for (Map.Entry<String, List<String>> entry : outputConfiguration.entrySet()) {
+				// needToWriteHeaders controls whether a first record of column names is written. Set to false if appending to existing file.
+				boolean needToWriteHeaders = true;
 				String writerName = entry.getKey();
 				writerFile = new File(this.outputDirectory, writerName + ".csv");
-				LOG.trace("Creating output file for writer {} ({})", writerName, writerFile.getAbsolutePath());
-				Writer writerFileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(writerFile), encoding));
+				if (appendOutput && writerFile.exists()) {
+					LOG.debug("Appending to existing file for writer {} ({})", writerName, writerFile.getAbsolutePath());
+					needToWriteHeaders = false;
+				} else {
+					LOG.debug("Creating output file for writer {} ({})", writerName, writerFile.getAbsolutePath());
+				}
+				Writer writerFileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(writerFile, appendOutput), encoding));
 
 				this.writers.put(writerName, new Tuple<File, Writer>(writerFile, writerFileWriter));
-				LOG.info("Successfully created output file for writer {} ({})", writerName, writerFile.getAbsolutePath());
+				LOG.info("Successfully opened output file for writer {} ({})", writerName, writerFile.getAbsolutePath());
 
-				// Write field names to the first row of the file.
-				try {
-					writerFileWriter.write(collectionToString(entry.getValue(), ",", null));
-					writerFileWriter.write(LINE_SEPARATOR);
-				} catch (IOException ioe) {
-					close();
-					throw new OutputManagerException("Unable to write field names to " + writerName, ioe);
+				// Write field names to the first row of the file, if not appending.
+				if (needToWriteHeaders) {
+					try {
+						writerFileWriter.write(collectionToString(entry.getValue(), ",", null));
+						writerFileWriter.write(LINE_SEPARATOR);
+					} catch (IOException ioe) {
+						close();
+						throw new OutputManagerException("Unable to write field names to " + writerName, ioe);
+					}
 				}
 			}
 		} catch (FileNotFoundException fileNotFoundException) {
@@ -161,7 +171,6 @@ public class OutputManager implements IOutputManager {
 		this.createdFiles = true;
 		LOG.info("Successfully created {} writers in {}", outputConfiguration.size(), this.outputDirectory.getAbsolutePath());
 	}
-
 
 	/**
 	 * Sets the directory to which output files will be written.

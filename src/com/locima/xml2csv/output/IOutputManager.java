@@ -19,9 +19,10 @@ public interface IOutputManager {
 	 *
 	 * @param outputConfiguration a map of output names (used for file names within the output directory) and the columns or fields that will be
 	 *            present in each one.
+	 * @param appendOutput true if output should be appended to existing files, false if new files should overwrite existing ones.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst creating the output files or writing to them.
 	 */
-	void createFiles(Map<String, List<String>> outputConfiguration) throws OutputManagerException;
+	void createFiles(Map<String, List<String>> outputConfiguration, boolean appendOutput) throws OutputManagerException;
 
 	/**
 	 * Sets the directory to which output files will be written.

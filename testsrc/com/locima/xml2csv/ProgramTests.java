@@ -37,7 +37,7 @@ public class ProgramTests {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
-		p.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), true);
+		p.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), true, false);
 		
 		assertCsvEquals("SimpleFamilyOutput1.csv",
 						outputFolder.getRoot(), "family.csv");

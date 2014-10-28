@@ -133,7 +133,7 @@ public class TestHelpers {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 		File outputDirectory = outputFolder.getRoot();
-		p.execute(configFiles, xmlInputFiles, outputDirectory, true);
+		p.execute(configFiles, xmlInputFiles, outputDirectory, true, false);
 
 		return outputFolder;
 
