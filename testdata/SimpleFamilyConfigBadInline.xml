@@ -1,32 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<m:MappingConfiguration
+	xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-<MappingSet inputSchema="http://www.example.com/xml2csv/family"
-	xmlns="http://locima.com/xml2csv/MappingSet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<m:MappingList mappingRoot="/family" name="family" inline="1">
+		<m:Mapping name="Family" xPath="name" />
+		<m:Mapping name="Address" xPath="address" />
+	</m:MappingList>
+	<!-- Create a separate file containing all the members of the family. This 
+		represents a 1..n mapping between families and family members. In this case, 
+		the column name will be formed by concatenating: 1) The outputName ("People" 
+		in this case) 2) The field name ("Name" ad "Age") 3) A sequence number, starting 
+		at 1. -->
+	<m:MappingList mappingRoot="/family/person" name="People">
 
-	<Mapping mappingRoot="/family" outputName="family" inline="1">
-		<Field name="Family" xPath="name" />
-		<Field name="Address" xPath="address" />
+		<!-- Use a linking field, which is the name of the family (from our parent) -->
+		<m:Mapping name="Family" xPath="../name" />
 
-		<!-- Create a separate file containing all the members of the family. This 
-			represents a 1..n mapping between families and family members. 
-			
-			In this case, the column name will be formed by concatenating:
-			1) The outputName ("People" in this case)
-			2) The field name ("Name" ad "Age")
-			3) A sequence number, starting at 1.
-			
-		-->
-		<Mapping mappingRoot="/family/person" outputName="People">
+		<!-- Include the properties of the family members -->
+		<!-- Name comes from the child element "name" under person -->
+		<m:Mapping name="Name" xPath="name" />
+		<!-- Age comes from the age attribute of the mappingRoot -->
+		<m:Mapping name="Age" xPath="@age" />
+	</m:MappingList>
 
-			<!-- Use a linking field, which is the name of the family (from our parent) -->
-			<Field name="Family" xPath="../name" />
-
-			<!-- Include the properties of the family members -->
-			<!-- Name comes from the child element "name" under person -->
-			<Field name="Name" xPath="name" />
-			<!-- Age comes from the age attribute of the mappingRoot -->
-			<Field name="Age" xPath="@age" />
-		</Mapping>
-
-	</Mapping>
-</MappingSet>
+</m:MappingConfiguration>

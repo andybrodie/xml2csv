@@ -7,9 +7,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -21,21 +18,9 @@ import com.locima.xml2csv.model.MappingConfiguration;
 
 public class XmlInputTests {
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-	}
-
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
-	
 	@Test
 	public void test() throws Exception {
 		XmlFileParser parser = new XmlFileParser();
@@ -58,7 +43,7 @@ public class XmlInputTests {
 		this.thrown.expect(XMLException.class);
 		parser.load(files);
 	}
-	
+
 	@Test
 	public void testNamespaces() throws Exception {
 		XmlFileParser parser = new XmlFileParser();

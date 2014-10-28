@@ -32,19 +32,14 @@ import com.locima.xml2csv.output.OutputManager;
 public class Program {
 	// CHECKSTYLE:ON
 
-	private static final Logger CONSOLE = LoggerFactory.getLogger("Console");
-
-	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 	public static final int CONSOLE_WIDTH = 80;
+	private static final String HEADER = "xml2csv v0.1.  Converts XML files in to CSV files according to a set of specified rules.";
+	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
+	public static final String OPT_CONFIG_FILE = "c";
 	public static final String OPT_HELP = "h";
 	public static final String OPT_OUT_DIR = "o";
-	public static final String OPT_CONFIG_FILE = "c";
 	public static final String OPT_TRIM_WHITESPACE = "w";
 	public static final String OPT_XML_DIR = "i";
-	public static final int VERSION_MAJOR = 0;
-	public static final int VERSION_MINOR = 1;
-	private static final String HEADER = String.format("xml2csv v%d.%d converts XML files in to CSV files according to a set of specified rules.",
-					VERSION_MAJOR, VERSION_MINOR);
 
 	/**
 	 * Entry point for the command line execution.
@@ -52,7 +47,19 @@ public class Program {
 	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
+		shutLogbackUp();
 		new Program().execute(args);
+	}
+
+	/**
+	 * Logback unfortunately starts logging debugging information to the console if you don't configure it.
+	 * <p>
+	 * This sucks for the user (who shouldn't need to have to learn how to configure logback).
+	 * Also I don't want to tightly-couple my code to logback, so if the user isn't hasn't tried to get logging working, then
+	 * let's get it to quietly STFU. 
+	 */
+	private static void shutLogbackUp() {
+				
 	}
 
 	/**
@@ -107,7 +114,9 @@ public class Program {
 			}
 
 		} finally {
-			// No matter what happens, attempt to close all the OutputManager resources
+			/* No matter what happens, attempt to close all the OutputManager resources so at least
+			 * we won't leave resources open.
+			 */
 			outputMgr.close();
 		}
 	}
@@ -123,19 +132,27 @@ public class Program {
 	 */
 	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace)
 					throws ProgramException {
+		File xmlInputDirectory;
 		try {
-			File xmlInputDirectory = FileUtility.getDirectory(xmlInputDirectoryName, FileUtility.CAN_READ, false);
-			File outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
-
-			List<File> configFiles = new ArrayList<File>();
-			configFiles.add(FileUtility.getFile(configFileName, FileUtility.CAN_READ));
-			List<File> xmlInputFiles = FileUtility.getFilesInDirectory(xmlInputDirectory);
-			execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace);
+			xmlInputDirectory = FileUtility.getDirectory(xmlInputDirectoryName, FileUtility.CAN_READ, false);
 		} catch (IOException ioe) {
-			// Only occurs from calls to FileUtility.getDirectory above
-			throw new ProgramException(ioe, "There was a problem with a directory you specified: " + ioe.getMessage());
+			throw new ProgramException(ioe, "Problem with XML input directory: %s", ioe.getMessage());
+		}
+		File outputDirectory;
+		try {
+			outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
+		} catch (IOException ioe) {
+			throw new ProgramException(ioe, "Problem with output directory: %s", ioe.getMessage());
 		}
 
+		List<File> configFiles = new ArrayList<File>();
+		try {
+			configFiles.add(FileUtility.getFile(configFileName, FileUtility.CAN_READ));
+		} catch (IOException ioe) {
+			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
+		}
+		List<File> xmlInputFiles = FileUtility.getFiles(xmlInputDirectory, false);
+		execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace);
 	}
 
 	/**
@@ -144,29 +161,34 @@ public class Program {
 	 * @param args command line arguments
 	 */
 	public void execute(String[] args) {
-
+		if (LOG.isInfoEnabled()) {
+			LOG.info("xml2csv execute invoked {}", StringUtil.toString(args));
+		}
 		Options options = getOptions();
 
 		try {
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("Parsing command line arguments {}", StringUtil.toString(args));
-			}
 			CommandLineParser parser = new BasicParser();
 			CommandLine cmdLine = parser.parse(options, args);
 			if (cmdLine.hasOption(OPT_HELP)) {
 				HelpFormatter formatter = new HelpFormatter();
+				LOG.debug("User asked for help, so outputting usage message and terminating");
 				formatter.printHelp(new PrintWriter(System.out, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
 			}
 			LOG.trace("Arguments verified.");
 			String trimWhitespaceValue = cmdLine.getOptionValue(OPT_TRIM_WHITESPACE);
 			boolean trimWhitespace = Boolean.parseBoolean(trimWhitespaceValue);
 			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR), trimWhitespace);
-			CONSOLE.info("Completed succesfully.");
+			System.out.println("Completed succesfully.");
 		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program
-			CONSOLE.error("Program termininating due to error, details follow.", pe);
+			System.err.println(pe.getMessage());
+			Throwable cause = pe.getCause();
+			if (cause != null) {
+				System.err.println(cause.getMessage());
+			}
 		} catch (ParseException pe) {
 			// Thrown when the command line arguments are invalid
+			LOG.debug("Invalid arguments specified: {}", pe.getMessage());
 			System.err.println("Invalid arguments specified: " + pe.getMessage());
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
@@ -186,6 +208,7 @@ public class Program {
 		option = new Option(OPT_XML_DIR, "inputDir", true, "The directory containing the XML files from which data will be extracted.");
 		option.setRequired(true);
 		options.addOption(option);
+		// Don't ask me why it's formatted like this, blame Eclipse Luna!
 		option =
 						new Option(OPT_OUT_DIR, "outDir", true, "The directory to which the output CSV files will be written.  "
 										+ "If not specified, current working directory will be used.");

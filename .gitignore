@@ -1,8 +1,11 @@
- Directories #
+# Directories #
 /build/
 /bin/
+/testbin/
 target/
 junit/
+# xml2csv specific files
+xml2csv.log
 # OS Files #
 .DS_Store
 *.class
@@ -35,6 +38,7 @@ Desktop.ini
 .project
 .metadata
 bin/**
+testbin/**
 tmp/**
 tmp/**/*
 *.tmp
@@ -54,3 +58,6 @@ local.properties
 .cproject
 # PDT-specific
 .buildpath
+/bin/
+
+.buildpath/testbin/

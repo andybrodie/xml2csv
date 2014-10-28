@@ -15,7 +15,7 @@
 			<include name="junit-4.11.jar" />
 			<include name="hamcrest-core-1.3.jar" />
 		</fileset>
-	</path>  
+	</path>
 	<!-- The classpath to build xml2csv against -->
 	<path id="xml2csv.build.classpath">
 		<fileset dir="${LIB}">
@@ -37,21 +37,6 @@
 		<!-- Don't forget to include our own bin directory -->
 		<pathelement location="bin" />
 	</path>
-	<target name="init">
-		<mkdir dir="bin" />
-		<!-- Copy all the non-compiled resources from the source directory to bin -->
-		<copy includeemptydirs="false" todir="bin">
-			<fileset dir="src">
-				<exclude name="**/*.java" />
-			</fileset>
-		</copy>
-		<!-- Includes all the non-compiled resources from testsrc.  One day we want to split this out to a separate bin -->
-		<copy includeemptydirs="false" todir="bin">
-			<fileset dir="testsrc">
-				<exclude name="**/*.java" />
-			</fileset>
-		</copy>
-	</target>
 	<target name="resolve" description="Retrieve dependencies with ivy">
 		<ivy:retrieve />
 	</target>
@@ -65,25 +50,56 @@
 	<target name="clean-junit" description="Deletes all JUnit outputs">
 		<delete dir="${junit.output.dir}" />
 	</target>
-	<target depends="clean, clean-ivy, clean-junit" name="clean-all" description="Deletes all built artifacts and downloaded depedencies" />
-	<target depends="init,resolve" name="build" description="Compile all the sources">
+	<target name="clean-jar" description="Deletes all built jar artifacts">
+		<delete file="xml2csv.jar" />
+		<delete file="xml2csv-standalone.jar" />
+	</target>
+	<target depends="clean, clean-ivy, clean-junit,clean-jar" name="clean-all" description="Deletes all built artifacts and downloaded dependencies" />
+	<target depends="resolve" name="build" description="Compile all the sources">
 		<echo message="${ant.project.name}: ${ant.file}" />
+		<mkdir dir="bin" />
+		<!-- Copy all the non-compiled resources from the source directory to bin -->
+		<copy includeemptydirs="false" todir="bin">
+			<fileset dir="src">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
 		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
 			<src path="src" />
-			<src path="testsrc" />
 			<classpath refid="xml2csv.build.classpath" />
 		</javac>
 	</target>
-	<target name="test" depends="build">
+	<target depends="resolve" name="build-tests" description="Compile all the test sources">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<mkdir dir="testbin" />
+		<!-- Copy all the non-compiled resources from the source directory to bin -->
+		<copy includeemptydirs="false" todir="testbin">
+			<fileset dir="testsrc">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="testbin" includeantruntime="false" source="${source}" target="${target}">
+			<src path="testsrc" />
+			<classpath>
+				<path refid="xml2csv.build.classpath"/>
+				<pathelement location="bin"/>
+			</classpath>
+		</javac>
+	</target>
+	<target name="test" depends="build, build-tests">
 		<mkdir dir="${junit.output.dir}" />
 		<junit fork="yes" printsummary="withOutAndErr">
 			<formatter type="xml" />
 			<batchtest todir="${junit.output.dir}">
-				<fileset dir="testsrc">
-					<include name="**/*Tests.java" />
+				<fileset dir="testbin">
+					<include name="**/*Tests.class" />
 				</fileset>
 			</batchtest>
-			<classpath refid="xml2csv.execute.classpath" />
+			<classpath>
+				<path refid="xml2csv.execute.classpath"/>
+				<pathelement location="bin"/>
+				<pathelement location="testbin"/>
+			</classpath>
 		</junit>
 	</target>
 	<target name="junit-report" depends="test">
@@ -119,13 +135,11 @@
 				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
 				<attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.Program" />
 				<attribute name="Class-Path" value="." />
-				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar hamcrest-core-1.3.jar junit-4.11.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar" />
+				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar" />
 			</manifest>
 			<zipfileset src="jar-in-jar-loader.zip" />
 			<fileset dir="bin" />
 			<zipfileset dir="lib" includes="commons-cli-1.2.jar" />
-			<zipfileset dir="lib" includes="hamcrest-core-1.3.jar" />
-			<zipfileset dir="lib" includes="junit-4.11.jar" />
 			<zipfileset dir="lib" includes="logback-classic-1.1.2.jar" />
 			<zipfileset dir="lib" includes="logback-core-1.1.2.jar" />
 			<zipfileset dir="lib" includes="Saxon-HE-9.5.1-6.jar" />
@@ -134,5 +148,5 @@
 			<zipfileset dir="lib" includes="xml-apis-1.4.01.jar" />
 		</jar>
 	</target>
-	
+
 </project>

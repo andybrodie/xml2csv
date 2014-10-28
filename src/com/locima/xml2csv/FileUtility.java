@@ -75,7 +75,7 @@ public class FileUtility {
 					throw new IOException("Unable to create directory " + absoluteDirName);
 				}
 			} else {
-				throw new FileNotFoundException("Directory " + absoluteDirName + " does not exist and no request was made to create it.");
+				throw new FileNotFoundException("Directory " + absoluteDirName + " does not exist.");
 			}
 		}
 		checkFlags(dir, flags);
@@ -102,42 +102,44 @@ public class FileUtility {
 	}
 
 	/**
-	 * Get all the files within a directory. Sub-directories or any other objects that aren't files are ignored.
+	 * Given a file name or directory, either return just that file in a list or all the files within a directory.
 	 *
-	 * @param directory the directory to find the files within.
+	 * @param fileOrDirectory a file the evaluate, or the directory to find files within.
+	 * @param recurseDirectories if true then directories will be recursively searched for files.
 	 * @return A (possibly empty) list of files.
 	 */
-	public static List<File> getFilesInDirectory(File directory) {
-		return getFilesInDirectory(directory, null);
-	}
-
-	/**
-	 * Get all the files within a directory. Sub-directories or any other objects that aren't files are ignored.
-	 *
-	 * @param directory the directory to find the files within.
-	 * @param filter A filter that all files must match if they are to be included. If null, no filtering is applied.
-	 * @return A (possibly empty) list of files.
-	 */
-	public static List<File> getFilesInDirectory(File directory, Object filter) {
-		LOG.debug("Retrieving all files in {}", directory.getAbsolutePath());
+	public static List<File> getFiles(File fileOrDirectory, boolean recurseDirectories) {
+		LOG.debug("Searching for files in {}", fileOrDirectory.getAbsolutePath());
 		List<File> files = new ArrayList<File>();
-
-		File[] listOfFiles = directory.listFiles();
-		for (File file : listOfFiles) {
-			if (file.isFile()) {
-				if (filter == null) {
-					LOG.trace("Adding {} to list.  Total size is now {}", file.getName(), files.size());
-					files.add(file);
-				} else {
-					LOG.trace("Excluding {} from list, based on filter", file.getName());
-				}
-			} else {
-				// Ignore any directories, we're not recursively searching
-				LOG.warn("Ignoring all non-file types {}", file.getPath());
-			}
+		if (fileOrDirectory.isFile()) {
+			files.add(fileOrDirectory);
+		} else {
+			getFiles(files, fileOrDirectory, recurseDirectories);
 		}
 		LOG.info("Found {} files", files.size());
 		return files;
+	}
+
+	/**
+	 * Recursively add all files wtihin <code>directory</code> to <code>files</code>.
+	 * <p>
+	 * <code>directory</code> MUST be a directory and non-null.
+	 * 
+	 * @param files the list of files to add to.
+	 * @param directory the directory to search.
+	 * @param recurseDirectories if true then directories will be recursively searched for files.
+	 */
+	private static void getFiles(List<File> files, File directory, boolean recurseDirectories) {
+		File[] listOfFiles = directory.listFiles();
+		for (File fileOrDirectory : listOfFiles) {
+			if (fileOrDirectory.isFile()) {
+				files.add(fileOrDirectory);
+			} else {
+				if (recurseDirectories) {
+					getFiles(files, fileOrDirectory, recurseDirectories);
+				}
+			}
+		}
 	}
 
 	/**

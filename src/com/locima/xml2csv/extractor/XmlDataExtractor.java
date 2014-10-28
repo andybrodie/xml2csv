@@ -22,8 +22,10 @@ import com.locima.xml2csv.output.OutputManagerException;
  * Extracts data from XML documents provided according a @see MappingConfiguration provided.
  * <p>
  * This makes use of Saxon for parsing XPath, because Saxon was the only XPath 2.0 compliant parser I could find. JAXP does NOT support default
- * namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs. All suggestions seem to be "just rewrite the XPath statement to
- * include a NS declaration. This Apple-style suggestion only works when I have control over the input files. For some use-cases this is not the case.
+ * namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs. All suggested workaround seem to be "just rewrite the
+ * XPath statement to include a NS declaration", however I have no control over the input files and XPath, so this is not viable.
+ * <p>
+ * This is a surprisingly thin class, because most of the actual heavy lifting is done in {@link MappingList} and {@link Mapping}.
  */
 public class XmlDataExtractor {
 
@@ -79,17 +81,23 @@ public class XmlDataExtractor {
 		return n.getLength() == 0 ? Collections.<Node>emptyList() : new NodeListWrapper(n);
 	}
 
+	/**
+	 * Stores the mapping configuration to be used by this extractor.
+	 */
 	private MappingConfiguration mappingConfiguration;
 
 	/**
-	 * Is set, then all whitespace will be trimmed from the beginning and end of element and attribute values.
+	 * If set, then all whitespace will be trimmed from the beginning and end of element and attribute values.
 	 */
 	private boolean trimWhitespace;
 
 	/**
 	 * Executes the mappingConfiguration set by {@link #setMappingConfiguration(MappingConfiguration)} against a document <code>xmlDoc</code> and
 	 * passes the results to <code>outputManager</code>.
-	 *
+	 * <p>
+	 * Note that all filtering (application of {@link MappingConfiguration#include(java.io.File)} and {@link MappingConfiguration#include(XdmNode)}
+	 * should be done by the caller before executing this method.
+	 * 
 	 * @param xmlDoc The XML document to extract information from.
 	 * @param outputManager The output manager to send the extracted data to. May be null if no output is required.
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
@@ -110,12 +118,12 @@ public class XmlDataExtractor {
 	}
 
 	/**
-	 * Configure this extractor with the set of mappingConfiguration specified.
+	 * Configure this extractor with the mappingConfiguration specified.
 	 *
-	 * @param newMappings the mappingConfiguration that define how to extract data from the XML when {@link #extractTo} is called.
+	 * @param mappingConfiguration the mappingConfiguration that define how to extract data from the XML when {@link #extractTo} is called.
 	 */
-	public void setMappingConfiguration(MappingConfiguration newMappings) {
-		this.mappingConfiguration = newMappings;
+	public void setMappingConfiguration(MappingConfiguration mappingConfiguration) {
+		this.mappingConfiguration = mappingConfiguration;
 	}
 
 	/**

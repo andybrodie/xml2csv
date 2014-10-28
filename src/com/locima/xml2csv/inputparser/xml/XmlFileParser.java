@@ -98,7 +98,7 @@ public class XmlFileParser implements IConfigParser {
 		}
 		return schemas.toArray(new Source[0]);
 	}
-	
+
 	@Override
 	public void load(List<File> inputConfigFiles) throws FileParserException, XMLException {
 
@@ -113,14 +113,14 @@ public class XmlFileParser implements IConfigParser {
 				xmlReader.parse(fileUrl);
 			}
 		} catch (ParserConfigurationException pce) {
-			throw new XMLException(pce, "XML parser failed while parsing input configuration file.");
+			throw new XMLException(pce, "Fatal error parsing input configuration file.");
 		} catch (IOException ioe) {
-			throw new XMLException(ioe, "XML parser failed while parsing input configuration file.");
+			throw new XMLException(ioe, "Fatal error parsing input configuration file.");
 		} catch (SAXException se) {
 			if (se.getCause() instanceof XMLException) {
 				throw (XMLException) se.getCause();
 			} else {
-				throw new XMLException(se, "XML parser failed while parsing input configuration file.");
+				throw new XMLException(se, "Fatal error parsing input configuration file.");
 			}
 		}
 		this.mappings = handler.getMappings();
