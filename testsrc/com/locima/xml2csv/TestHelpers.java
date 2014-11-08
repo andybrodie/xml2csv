@@ -18,16 +18,12 @@ import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
-import org.junit.Assert;
-import org.junit.internal.ArrayComparisonFailure;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
-import com.locima.xml2csv.model.IMapping;
-import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
 
 public class TestHelpers {
@@ -57,27 +53,6 @@ public class TestHelpers {
 		assertCsvEquals(new File(RES_DIR, expectedFileName), new File(actualFileName));
 	}
 
-	public static void assertMappingInstanceCountsCorrect(MappingConfiguration config, int... instanceCounts) {
-		List<Integer> expectedInstanceCounts = new ArrayList<Integer>();
-		for (int instanceCount : instanceCounts) {
-			expectedInstanceCounts.add(instanceCount);
-		}
-		List<Integer> maxInstanceCounts = new ArrayList<Integer>();
-
-		for (IMappingContainer mappingContainer : config) {
-			getMaxInstanceCounts(mappingContainer, maxInstanceCounts);
-		}
-		LOG.info("Checking max instance counts of {}", config);
-		try {
-			Assert.assertArrayEquals(expectedInstanceCounts.toArray(), maxInstanceCounts.toArray());
-		} catch (ArrayComparisonFailure acf) {
-			// Print out some more helpful logging before re-throwing
-			LOG.debug("Expected: {}", toFlatString(expectedInstanceCounts));
-			LOG.debug("Actual: {}", toFlatString(maxInstanceCounts));
-			throw acf;
-		}
-	}
-
 	public static XdmNode createDocument(String xmlText) throws SaxonApiException {
 		DocumentBuilder db = XmlUtil.getProcessor().newDocumentBuilder();
 		XdmNode document = db.build(new StreamSource(new StringReader(xmlText)));
@@ -86,18 +61,6 @@ public class TestHelpers {
 
 	public static File createFile(String relativeFilename) {
 		return new File(RES_DIR, relativeFilename);
-	}
-
-	private static void getMaxInstanceCounts(IMapping mapping, List<Integer> maxInstanceCounts) {
-		int maxInstanceCount = mapping.getMaxInstanceCount();
-		maxInstanceCounts.add(maxInstanceCount);
-		String mappingName = mapping.toString();
-		LOG.debug("Found {} instance count value for {}", maxInstanceCount, mappingName);
-		if (mapping instanceof IMappingContainer) {
-			for (IMapping nestedMapping : (IMappingContainer) mapping) {
-				getMaxInstanceCounts(nestedMapping, maxInstanceCounts);
-			}
-		}
 	}
 
 	public static String[] loadFile(File file) throws IOException {

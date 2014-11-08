@@ -15,6 +15,7 @@ import org.w3c.dom.NodeList;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.RecordSet;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -103,14 +104,12 @@ public class XmlDataExtractor {
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
-	public void convert(XdmNode xmlDoc, IOutputManager outputManager) throws DataExtractorException, OutputManagerException {
+	public void extractTo(XdmNode xmlDoc, IOutputManager outputManager) throws DataExtractorException, OutputManagerException {
 		LOG.trace("Executing {} sets of mappingConfiguration.", this.mappingConfiguration.size());
 		for (IMappingContainer mapping : this.mappingConfiguration) {
-			List<List<String>> records = mapping.evaluateToRecordList(xmlDoc, this.trimWhitespace);
+			RecordSet records = mapping.evaluate(xmlDoc, this.trimWhitespace);
 			if (outputManager != null) {
-				for (List<String> record : records) {
-					outputManager.writeRecords(mapping.getOutputName(), record);
-				}
+				outputManager.writeRecords(records);
 			} else {
 				LOG.trace("No IOutputManager passed so not writing any output.");
 			}

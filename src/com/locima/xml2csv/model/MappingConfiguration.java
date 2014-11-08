@@ -30,7 +30,9 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	/**
 	 * The default inline behaviour (when multiple values for fields are found) for all mappings (unless overridden).
 	 */
-	private MultiValueBehaviour defaultInlineBehaviour;
+	private MultiValueBehaviour defaultMultiValueBehaviour;
+
+	private NameFormat defaultNameFormat;
 
 	/**
 	 * Contains all the input filters that have been configured for this set of mappings.
@@ -49,7 +51,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 
 	/**
 	 * Add a new input filter to the list of filters that will be executed for all files processed by this mapping configuration.
-	 * 
+	 *
 	 * @param filter the filter to add, must not be null.
 	 */
 	public void addInputFilter(IInputFilter filter) {
@@ -70,11 +72,11 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 			throw new ArgumentNullException("maps");
 		}
 		// Ensure that the mapping set name is unique
-		String mappingSetName = maps.getOutputName();
+		String mappingSetName = maps.getContainerName();
 		if (mappingSetName == null) {
 			throw new ArgumentException("maps", "contains a null name.");
 		}
-		if (getMappingsByName(maps.getOutputName()) != null) {
+		if (containsContainer(mappingSetName)) {
 			throw new ArgumentException("maps", "must contain a unique name");
 		}
 		this.mappings.add(maps);
@@ -107,82 +109,32 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 	/**
-	 * Returns true if this mapping configuration has encountered any mapping lists or mappings with multiple values.
+	 * Determines whether this object already contains a mapping contains with the same name (this isn't allowed).
 	 *
-	 * @return true if this mapping configuration has encountered any mapping lists or mappings with multiple values.
+	 * @param name the name of the mapping set to return
+	 * @return null if a mapping set with that name could not be found.
 	 */
-	public boolean containsInline() {
-		for (IMappingContainer container : this) {
-			if (containsInline(container)) {
+	public boolean containsContainer(String name) {
+		for (IMappingContainer mapping : this.mappings) {
+			if (mapping.getContainerName().equals(name)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	/**
-	 * Returns true if this {@link IMapping} instance passed contains any mapping lists or mappings with multiple values.
-	 *
-	 * @param mapping the mapping to search for multiple values.
-	 * @return true if this {@link IMapping} instance passed contains any mapping lists or mappings with multiple values.
+/**
+	 * Retrieve a top level mapping container ({@link MappingList by name, or null if it doesn't exist.
+	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getContainerName()}).
+	 * @return a mapping container instance with the matching name, or null if one doesn't exist.
 	 */
-	private boolean containsInline(IMapping mapping) {
-		if (mapping.getMaxInstanceCount() > 1) {
-			return true;
-		}
-		boolean foundOne = false;
-		if (mapping instanceof IMappingContainer) {
-			for (IMapping childMapping : ((IMappingContainer) mapping)) {
-				if (containsInline(childMapping)) {
-					foundOne = true;
-					break;
-				}
-			}
-		}
-		return foundOne;
-	}
-
-	/**
-	 * Gets the default inline behaviour for this configuration.
-	 *
-	 * @return never returns null.
-	 */
-	public MultiValueBehaviour getDefaultInlineBehaviour() {
-		return this.defaultInlineBehaviour;
-	}
-
-	/**
-	 * Get a specific set of mappings by name. Generally used for unit testing but might be handy one day.
-	 *
-	 * @param name the name of the mapping set to return
-	 * @return null if a mapping set with that name could not be found.
-	 */
-	public IMappingContainer getMappingsByName(String name) {
-		for (IMappingContainer mapping : this.mappings) {
-			if (mapping.getOutputName().equals(name)) {
-				return mapping;
+	public IMappingContainer getContainerByName(String containerName) {
+		for (IMappingContainer container : this.mappings) {
+			if (container.getContainerName().equals(containerName)) {
+				return container;
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Retrieves all "headers" associated with all the mappings.
-	 * <p>
-	 * The headings are all the output names mapped to the column names that they have. This is useful for initialising all the output files using
-	 * {@link com.locima.xml2csv.output.OutputManager#createFiles(Map)}
-	 *
-	 * @return a map, possibly empty, but never null, or output name to the list of column names.
-	 */
-	public Map<String, List<String>> getMappingsHeaders() {
-		Map<String, List<String>> headers = new HashMap<String, List<String>>();
-		for (IMappingContainer mapping : this.mappings) {
-			List<String> colNames = new ArrayList<String>();
-			int colCount = mapping.getColumnNames(colNames);
-			LOG.info("Found {} columns in mapping configuration for {}", colCount, this);
-			headers.put(mapping.getOutputName(), colNames);
-		}
-		return headers;
 	}
 
 	/**
@@ -194,6 +146,27 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public Map<String, String> getNamespaceMap() {
 		return this.namespaceMappings;
+	}
+
+	/**
+	 * Returns true if this mapping configuration is interested in processing the passed XML file.
+	 *
+	 * @param xmlFile the XML file to test. Must not be null.
+	 * @return true if the file should be processed, false otherwise.
+	 */
+	public boolean include(File xmlFile) {
+		return this.filterContainer.include(xmlFile);
+	}
+
+	/**
+	 * Returns true if this mapping configuration is interested in processing the passed XML document.
+	 *
+	 * @param xmlDoc the XML document to test. Must not be null.
+	 * @return true if the document should be processed, false otherwise.
+	 * @throws DataExtractorException if there was a problem executing the filter.
+	 */
+	public boolean include(XdmNode xmlDoc) throws DataExtractorException {
+		return this.filterContainer.include(xmlDoc);
 	}
 
 	@Override
@@ -211,13 +184,22 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 	/**
-	 * Sets the default inline behaviour for all child mappings of this configuration. If {@link MultiValueBehaviour#INHERIT} is specified then it
-	 * will be substitued for {@link MultiValueBehaviour#IGNORE} as there is nowhere to inherit from.
+	 * Sets the default inline behaviour for all child mappings of this configuration. If {@link MultiValueTolerance#INHERIT} is specified then it
+	 * will be substitued for {@link MultiValueTolerance#IGNORE} as there is nowhere to inherit from.
 	 *
-	 * @param defaultInlineBehaviour the default inline behaviour for child mappings.
+	 * @param defaultMultiValueBehaviour the default inline behaviour for child mappings.
 	 */
-	public void setDefaultInlineBehaviour(MultiValueBehaviour defaultInlineBehaviour) {
-		this.defaultInlineBehaviour = (defaultInlineBehaviour == MultiValueBehaviour.INHERIT) ? MultiValueBehaviour.IGNORE : defaultInlineBehaviour;
+	public void setDefaultMultiValueBehaviour(MultiValueBehaviour defaultMultiValueBehaviour) {
+		this.defaultMultiValueBehaviour =
+						(defaultMultiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.DISCARD : defaultMultiValueBehaviour;
+	}
+
+	public void setDefaultNameFormat(NameFormat format) {
+		this.defaultNameFormat = format;
+	}
+
+	public MultiValueBehaviour getDefaultMultiValueBehaviour() {
+		return this.defaultMultiValueBehaviour;
 	}
 
 	/**
@@ -227,26 +209,5 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public int size() {
 		return this.mappings.size();
-	}
-
-	/**
-	 * Returns true if this mapping configuration is interested in processing the passed XML file.
-	 * 
-	 * @param xmlFile the XML file to test. Must not be null.
-	 * @return true if the file should be processed, false otherwise.
-	 */
-	public boolean include(File xmlFile) {
-		return this.filterContainer.include(xmlFile);
-	}
-
-	/**
-	 * Returns true if this mapping configuration is interested in processing the passed XML document.
-	 * 
-	 * @param xmlDoc the XML document to test. Must not be null.
-	 * @return true if the document should be processed, false otherwise.
-	 * @throws DataExtractorException if there was a problem executing the filter.
-	 */
-	public boolean include(XdmNode xmlDoc) throws DataExtractorException {
-		return this.filterContainer.include(xmlDoc);
 	}
 }

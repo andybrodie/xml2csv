@@ -16,7 +16,6 @@ import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.output.OutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
 public class ExtractorTests {
@@ -25,16 +24,13 @@ public class ExtractorTests {
 
 	@Test
 	public void testInstanceCounts() throws Exception {
-		TemporaryFolder outputFolder =
-						testInstanceCounts("HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 },
-										"HeavilyNestedInstance.xml");
+		TemporaryFolder outputFolder = testInstanceCounts("HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 }, "HeavilyNestedInstance.xml");
 
-		assertCsvEquals(TestHelpers.createFile("HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(),
-						"HeavilyNestedInstance.csv"));
+		assertCsvEquals(TestHelpers.createFile("HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(), "HeavilyNestedInstance.csv"));
 	}
 
 	private TemporaryFolder testInstanceCounts(String configFile, int[] instanceCounts, String... inputFiles) throws IOException, XMLException,
-					FileParserException, OutputManagerException, DataExtractorException {
+	FileParserException, OutputManagerException, DataExtractorException {
 		MappingConfiguration config = loadMappingConfiguration(configFile);
 
 		TemporaryFolder outputFolder = new TemporaryFolder();
@@ -46,19 +42,7 @@ public class ExtractorTests {
 
 		File inputFile = TestHelpers.createFile("HeavilyNestedInstance.xml");
 
-		extractor.convert(XmlUtil.loadXmlFile(inputFile), null);
-
-		/*
-		 * Now each MappingList and Mapping knows the maximum number of iterations that can appear within a single mapping, Now start again to get the
-		 * correct column headers. This is just a temporary measure whilst we're adding inline support.
-		 */
-
-		LOG.info("*** Starting again now we know the column counts");
-		OutputManager om = new OutputManager();
-		om.setDirectory(outputFolder.getRoot().getAbsolutePath());
-		om.createFiles(config.getMappingsHeaders(), false);
-		extractor.convert(XmlUtil.loadXmlFile(inputFile), om);
-		om.close();
+		extractor.extractTo(XmlUtil.loadXmlFile(inputFile), null);
 
 		return outputFolder;
 	}

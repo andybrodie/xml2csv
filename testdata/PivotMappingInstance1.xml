@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<people>
+	<person>
+		<kvpair key="lastname" value="Smith" />
+		<kvpair key="firstname" value="Robert" />
+		<kvpair key="age" value="34" />
+	</person>
+	<person>
+		<kvpair key="lastname" value="Jones" />
+		<kvpair key="firstname" value="Wendy" />
+		<kvpair key="age" value="28" />
+	</person>
+</people>

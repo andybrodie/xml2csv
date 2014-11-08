@@ -50,6 +50,36 @@ public class FileUtility {
 	}
 
 	/**
+	 * Creates a POSIX-compliant file name bsased on the parameter passed.  The returned string will be:
+	 * <p>
+	 * Note we only permit characters that are fully POSIX compliant, this means:
+	 * <ol>
+	 * <li>14 characters or fewer.</li>
+	 * <li>Made up only of the following characters: A–Z a–z 0–9 . (period) _ (underscore) - (minus/hyphen).</li>
+	 * <li>The first character may not be a minus/hyphen.</li>
+	 * </ol>
+	 *
+	 * @param str a string that needs to be converted to a file name.
+	 * @return a string that only contains POSIX-compliant filename characters and length.
+	 */
+	public static String convertToPOSIXCompliantFilename(String str) {
+		if (str == null) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; (i < str.length()) && (sb.length() < 14); i++) {
+			char ch = str.charAt(i);
+			if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')) || ((ch >= '0') && (ch <= '9')) || (ch == '.') || (ch == '_')
+							|| (ch == '-' && sb.length()>0)) {
+				sb.append(ch);
+			}
+		}
+		String fileName = sb.toString();
+		LOG.info("Created file name {} from {}", fileName, str);
+		return fileName;
+	}
+
+	/**
 	 * Turns a directory name in to a {@link File} instance, creating the directory if necessary and ensuring that required permissions are granted to
 	 * the current user.
 	 *
@@ -124,7 +154,7 @@ public class FileUtility {
 	 * Recursively add all files wtihin <code>directory</code> to <code>files</code>.
 	 * <p>
 	 * <code>directory</code> MUST be a directory and non-null.
-	 * 
+	 *
 	 * @param files the list of files to add to.
 	 * @param directory the directory to search.
 	 * @param recurseDirectories if true then directories will be recursively searched for files.

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Demonstrates a simple pivot mapping -->
+<m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<m:MappingList mappingRoot="/people/person" name="PivotMapping">
+		<m:PivotMapping name="kvpair/@key" xPath="../@value" />
+	</m:MappingList>
+</m:MappingConfiguration>

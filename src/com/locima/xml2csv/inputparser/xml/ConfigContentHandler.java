@@ -15,12 +15,15 @@ import org.xml.sax.helpers.DefaultHandler;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.inputparser.FileParserException;
+import com.locima.xml2csv.model.FieldDefinition;
 import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.InlineFormat;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.MappingList;
 import com.locima.xml2csv.model.MultiValueBehaviour;
+import com.locima.xml2csv.model.NameFormat;
+import com.locima.xml2csv.model.XPathValue;
 import com.locima.xml2csv.model.filter.FileNameInputFilter;
 import com.locima.xml2csv.model.filter.IInputFilter;
 import com.locima.xml2csv.model.filter.XPathInputFilter;
@@ -35,18 +38,25 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * a bit more elegant using a switch statement.
 	 */
 	private static enum ElementNames {
-		FileNameInputFilter, Filters, Mapping, MappingConfiguration, MappingList, XPathInputFilter
+		FileNameInputFilter, Filters, Mapping, MappingConfiguration, MappingList, PivotMapping, XPathInputFilter
 	}
 
+	private static final String GROUP_NUMBER_ATTR = "group";
+
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
-
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
-
+	private static final String MAPPING_ROOT_ATTR = "mappingRoot";
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
+	private static final String NAME_ATTR = "name";
+	private static final String NAME_FORMAT_ATTR = "nameFormat";
+	private static final String XPATH_ATTR = "xPath";
 
 	private Locator documentLocator;
+
 	private Stack<IInputFilter> inputFilterStack;
+
 	private MappingConfiguration mappingConfiguration;
+
 	private Stack<MappingList> mappingListStack;
 
 	/**
@@ -71,27 +81,98 @@ public class ConfigContentHandler extends DefaultHandler {
 	 *
 	 * @param name the name of the column.
 	 * @param xPath the XPath that should be executed to get the value of the column.
-	 * @param inlineStyleName the name of one of the built-in styles (see {@link InlineFormat} public members.
-	 * @param inlineStyleFormat a bespoke style to use for this mapping.
+	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
+	 * @param groupNumber the group number that applies to this mapping.
+	 * @param bespokeNameFormatFormat a bespoke style to use for this mapping.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addMapping(String name, String xPath, String inlineStyleName, String inlineStyleFormat, String multiValueBehaviour)
-					throws SAXException {
+	private void addMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
+					String multiValueBehaviour) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
+		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
+		String fieldName;
+		if (StringUtil.isNullOrEmpty(name)) {
+			LOG.debug("No name was specified for mapping, so XPath value is used instead {}", xPath);
+			fieldName = xPath.replace('/', '_');
+		} else {
+			fieldName = name;
+		}
+		XPathValue compiledXPath;
 		try {
-			InlineFormat format = getFormat(inlineStyleName, inlineStyleFormat);
-			String columnName;
-			if (StringUtil.isNullOrEmpty(name)) {
-				LOG.debug("No name was specified for mapping, so XPath value is used instead {}", xPath);
-				columnName = xPath.replace('/', '_');
-			} else {
-				columnName = name;
-			}
-			current.put(columnName, xPath, format, parseInlineBehaviour(multiValueBehaviour));
+			compiledXPath = XmlUtil.createXPathValue(current.getNamespaceMappings(), xPath);
+		} catch (XMLException e) {
+			throw getException(e, "Unable to add field %s as there was a problem with the XPath value \"%s\"", name, xPath);
+		}
+		FieldDefinition fieldDefinition =
+						new FieldDefinition(fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath);
+		current.add(fieldDefinition);
+	}
+
+	/**
+	 * Configures the inline behaviour (the instance of {@link MappingConfiguration} is already initialised on {@link #startDocument()}.
+	 *
+	 * @param multiValueBehaviour the inline behaviour to observe, by default, for all child mappings.
+	 */
+	private void addMappingConfiguration(String predefinedNameFormat, String multiValueBehaviour) {
+		this.mappingConfiguration.setDefaultMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour));
+		this.mappingConfiguration.setDefaultNameFormat(NameFormat.parse(predefinedNameFormat, null, NameFormat.NO_COUNTS));
+		this.mappingListStack = new Stack<MappingList>();
+	}
+
+	/**
+	 * Initialises a new MappingList object based on a Mapping element.
+	 *
+	 * @param mappingRoot The XPath expression that identifies the "root" elements for the mapping.
+	 * @param outputName The name of the output that this set of mappings should be written to.
+	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
+	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
+	 */
+	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour) throws SAXException {
+		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
+		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
+		try {
+			newMapping.setMappingRoot(mappingRoot);
+		} catch (XMLException e) {
+			throw getException(e, "Invalid XPath \"%s\" found in mapping root for mapping list", mappingRoot);
+		}
+		newMapping.setOutputName(outputName);
+		this.mappingListStack.push(newMapping);
+	}
+
+	/**
+	 * Adds a column mapping to the current MappingList instance being defined.
+	 *
+	 * @param name the name of the column.
+	 * @param xPath the XPath that should be executed to get the value of the column.
+	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
+	 * @param groupNumber the group number that applies to this mapping.
+	 * @param bespokeNameFormatFormat a bespoke style to use for this mapping.
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
+	 */
+	private void addPivotMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
+					String multiValueBehaviour) throws SAXException {
+		MappingList current = this.mappingListStack.peek();
+		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
+		String fieldName;
+		if (StringUtil.isNullOrEmpty(name)) {
+			LOG.debug("No name was specified for mapping, so XPath value is used instead {}", xPath);
+			fieldName = xPath.replace('/', '_');
+		} else {
+			fieldName = name;
+		}
+		XPathValue compiledXPath;
+		try {
+			compiledXPath = XmlUtil.createXPathValue(current.getNamespaceMappings(), xPath);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field");
 		}
+		FieldDefinition fieldDefinition =
+						new FieldDefinition(fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath);
+		current.add(fieldDefinition);
 	}
 
 	/**
@@ -123,6 +204,8 @@ public class ConfigContentHandler extends DefaultHandler {
 					break;
 				case Mapping:
 					break;
+				case PivotMapping:
+					break;
 				case MappingConfiguration:
 					break;
 				case MappingList:
@@ -139,7 +222,7 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	/**
 	 * Clears down the stack for filters.
-	 * 
+	 *
 	 * @throws SAXException if the input filter stack isn't empty. Indicates a bug in xml2csv.
 	 */
 	private void endFilters() throws SAXException {
@@ -168,10 +251,19 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
+	private int getAttributeValueAsInt(Attributes atts, String attrName, int defaultValue) throws SAXException {
+		String attrValueAsString = atts.getValue(attrName);
+		try {
+			return Integer.parseInt(attrValueAsString);
+		} catch (NumberFormatException nfe) {
+			throw getException(nfe, "Invalid value for %s found: %s", attrName, attrValueAsString);
+		}
+	}
+
 	/**
 	 * Given an element's local name (namespace URI checking is left to the caller), return an enum value that can be used in switch statements to
 	 * branch logic depending on the input.
-	 * 
+	 *
 	 * @param localName the local name of the element.
 	 * @return an enum representation of the element's name
 	 * @throws SAXException if the element is not recognised (indicates a bug in xml2csv).
@@ -205,59 +297,12 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Parse the inline style name or specified format in to an {@link InlineFormat} instance.
-	 *
-	 * @param inlineStyleName the name of a specific style.
-	 * @param inlineStyleFormat if none of the built-in styles (specified by name) are suitable, this allows a custom style to be defined.
-	 * @return an inline format, or null if one could not be determined.
-	 */
-	private InlineFormat getFormat(String inlineStyleName, String inlineStyleFormat) {
-		InlineFormat format;
-		if (inlineStyleFormat != null) {
-			format = new InlineFormat(inlineStyleFormat);
-		} else if (inlineStyleName != null) {
-			if ("NoCounts".equals(inlineStyleName)) {
-				format = InlineFormat.NO_COUNTS;
-			} else if ("WithCount".equals(inlineStyleName)) {
-				format = InlineFormat.WITH_COUNT;
-			} else if ("WithParentCount".equals(inlineStyleName)) {
-				format = InlineFormat.WITH_PARENT_COUNT;
-			} else if ("WithCountAndParentCount".equals(inlineStyleName)) {
-				format = InlineFormat.WITH_COUNT_AND_PARENT_COUNT;
-			} else if ("Custom".equals(inlineStyleName)) {
-				format = new InlineFormat(inlineStyleFormat);
-			} else {
-				throw new IllegalStateException(
-								"Unknown format found, this means that the XSD is wrong as it's permitted a value that isn't supported.");
-			}
-		} else {
-			format = null;
-		}
-		return format;
-	}
-
-	/**
 	 * Get all the mappings that have been found so far by this parser.
 	 *
 	 * @return a set of mappings, possibly empty and possible null if no files have been parsed.
 	 */
 	public MappingConfiguration getMappings() {
 		return this.mappingConfiguration;
-	}
-
-	/**
-	 * Parses a string representation of inline behaviour to an instance of {@link MultiValueBehaviour}.
-	 *
-	 * @param inlineBehaviour the inline behaviour (if null or empty then {@link MultiValueBehaviour#INHERIT} is used.
-	 * @return an inline behaviour. Never returns null.
-	 */
-	public MultiValueBehaviour parseInlineBehaviour(String inlineBehaviour) {
-		if (StringUtil.isNullOrEmpty(inlineBehaviour)) {
-			return MultiValueBehaviour.INHERIT;
-		} else {
-			String upperCaseVersion = inlineBehaviour.toUpperCase();
-			return MultiValueBehaviour.valueOf(upperCaseVersion);
-		}
 	}
 
 	@Override
@@ -296,14 +341,19 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (MAPPING_NAMESPACE.equals(uri)) {
 			switch (elementName) {
 				case Mapping:
-					addMapping(atts.getValue("name"), atts.getValue("xPath"), atts.getValue("inlineStyle"), atts.getValue("inlineFormat"),
-									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
+									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+					break;
+				case PivotMapping:
+					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
+									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 					break;
 				case MappingList:
-					startMappingList(atts.getValue("mappingRoot"), atts.getValue("name"));
+					addMappingList(atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(NAME_ATTR), atts.getValue(NAME_FORMAT_ATTR),
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 					break;
 				case MappingConfiguration:
-					startMappingConfiguration(atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+					addMappingConfiguration(atts.getValue(NAME_FORMAT_ATTR), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 					break;
 				case Filters:
 					startFilters();
@@ -339,7 +389,7 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	/**
 	 * When a new set of filters are found, ensure that stack is empty.
-	 * 
+	 *
 	 * @throws SAXException if {@link #inputFilterStack} isn't null.
 	 */
 	private void startFilters() throws SAXException {
@@ -347,37 +397,6 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(null, "New Filter set found, but existing filter set not tidied up.  Bug in xml2csv");
 		}
 		this.inputFilterStack = new Stack<IInputFilter>();
-	}
-
-	/**
-	 * Configures the inline behaviour (the instance of {@link MappingConfiguration} is already initialised on {@link #startDocument()}.
-	 *
-	 * @param inlineBehaviour the inline behaviour to observe, by default, for all child mappings.
-	 */
-	private void startMappingConfiguration(String inlineBehaviour) {
-		if (!StringUtil.isNullOrEmpty(inlineBehaviour)) {
-			this.mappingConfiguration.setDefaultInlineBehaviour(parseInlineBehaviour(inlineBehaviour));
-		}
-		this.mappingListStack = new Stack<MappingList>();
-	}
-
-	/**
-	 * Initialises a new MappingList object based on a Mapping element.
-	 *
-	 * @param mappingRoot The XPath expression that identifies the "root" elements for the mapping.
-	 * @param outputName The name of the output that this set of mappings should be written to.
-	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
-	 */
-	private void startMappingList(String mappingRoot, String outputName) throws SAXException {
-		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
-		MappingList newMapping = new MappingList(parent, this.mappingConfiguration.getNamespaceMap());
-		try {
-			newMapping.setMappingRoot(mappingRoot);
-		} catch (XMLException e) {
-			throw getException(e, "Invalid XPath \"%s\" found in mapping root", mappingRoot);
-		}
-		newMapping.setOutputName(outputName);
-		this.mappingListStack.push(newMapping);
 	}
 
 	/**

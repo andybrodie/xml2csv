@@ -23,7 +23,7 @@ import com.locima.xml2csv.inputparser.IConfigParser;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.IOutputManager;
-import com.locima.xml2csv.output.OutputManager;
+import com.locima.xml2csv.output.OutputManagerFactory;
 
 /**
  * Main entry point and logic for the program.
@@ -35,12 +35,12 @@ public class Program {
 	public static final int CONSOLE_WIDTH = 80;
 	private static final String HEADER = "xml2csv v0.1.  Converts XML files in to CSV files according to a set of specified rules.";
 	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
+	public static final String OPT_APPEND_OUTPUT = "a";
 	public static final String OPT_CONFIG_FILE = "c";
 	public static final String OPT_HELP = "h";
 	public static final String OPT_OUT_DIR = "o";
 	public static final String OPT_TRIM_WHITESPACE = "w";
 	public static final String OPT_XML_DIR = "i";
-	public static final String OPT_APPEND_OUTPUT = "a";
 
 	/**
 	 * Entry point for the command line execution.
@@ -81,10 +81,10 @@ public class Program {
 		MappingConfiguration mappingConfig = configParser.getMappings();
 
 		// Create headers for all the output files
-		IOutputManager outputMgr = new OutputManager();
-		outputMgr.setOutputDirectory(outputDirectory);
+		IOutputManager outputMgr = OutputManagerFactory.create(mappingConfig);
+		outputMgr.setDirectory(outputDirectory);
 		try {
-			outputMgr.createFiles(mappingConfig.getMappingsHeaders(), appendOutput);
+			outputMgr.initialise(mappingConfig, appendOutput);
 
 			// Parse the input XML files
 			XmlDataExtractor extractor = new XmlDataExtractor();
@@ -96,7 +96,7 @@ public class Program {
 				if (mappingConfig.include(xmlFile)) {
 					XdmNode docToConvert = XmlUtil.loadXmlFile(xmlFile);
 					if (mappingConfig.include(docToConvert)) {
-						extractor.convert(docToConvert, outputMgr);
+						extractor.extractTo(docToConvert, outputMgr);
 					} else {
 						LOG.debug("Excluding {} due to document content filters", xmlFile.getAbsolutePath());
 					}
@@ -104,17 +104,6 @@ public class Program {
 					LOG.debug("Excluding {} due to file filters", xmlFile.getAbsolutePath());
 				}
 			}
-
-			// If there's any inlined elements, run the whole lot again. Yes, this is very inefficient, but it works for now!
-			if (mappingConfig.containsInline()) {
-				LOG.info("Found inline element, therefore reprocessing with inline values supported.");
-				outputMgr.createFiles(mappingConfig.getMappingsHeaders(), appendOutput);
-				for (File xmlFile : xmlInputFiles) {
-					XdmNode docToConvert = XmlUtil.loadXmlFile(xmlFile);
-					extractor.convert(docToConvert, outputMgr);
-				}
-			}
-
 		} finally {
 			/*
 			 * No matter what happens, attempt to close all the OutputManager resources so at least we won't leave resources open.

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.extractor.DataExtractorException;
+import com.locima.xml2csv.model.XPathValue;
 
 /**
  * Utility methods to make dealing with Saxon easier.
@@ -30,6 +31,18 @@ public class XmlUtil {
 	 * at net.sf.saxon.s9api.XPathSelector.setContextItem(XPathSelector.java:62</code>.
 	 */
 	private static Processor processor = new Processor(false);
+
+	/**
+	 * Creates an executable XPath expression based on the XPath and a set of namespace prefix to URI mappings.
+	 *
+	 * @param namespaceMappings A mapping of namespace prefix to URI mappings. May be null if there are no namespaces involved.
+	 * @param xPathExpression An XPath expression to compile. Must be valid XPath.
+	 * @return a Saxon executable XPath expression, never null.
+	 * @throws XMLException If there are any problems compiling <code>xPathExpression</code>.
+	 */
+	public static XPathValue createXPathValue(Map<String, String> namespaceMappings, String xPathExpression) throws XMLException {
+		return new XPathValue(xPathExpression, createXPathExecutable(namespaceMappings, xPathExpression));
+	}
 
 	/**
 	 * Creates an Saxon executable XPath expression based on the XPath and a set of namespace prefix to URI mappings.

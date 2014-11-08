@@ -5,6 +5,7 @@ import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmNode;
 
+import com.locima.xml2csv.EqualsUtil;
 import com.locima.xml2csv.extractor.DataExtractorException;
 
 /**
@@ -52,6 +53,24 @@ public class XPathValue {
 	 */
 	public String getSource() {
 		return this.xPathExpr;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.xPathExpr.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj instanceof XPathValue) {
+			XPathValue that = (XPathValue) obj;
+			return EqualsUtil.areEqual(this.xPathExpr, that.xPathExpr);
+		} else {
+			return false;
+		}
 	}
 
 }

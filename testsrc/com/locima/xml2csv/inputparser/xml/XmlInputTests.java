@@ -27,11 +27,11 @@ public class XmlInputTests {
 		List<File> files = new ArrayList<File>();
 		files.add(TestHelpers.createFile("SimpleFamilyConfig.xml"));
 		parser.load(files);
-		MappingConfiguration set = parser.getMappings();
-		assertNotNull("MappingSet was null, should be non-null", set);
-		assertEquals(2, set.size());
+		MappingConfiguration config = parser.getMappings();
+		assertNotNull("MappingSet was null, should be non-null", config);
+		assertEquals(2, config.size());
 
-		IMappingContainer mapping1 = set.getMappingsByName("family");
+		IMappingContainer mapping1 = config.getContainerByName("family");
 		assertNotNull("Couldn't find family mapping", mapping1);
 	}
 
@@ -54,9 +54,9 @@ public class XmlInputTests {
 		assertNotNull("MappingSet was null, should be non-null", set);
 		assertEquals(2, set.size());
 
-		IMappingContainer mapping1 = set.getMappingsByName("FamilyWithNamespaces");
+		IMappingContainer mapping1 = set.getContainerByName("FamilyWithNamespaces");
 		assertNotNull("Couldn't find family mapping", mapping1);
-		IMappingContainer mapping2 = set.getMappingsByName("FamilyMembersWithNamespaces");
+		IMappingContainer mapping2 = set.getContainerByName("FamilyMembersWithNamespaces");
 		assertNotNull("Couldn't find family mapping", mapping2);
 	}
 

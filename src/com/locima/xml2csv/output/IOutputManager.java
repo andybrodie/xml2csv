@@ -1,8 +1,9 @@
 package com.locima.xml2csv.output;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
+
+import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.RecordSet;
 
 /**
  * Provided ONLY for unit testing.
@@ -10,19 +11,18 @@ import java.util.Map;
 public interface IOutputManager {
 
 	/**
-	 * Close all the writers managed by this class. All exceptions are suppressed as there's nothing we're going to do about it anyway.
+	 * Finalises all the output files.
 	 */
-	void close();
+	void close() throws OutputManagerException;
 
 	/**
 	 * Creates the CSV files that will be used for the different writers.
 	 *
-	 * @param outputConfiguration a map of output names (used for file names within the output directory) and the columns or fields that will be
-	 *            present in each one.
+	 * @param config the mapping configuration that determines what outputs will be written.  Must not be null.
 	 * @param appendOutput true if output should be appended to existing files, false if new files should overwrite existing ones.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst creating the output files or writing to them.
 	 */
-	void createFiles(Map<String, List<String>> outputConfiguration, boolean appendOutput) throws OutputManagerException;
+	void initialise(MappingConfiguration config, boolean appendOutput) throws OutputManagerException;
 
 	/**
 	 * Sets the directory to which output files will be written.
@@ -30,23 +30,8 @@ public interface IOutputManager {
 	 * @param outputDirectoryName the name of the output directory. Directory must exist and be writeable.
 	 * @throws OutputManagerException If the directory does not exist.
 	 */
-	void setDirectory(String outputDirectoryName) throws OutputManagerException;
+	void setDirectory(File outputDirectoryName) throws OutputManagerException;
 
-	/**
-	 * Sets the directory to which output files will be written.
-	 *
-	 * @param outputDirectory the output directory. Must exist and be writeable.
-	 * @throws OutputManagerException If the directory does not exist.
-	 */
-	void setOutputDirectory(File outputDirectory) throws OutputManagerException;
-
-	/**
-	 * Writes a set of values out to the specified writer.
-	 *
-	 * @param writerName the name of the writer to send the values to.
-	 * @param values the values to write.
-	 * @throws OutputManagerException if an error occurred writing the files.
-	 */
-	void writeRecords(String writerName, List<String> values) throws OutputManagerException;
+	void writeRecords(RecordSet records) throws OutputManagerException;
 
 }

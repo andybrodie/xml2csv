@@ -20,7 +20,18 @@
 				<element name="MappingList" type="tns:MappingList" />
 			</sequence>
 		</sequence>
-		<attribute name="InlineBehaviour" type="tns:InlineBehaviour" />
+		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional">
+			<annotation>
+				<documentation>The default behaviour for all mappings contained within this configuration.</documentation>
+			</annotation>
+		</attribute>
+
+		<attribute name="nameFormat" type="tns:NameFormat" use="optional">
+			<annotation>
+				<documentation>The default format for all field names contained within this configuration.</documentation>
+			</annotation>
+		</attribute>
+
 	</complexType>
 
 	<complexType name="MappingList">
@@ -29,7 +40,12 @@
 		</annotation>
 		<choice minOccurs="1" maxOccurs="unbounded">
 			<element name="Mapping" type="tns:Mapping" />
-			<element name="MappingList" type="tns:MappingList" />
+			<element name="PivotMapping" type="tns:PivotMapping"/>
+			<element name="MappingList" type="tns:MappingList">
+				<annotation>
+					<documentation>I'm not sure I need this any more with group numbers and multi-value behaviour, but keeping it just in case.</documentation>
+				</annotation>
+			</element>
 		</choice>
 		<attribute name="mappingRoot" type="string">
 			<annotation>
@@ -47,11 +63,13 @@
 			<annotation>
 				<documentation>Specifies the name of this mapping output.
 					This is used either as the basis of a filename (if inline is false) or
-					a column name
-					prefix (if inline is true).
+					a field name prefix
+					(if inline is true).
 				</documentation>
 			</annotation>
 		</attribute>
+		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
+		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
 	</complexType>
 
 	<complexType name="Mapping">
@@ -69,9 +87,28 @@
 				</documentation>
 			</annotation>
 		</attribute>
-		<attribute name="onInlineDetected" type="tns:InlineBehaviour" use="optional" default="Warn" />
-		<attribute name="inlineStyle" type="tns:InlineStyle" use="optional" />
-		<attribute name="inlineFormat" type="string" use="optional" />
+		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
+		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
+		<attribute name="group" type="tns:MappingGroup" use="optional" />
+	</complexType>
+
+	<complexType name="PivotMapping">
+		<annotation>
+			<documentation>Specifies a pivot mapping where the name must be an XPath expression that is used to
+				derive column names.
+			</documentation>
+		</annotation>
+		<complexContent>
+			<restriction base="tns:Mapping">
+				<attribute name="name" type="string" use="required">
+					<annotation>
+						<documentation>
+							Mandatory XPath expression that derives the names of the columns.
+						</documentation>
+					</annotation>
+				</attribute>
+			</restriction>
+		</complexContent>
 	</complexType>
 
 	<complexType name="Filters">
@@ -130,15 +167,23 @@
 		</attribute>
 	</complexType>
 
-	<simpleType name="InlineBehaviour">
+	<simpleType name="MultiValueBehaviour">
 		<restriction base="string">
-			<enumeration value="Warn" />
+			<enumeration value="Discard" />
 			<enumeration value="Error" />
-			<enumeration value="Ignore" />
+			<enumeration value="Default" />
+			<enumeration value="Inline" />
+			<enumeration value="MultiRecord" />
+			<enumeration value="Warn" />
 		</restriction>
 	</simpleType>
 
-	<simpleType name="InlineStyle" final="restriction">
+	<simpleType name="MappingGroup">
+		<restriction base="int" />
+	</simpleType>
+
+
+	<simpleType name="NameFormat">
 		<restriction base="string">
 			<enumeration value="NoCounts" />
 			<enumeration value="WithCount" />
@@ -147,4 +192,5 @@
 			<enumeration value="Custom" />
 		</restriction>
 	</simpleType>
+
 </schema>

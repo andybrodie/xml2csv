@@ -5,16 +5,16 @@ import static com.locima.xml2csv.TestHelpers.toFlatString;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.NotImplementedException;
 import com.locima.xml2csv.Tuple;
-import com.locima.xml2csv.output.IOutputManager;
-import com.locima.xml2csv.output.OutputManagerException;
+import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.RecordSet;
 
 public class MockOutputManager implements IOutputManager {
 
@@ -34,16 +34,15 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
-	public void createFiles(Map<String, List<String>> headers, boolean appendOutput) throws OutputManagerException {
+	public void initialise(MappingConfiguration config, boolean appendOutput) throws OutputManagerException {
 	}
 
 	@Override
-	public void setDirectory(String outputDirectoryName) throws OutputManagerException {
+	public void setDirectory(File outputDirectoryName) throws OutputManagerException {
 	}
 
 	@Override
-	public void writeRecords(String writerName, List<String> values) throws OutputManagerException {
-		writeRecords(writerName, values.toArray(new String[0]));
+	public void writeRecords(RecordSet records) throws OutputManagerException {
 	}
 
 	public void writeRecords(String writerName, String[] values) throws OutputManagerException {
@@ -58,12 +57,6 @@ public class MockOutputManager implements IOutputManager {
 			LOG.trace("Actual \"{}\"", toFlatString(values));
 		}
 		Assert.assertArrayEquals(s.getSecond(), values);
-	}
-
-	@Override
-	public void setOutputDirectory(File outputDirectory) throws OutputManagerException {
-		// TODO Auto-generated method stub
-		
 	}
 
 }
