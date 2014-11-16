@@ -1,5 +1,7 @@
 package com.locima.xml2csv.model;
 
+import java.util.List;
+
 
 /**
  * Used for objects that contain ordered collections of mappings of field name to XPath.
@@ -13,5 +15,7 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 	 *         {@link MappingConfiguration} cannot be anonymous and must have a valid non-zero length string.
 	 */
 	String getContainerName();
+
+	List<String> getFieldNames(String parentName, int parentIterationNumber);
 
 }

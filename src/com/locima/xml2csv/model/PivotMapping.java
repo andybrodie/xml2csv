@@ -1,5 +1,7 @@
 package com.locima.xml2csv.model;
 
+import java.util.List;
+
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
@@ -85,6 +87,12 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 		sb.append(getValueXPath().getSource());
 		sb.append(')');
 		return sb.toString();
+	}
+
+	@Override
+	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

@@ -213,6 +213,7 @@ public class XmlExtractorTests {
 	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, String valueXPathExpression) throws XMLException {
 		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
 		Mapping m = new Mapping(baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.DEFAULT, valueXPath);
+		mappings.add(m);
 	}
 
 	

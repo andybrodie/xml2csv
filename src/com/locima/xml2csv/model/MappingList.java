@@ -65,7 +65,9 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 */
 	private XPathExecutable mappingRoot;
 
-	private int minimumInstanceCount = 1;
+	private int maximumResultCount;
+
+	private int minimumResultCount = 1;
 
 	private Map<String, String> namespaceMappings;
 
@@ -102,6 +104,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 			rootIterator = getNodeIterator(rootNode, this.mappingRoot);
 			for (XdmItem item : rootIterator) {
 				if (item instanceof XdmNode) {
+					instanceCount++;
 					evaluate((XdmNode) item, rs, trimWhitespace);
 				} else {
 					LOG.warn("Expected to find only elements after executing XPath on mapping list, got {}", item.getClass().getName());
@@ -111,35 +114,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 			evaluate(rootNode, rs, trimWhitespace);
 		}
 
+		this.maximumResultCount = Math.max(this.maximumResultCount, instanceCount);
+
 		LOG.trace("Completed all mappings against document");
 		return rs;
 	}
-
-	// /**
-	// * Recursive implementation of {@link #getColumnNames(List)}. This ensures that the parent iteration count is available.
-	// *
-	// * @param columnNames the list of column names that is being built up.
-	// * @param parentName the name of the parent mapping list (or <code>null</code> if this {@link MappingList} is a direct child of the
-	// * {@link MappingConfiguration}.
-	// * @param parentCount the iteration of the parent mapping list that we're currently within.
-	// * @return the number of columns added by this invocation.
-	// */
-	// @Override
-	// public int getColumnNames(List<String> columnNames, String parentName, int parentCount) {
-	// int columnCount = 0;
-	// /*
-	// * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
-	// * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
-	// */
-	// int repeats = (parentName != null) ? getMaxInstanceCount() : 1;
-	// String mappingListName = getOutputName();
-	// for (int mappingListIteration = 0; mappingListIteration < repeats; mappingListIteration++) {
-	// for (IMapping mapping : this) {
-	// columnCount += mapping.getColumnNames(columnNames, mappingListName, mappingListIteration);
-	// }
-	// }
-	// return columnCount;
-	// }
 
 	/**
 	 * Evaluates a nested mapping, appending the results to the output line passed.
@@ -165,6 +144,43 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	@Override
 	public String getContainerName() {
 		return this.containerName;
+	}
+
+	/**
+	 * Recursive implementation of {@link #getColumnNames(List)}. This ensures that the parent iteration count is available.
+	 *
+	 * @param fieldNames the list of column names that is being built up.
+	 * @param parentName the name of the parent mapping list (or <code>null</code> if this {@link MappingList} is a direct child of the
+	 *            {@link MappingConfiguration}.
+	 * @param parentCount the iteration of the parent mapping list that we're currently within.
+	 * @return the number of columns added by this invocation.
+	 */
+	@Override
+	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount) {
+		int columnCount = 0;
+		/*
+		 * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
+		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
+		 */
+		int repeats = parentName != null ? getMaxResultCount() : 1;
+		String mappingListName = getContainerName();
+		for (int mappingListIteration = 0; mappingListIteration < repeats; mappingListIteration++) {
+			for (IMapping mapping : this) {
+				columnCount += mapping.getFieldNames(fieldNames, mappingListName, mappingListIteration);
+			}
+		}
+		return columnCount;
+	}
+
+	@Override
+	public List<String> getFieldNames(String parentName, int parentIterationNumber) {
+		List<String> fieldNames = new ArrayList<String>();
+		getFieldNames(fieldNames, parentName, parentIterationNumber);
+		return fieldNames;
+	}
+
+	private int getMaxResultCount() {
+		return Math.max(this.minimumResultCount, this.maximumResultCount);
 	}
 
 	@Override

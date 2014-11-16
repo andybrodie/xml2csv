@@ -19,7 +19,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.model.Mapping;
 import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.MappingList;
+import com.locima.xml2csv.model.MultiValueBehaviour;
+import com.locima.xml2csv.model.NameFormat;
 import com.locima.xml2csv.model.RecordSet;
 
 public class OutputManagerTests {
@@ -78,13 +84,24 @@ public class OutputManagerTests {
 		return null;
 	}
 
-	private MappingConfiguration createConfig(Map<String, List<String>> config) {
-		// TODO Auto-generated method stub
-		return null;
+	private MappingConfiguration createConfig(Map<String, List<String>> config) throws XMLException {
+		MappingConfiguration mappingConfig= new MappingConfiguration();
+		for (Map.Entry<String, List<String>> entry : config.entrySet()) {
+			String outputName = entry.getKey();
+			List<String> fieldNames= entry.getValue();
+			MappingList container = new MappingList();
+			container.setOutputName(outputName);
+			for (String fieldName : fieldNames) {
+				Mapping mapping = new Mapping(fieldName, NameFormat.NO_COUNTS,0, MultiValueBehaviour.DEFAULT, XmlUtil.createXPathValue(null, "."));
+				container.add(mapping);
+			}
+			mappingConfig.addMappings(container);
+		}
+		return mappingConfig;
 	}
 
 	@Test
-	public void testClose() throws IOException, OutputManagerException {
+	public void testClose() throws IOException, OutputManagerException, XMLException {
 		IOutputManager om = createTempOutputManager();
 		Map<String, List<String>> outputConfiguration = new LinkedHashMap<String, List<String>>();
 		om.initialise(createConfig(outputConfiguration), false);
@@ -92,7 +109,7 @@ public class OutputManagerTests {
 	}
 
 	@Test
-	public void testCreateFiles() throws IOException, OutputManagerException {
+	public void testCreateFiles() throws IOException, OutputManagerException, XMLException {
 		IOutputManager om = createTempOutputManager();
 		Map<String, List<String>> config = addOMConfig(null, "test", "col1", "col2", "col3");
 		addOMConfig(config, "test2", "colA", "colB", "colC");

@@ -44,7 +44,7 @@ public class TestHelpers {
 		}
 		assertEquals("More lines in actual than expected.", expected.length, actual.length);
 	}
-
+	
 	public static void assertCsvEquals(String expectedFileName, File actualRootDirectory, String actualFileName) throws Exception {
 		assertCsvEquals(new File(RES_DIR, expectedFileName), new File(actualRootDirectory, actualFileName));
 	}
@@ -127,4 +127,15 @@ public class TestHelpers {
 		}
 		return buf.toString();
 	}
+	
+
+	public static List<String> toStringList(String... string) {
+		List<String> list = new ArrayList<String>(string.length);
+		for (int i=0; i<string.length; i++) {
+			list.add(string[i]);
+		}
+		return list;
+	}
+
+
 }

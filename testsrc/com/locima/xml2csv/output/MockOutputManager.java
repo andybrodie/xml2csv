@@ -43,6 +43,9 @@ public class MockOutputManager implements IOutputManager {
 
 	@Override
 	public void writeRecords(RecordSet records) throws OutputManagerException {
+		for (List<String> values : records) {
+			Tuple<String, String[]> s = this._expectedResults.poll();
+		}
 	}
 
 	public void writeRecords(String writerName, String[] values) throws OutputManagerException {

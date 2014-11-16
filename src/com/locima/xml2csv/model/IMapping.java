@@ -29,4 +29,6 @@ public interface IMapping {
 	NameFormat getNameFormat();
 
 	MultiValueBehaviour getMultiValueBehaviour();
+	
+	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount);
 }

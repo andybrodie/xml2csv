@@ -253,6 +253,10 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private int getAttributeValueAsInt(Attributes atts, String attrName, int defaultValue) throws SAXException {
 		String attrValueAsString = atts.getValue(attrName);
+		if (StringUtil.isNullOrEmpty(attrValueAsString)) {
+			LOG.debug("No value specified for {}, returning default value of {}", attrName, defaultValue);
+			return defaultValue;
+		}
 		try {
 			return Integer.parseInt(attrValueAsString);
 		} catch (NumberFormatException nfe) {

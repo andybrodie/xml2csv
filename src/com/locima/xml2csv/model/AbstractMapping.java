@@ -62,7 +62,12 @@ public abstract class AbstractMapping implements IMapping {
 
 	@Override
 	public MultiValueBehaviour getMultiValueBehaviour() {
-		return this.multiValueBehaviour;
+		if (this.multiValueBehaviour == MultiValueBehaviour.DEFAULT) {
+			// TODO Implement inheritence from parent (currently a mapping has no concept of parent container!)
+			return MultiValueBehaviour.INLINE;
+		} else {
+			return this.multiValueBehaviour;
+		}
 	}
 
 	@Override

@@ -25,6 +25,8 @@ public class Mapping extends AbstractMapping implements IMapping {
 	 */
 	private String baseName;
 
+	private int maxResultsFound;
+
 	/**
 	 * Creates a new immutable Field Definition.
 	 *
@@ -67,28 +69,11 @@ public class Mapping extends AbstractMapping implements IMapping {
 				}
 				values.add(value);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("{} found {} value(s) {} found after executing XPath {}", fieldName, values.size(), value, getValueXPath().getSource());
+					LOG.debug("Field \"{}\" found {} value(s) \"{}\" found after executing XPath \"{}\"", fieldName, values.size(), value, getValueXPath().getSource());
 				}
 			}
 		}
-		int instanceCount = values.size();
-
-		// // Add any blanks where maxInstanceCount is more than valuesSize
-		// int maxInstances = getMaxInstanceCount();
-		// if (instanceCount < maxInstances) {
-		// if (LOG.isTraceEnabled()) {
-		// LOG.trace("Adding {} blank fields to make up to {} in mapping {}", this.maxInstanceCount - instanceCount, this.getMaxInstanceCount,
-		// this) ;
-		// }
-		// for (int i = instanceCount; i < maxInstances; i++) {
-		// values.add(StringUtil.EMPTY_STRING);
-		// }
-		// }
-		//
-		// this.maxInstanceCount = Math.max(this.maxInstanceCount, instanceCount);
-		// if (instanceCount == 0) {
-		// LOG.debug("No value for {} was found after executing XPath {}", this.field, this.xPathExpr.getSource());
-		// }
+		this.maxResultsFound = Math.max(this.maxResultsFound, values.size());
 
 		RecordSet rs = new RecordSet();
 		rs.addResults(this, values);
@@ -124,6 +109,30 @@ public class Mapping extends AbstractMapping implements IMapping {
 		sb.append(getValueXPath().getSource());
 		sb.append(')');
 		return sb.toString();
+	}
+
+	@Override
+	public int getFieldNames(List<String> fieldNames, String parentName, int parentIterationNumber) {
+		int numNames = this.maxResultsFound;
+		int fieldCount=0;
+		switch (this.getMultiValueBehaviour()) {
+			case DISCARD:
+			case ERROR:
+			case MULTI_RECORD:
+				fieldNames.add(this.getBaseName());
+				fieldCount++;
+				break;
+			case INLINE:
+			case WARN:
+				for (int i = 0; i < numNames; i++) {
+					fieldCount++;
+					fieldNames.add(this.getNameFormat().format(baseName, i, parentName, parentIterationNumber));
+				}
+				break;
+			default:
+				throw new IllegalStateException("Unexpected MultiValueBehaviour: " + this.getMultiValueBehaviour());
+		}
+		return fieldCount;
 	}
 
 }

@@ -72,11 +72,11 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 			throw new ArgumentNullException("maps");
 		}
 		// Ensure that the mapping set name is unique
-		String mappingSetName = maps.getContainerName();
-		if (mappingSetName == null) {
+		String containerName = maps.getContainerName();
+		if (containerName == null) {
 			throw new ArgumentException("maps", "contains a null name.");
 		}
-		if (containsContainer(mappingSetName)) {
+		if (containsContainer(containerName)) {
 			throw new ArgumentException("maps", "must contain a unique name");
 		}
 		this.mappings.add(maps);
