@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +18,12 @@ public abstract class AbstractCsvWriter implements IOutputManager {
 
 	public static List<OutputEntry> createEntries(File outputDirectory, MappingConfiguration config, boolean appendOutput)
 					throws OutputManagerException {
-		if (config==null) throw new ArgumentNullException("config");
-		if (outputDirectory==null) throw new ArgumentNullException("outputDirectory");
+		if (config == null) {
+			throw new ArgumentNullException("config");
+		}
+		if (outputDirectory == null) {
+			throw new ArgumentNullException("outputDirectory");
+		}
 		List<OutputEntry> outputs = new ArrayList<OutputEntry>();
 		for (IMappingContainer container : config) {
 			outputs.add(OutputEntry.create(outputDirectory, container, appendOutput));

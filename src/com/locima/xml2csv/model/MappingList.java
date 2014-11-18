@@ -132,7 +132,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	private void evaluate(XdmNode node, RecordSet outputLine, boolean trimWhitespace) throws DataExtractorException {
 		for (IMapping mapping : this) {
 			RecordSet records = mapping.evaluate(node, trimWhitespace);
-			outputLine.mergeFrom(records);
+			outputLine.addAll(records);
 		}
 	}
 
@@ -259,6 +259,12 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 		sb.append("]");
 		return sb.toString();
+	}
+
+	@Override
+	public int getGroupNumber() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

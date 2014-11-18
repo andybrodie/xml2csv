@@ -23,8 +23,8 @@ import com.locima.xml2csv.output.OutputManagerException;
  * Extracts data from XML documents provided according a @see MappingConfiguration provided.
  * <p>
  * This makes use of Saxon for parsing XPath, because Saxon was the only XPath 2.0 compliant parser I could find. JAXP does NOT support default
- * namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs. All suggested workaround seem to be "just rewrite the
- * XPath statement to include a NS declaration", however I have no control over the input files and XPath, so this is not viable.
+ * namespace prefixes (part of XPath 2.0), so had to resort to the native Saxon APIs. All suggested workaround seem to be "just rewrite the XPath
+ * statement to include a NS declaration", however I have no control over the input files and XPath, so this is not viable.
  * <p>
  * This is a surprisingly thin class, because most of the actual heavy lifting is done in {@link MappingList} and {@link Mapping}.
  */
@@ -109,7 +109,7 @@ public class XmlDataExtractor {
 		for (IMappingContainer mapping : this.mappingConfiguration) {
 			RecordSet records = mapping.evaluate(xmlDoc, this.trimWhitespace);
 			if (outputManager != null) {
-				outputManager.writeRecords(records);
+				outputManager.writeRecords(mapping.getContainerName(), records);
 			} else {
 				LOG.trace("No IOutputManager passed so not writing any output.");
 			}

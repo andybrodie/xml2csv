@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Output every Level2 element's data in a single row, i.e. inline levels 
-	3 and 4 -->
-<m:MappingConfiguration
-	xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<m:MappingList mappingRoot="/Level1/Level2" name="HeavilyNestedInstance">
-		<m:Mapping name="Level1" xPath="../@data" inlineStyle="NoCounts" />
-		<m:Mapping name="Level2" xPath="@data" inlineStyle="NoCounts" />
-		<m:MappingList name="Level3List" mappingRoot="Level3">
-			<m:Mapping name="Level3" xPath="@data" inlineStyle="WithParentCount" />
-			<m:Mapping name="Level4" xPath="Level4/@data" inlineStyle="WithCount" />
-		</m:MappingList>
+<!-- Output every Level2 element's data in a single row, i.e. inline levels 3 and 4 -->
+<m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<m:MappingList name="HeavilyNestedInstance" mappingRoot="/Level1/Level2">
+		<m:Mapping name="Level1" xPath="../@data" behaviour="MultiRecord" group="1" />
+		<m:Mapping name="Level2" xPath="@data" behaviour="MultiRecord" group="1" />
+		<m:Mapping name="Level3" xPath="Level3/@data" behaviour="Inline" group="2" />
+		<m:Mapping name="Level4" xPath="Level4/@data" behaviour="Inline" group="2" />
 	</m:MappingList>
+
+	<!-- <m:MappingList mappingRoot="/Level1/Level2" name="HeavilyNestedInstance"> <m:Mapping name="Level1" xPath="../@data" inlineStyle="NoCounts" /> <m:Mapping 
+		name="Level2" xPath="@data" inlineStyle="NoCounts" /> <m:MappingList name="Level3List" mappingRoot="Level3"> <m:Mapping name="Level3" xPath="@data" inlineStyle="WithParentCount" 
+		/> <m:Mapping name="Level4" xPath="Level4/@data" inlineStyle="WithCount" /> </m:MappingList> </m:MappingList> -->
+
 </m:MappingConfiguration>

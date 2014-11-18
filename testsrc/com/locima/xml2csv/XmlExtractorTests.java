@@ -76,30 +76,30 @@ public class XmlExtractorTests {
 
 	@Test
 	public void testBasicMappingsWithRoot() throws Exception {
+		MappingConfiguration config = new MappingConfiguration();
+		
 		MappingList parents = new MappingList();
 		parents.setOutputName("Parents");
 		parents.setMappingRoot("/root/parent");
 		addMapping(parents, null, "data", "data");
-
+		config.addMappings(parents);
+		
 		MappingList children = new MappingList();
 		children.setOutputName("Children");
 		children.setMappingRoot("/root/parent/child");
-		addMapping(parents, null, "data", "data"); 
-
-		MappingConfiguration config = new MappingConfiguration();
-		config.addMappings(parents);
+		addMapping(children, null, "data", "data");
 		config.addMappings(children);
 
 		XmlDataExtractor extractor = new XmlDataExtractor();
 		extractor.setMappingConfiguration(config);
 
 		MockOutputManager om = new MockOutputManager();
-		om.addExpectedResult("Parents", new String[] { "ParentData1" });
-		om.addExpectedResult("Parents", new String[] { "ParentData2" });
-		om.addExpectedResult("Children", new String[] { "ParentData1Child1" });
-		om.addExpectedResult("Children", new String[] { "ParentData1Child2" });
-		om.addExpectedResult("Children", new String[] { "ParentData2Child1" });
-		om.addExpectedResult("Children", new String[] { "ParentData2Child2" });
+		om.addExpectedResult("Parents", "ParentData1");
+		om.addExpectedResult("Parents", "ParentData2");
+		om.addExpectedResult("Children", "ParentData1Child1");
+		om.addExpectedResult("Children", "ParentData1Child2");
+		om.addExpectedResult("Children", "ParentData2Child1");
+		om.addExpectedResult("Children", "ParentData2Child2");
 
 		XdmNode testDoc =
 						createFromString("<root><parent><data>ParentData1</data>" + "<child><data>ParentData1Child1</data></child>"
@@ -157,7 +157,6 @@ public class XmlExtractorTests {
 		om.close();
 	}
 
-
 	@Test
 	public void testSimpleMappings() throws Exception {
 		MappingList mappings = new MappingList();
@@ -209,14 +208,12 @@ public class XmlExtractorTests {
 		x.extractTo(testDoc, om);
 	}
 
-	
 	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, String valueXPathExpression) throws XMLException {
 		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
-		Mapping m = new Mapping(baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.DEFAULT, valueXPath);
+		Mapping m = new Mapping(baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, valueXPath);
 		mappings.add(m);
 	}
 
-	
 	@Test
 	public void testSimpleMappingsWithRoot() throws Exception {
 		MappingList mappings = new MappingList();

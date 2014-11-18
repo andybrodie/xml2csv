@@ -18,6 +18,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
@@ -67,21 +69,20 @@ public class OutputManagerTests {
 		Map<String, List<String>> config = addOMConfig(null, "test", "col1", "col2", "col3");
 		addOMConfig(config, "test2", "colA", "colB", "colC");
 		om.initialise(createConfig(config), false);
-		om.writeRecords(createRs("test", Arrays.asList(new String[] { "1", "2", "3" })));
-		om.writeRecords(createRs("test2", Arrays.asList(new String[] { "A", "B", "C" })));
+		om.writeRecords("test", createRs("1", "2", "3"));
+		om.writeRecords("test2", createRs("A", "B", "C"));
 		om.close();
 		om.initialise(createConfig(config), true);
-		om.writeRecords(createRs("test", Arrays.asList(new String[] { "1", "2", "3" })));
-		om.writeRecords(createRs("test2", Arrays.asList(new String[] { "A", "B", "C" })));
+		om.writeRecords("test", createRs("1", "2", "3" ));
+		om.writeRecords("test2", createRs("A", "B", "C" ));
 		om.close();
 
 		assertCsvEquals("OutputManagerAppendTest1.csv", testOutputDir, "test.csv");
 		assertCsvEquals("OutputManagerAppendTest2.csv", testOutputDir, "test2.csv");
 	}
 
-	private RecordSet createRs(String string, List<String> asList) {
-		// TODO Auto-generated method stub
-		return null;
+	private RecordSet createRs(String... values) {
+		throw new NotImplementedException();
 	}
 
 	private MappingConfiguration createConfig(Map<String, List<String>> config) throws XMLException {
@@ -132,8 +133,8 @@ public class OutputManagerTests {
 		Map<String, List<String>> config = addOMConfig(null, "test", "col1", "col2", "col3");
 		addOMConfig(config, "test2", "colA", "colB", "colC");
 		om.initialise(createConfig(config), false);
-		om.writeRecords(createRs("test", Arrays.asList(new String[] { "1", "2", "3" })));
-		om.writeRecords(createRs("test2", Arrays.asList(new String[] { "A", "B", "C" })));
+		om.writeRecords("test", createRs("1", "2", "3" ));
+		om.writeRecords("test2", createRs("A", "B", "C" ));
 		om.close();
 	}
 

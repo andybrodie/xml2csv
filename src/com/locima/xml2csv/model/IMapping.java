@@ -24,11 +24,15 @@ public interface IMapping {
 
 	/**
 	 * Defines how multiple values being found by this mapping, for a single input, should be named.
+	 * 
 	 * @return an inline format specification.
 	 */
 	NameFormat getNameFormat();
 
 	MultiValueBehaviour getMultiValueBehaviour();
-	
-	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount);
+
+	int getFieldNames(List<String> fieldNames, String parentName, int parentCount);
+
+	int getGroupNumber();
+
 }

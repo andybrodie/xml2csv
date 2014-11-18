@@ -69,7 +69,8 @@ public class Mapping extends AbstractMapping implements IMapping {
 				}
 				values.add(value);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Field \"{}\" found {} value(s) \"{}\" found after executing XPath \"{}\"", fieldName, values.size(), value, getValueXPath().getSource());
+					LOG.debug("Field \"{}\" found {} value(s) \"{}\" found after executing XPath \"{}\"", fieldName, values.size(), value,
+									getValueXPath().getSource());
 				}
 			}
 		}
@@ -82,6 +83,30 @@ public class Mapping extends AbstractMapping implements IMapping {
 
 	public String getBaseName() {
 		return this.baseName;
+	}
+
+	@Override
+	public int getFieldNames(List<String> fieldNames, String parentName, int parentIterationNumber) {
+		int numNames = this.maxResultsFound;
+		int fieldCount = 0;
+		switch (getMultiValueBehaviour()) {
+			case DISCARD:
+			case ERROR:
+			case MULTI_RECORD:
+				fieldNames.add(getBaseName());
+				fieldCount++;
+				break;
+			case INLINE:
+			case WARN:
+				for (int i = 0; i < numNames; i++) {
+					fieldCount++;
+					fieldNames.add(getNameFormat().format(this.baseName, i, parentName, parentIterationNumber));
+				}
+				break;
+			default:
+				throw new IllegalStateException("Unexpected MultiValueBehaviour: " + getMultiValueBehaviour());
+		}
+		return fieldCount;
 	}
 
 	/**
@@ -109,30 +134,6 @@ public class Mapping extends AbstractMapping implements IMapping {
 		sb.append(getValueXPath().getSource());
 		sb.append(')');
 		return sb.toString();
-	}
-
-	@Override
-	public int getFieldNames(List<String> fieldNames, String parentName, int parentIterationNumber) {
-		int numNames = this.maxResultsFound;
-		int fieldCount=0;
-		switch (this.getMultiValueBehaviour()) {
-			case DISCARD:
-			case ERROR:
-			case MULTI_RECORD:
-				fieldNames.add(this.getBaseName());
-				fieldCount++;
-				break;
-			case INLINE:
-			case WARN:
-				for (int i = 0; i < numNames; i++) {
-					fieldCount++;
-					fieldNames.add(this.getNameFormat().format(baseName, i, parentName, parentIterationNumber));
-				}
-				break;
-			default:
-				throw new IllegalStateException("Unexpected MultiValueBehaviour: " + this.getMultiValueBehaviour());
-		}
-		return fieldCount;
 	}
 
 }

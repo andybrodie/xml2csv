@@ -7,6 +7,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.StringUtil;
+
 /**
  * Represents a set of records created by a mapping execution.
  * <p>
@@ -17,18 +19,56 @@ import org.slf4j.LoggerFactory;
  * <li>The handling of multi-valued fields with respect to whether multiple values are presented in a single record (known as "inline" mappings) or
  * over multiple records (known as multi-record mappings).
  * </ol>
- * This class contains the logic to convert the mapping configuration and their values (either via {@link #addResults(Mapping, List)} or
- * {@link #mergeFrom(RecordSet)}) and allow them to be iterated over using the implemementation of the {@link Iterator} implemented this class
- * provides.
  */
 public class RecordSet implements Iterable<List<String>> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RecordSet.class);
 
+	private String outputName;
+
 	List<MappingRecord> results;
 
+	/**
+	 * Initialises a new, empty record set.
+	 */
 	public RecordSet() {
 		this.results = new ArrayList<MappingRecord>();
+	}
+
+	/**
+	 * Copy all the records from the passed <code>records</code> and add them to this instance.
+	 *
+	 * @param records the records to add. If null or empty then no action is taken.
+	 */
+	public void addAll(RecordSet records) {
+		if (records != null) {
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("Adding {} records to this set, making a total of {}", records.results.size(), records.results.size() + this.results.size());
+			}
+			for (MappingRecord record : records.results) {
+				add(record);
+			}
+		}
+	}
+
+	/**
+	 * Adds a new result of executing a mapping to this record set.
+	 *
+	 * @param record the record to add. Must not be null.
+	 */
+	public void add(MappingRecord record) {
+		boolean addedToExisting = false;
+		for (MappingRecord existingRecord : this.results) {
+			if (existingRecord.getMapping() == record.getMapping()) {
+				existingRecord.addAll(record);
+				addedToExisting = true;
+				break;
+				// throw new IllegalStateException("Attempted to add a second set of results for mapping " + record.getMapping());
+			}
+		}
+		if (!addedToExisting) {
+			this.results.add(record);
+		}
 	}
 
 	/**
@@ -38,53 +78,15 @@ public class RecordSet implements Iterable<List<String>> {
 	 * @param values the values generated from the passed <code>mapping</code>.
 	 */
 	public void addResults(Mapping mapping, List<String> values) {
-		this.addResults(new MappingRecord(mapping, values));
-	}
-
-	public void addResults(MappingRecord record) {
-		for (MappingRecord existingRecord : this.results) {
-			if (existingRecord.getMapping() == record.getMapping()) {
-				throw new IllegalStateException("Attempted to put in two sets of records for the same mapping " + record.getMapping()
-								+ ", this should never happen. BUG");
-			}
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("Adding values to {}: {}", mapping, StringUtil.collectionToString(values, ",", "\""));
 		}
-		this.results.add(record);
-	}
-
-	/**
-	 * Determines whether there are records that are cofigured with {@link MultiValueBehaviour#MULTI_RECORD} that are <strong>not</strong> active, but
-	 * have more values to yield.
-	 * <p>
-	 * This is required for {@link #next()} to know whether it can move the active group on or not.
-	 *
-	 * @param activeGroupNumber the current active group number
-	 * @return true if there are more records based on non-active groups to yield.
-	 */
-	public boolean currentNonActiveMultiRecordHasNext(int activeGroupNumber) {
-		for (MappingRecord record : this.results) {
-			if (record.hasNext() && (record.getMapping().getGroupNumber() != activeGroupNumber)) {
-				return true;
-			}
-		}
-		return false;
+		add(new MappingRecord(mapping, values));
 	}
 
 	@Override
 	public Iterator<List<String>> iterator() {
 		return new RecordSetIterator(this.results);
-	}
-
-	/**
-	 * Copy all the records from the passed <code>records</code> and add them to this instance.
-	 *
-	 * @param records the records to add. If null or empty then no action is taken.
-	 */
-	public void mergeFrom(RecordSet records) {
-		if (records != null) {
-			for (MappingRecord record : records.results) {
-				this.addResults(record);
-			}
-		}
 	}
 
 }

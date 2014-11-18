@@ -59,7 +59,7 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 
 			Mapping mapping = new Mapping(baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath());
 			RecordSet pivotEntryResults = mapping.evaluate((XdmNode) item, true);
-			rs.mergeFrom(pivotEntryResults);
+			rs.addAll(pivotEntryResults);
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("{} found {} field definition(s) after executing XPath {}", this, keyCount, this.baseNameXPath.getSource(),

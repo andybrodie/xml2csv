@@ -7,17 +7,12 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.FileUtility;
-import com.locima.xml2csv.model.IMapping;
 import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.MappingList;
 
 public class OutputEntry {
 
@@ -25,7 +20,7 @@ public class OutputEntry {
 
 	public static OutputEntry create(File outputDirectory, IMappingContainer container, boolean appendOutput) throws OutputManagerException {
 		String name = container.getContainerName();
-		String fileNameBasis = name += ".csv";
+		String fileNameBasis = name +  ".csv";
 		File file = new File(outputDirectory, FileUtility.convertToPOSIXCompliantFilename(fileNameBasis));
 		Writer writer = createWriter(file, appendOutput);
 		return new OutputEntry(name, file, writer, container);
@@ -46,13 +41,13 @@ public class OutputEntry {
 		}
 	}
 
+	private IMappingContainer container;
+
 	private File file;
 
 	private String name;
 
 	private Writer writer;
-
-	private IMappingContainer container;
 
 	public OutputEntry(String outputName, File outputFile, Writer outputWriter, IMappingContainer container) {
 		this.name = outputName;
@@ -76,6 +71,5 @@ public class OutputEntry {
 	public Writer getWriter() {
 		return this.writer;
 	}
-
 
 }

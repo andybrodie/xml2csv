@@ -11,14 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.NotImplementedException;
 import com.locima.xml2csv.StringUtil;
 
 /**
  * Iterates over a {@link RecordSet} to output a set of CSV output lines.
  * <p>
- * When initialised, this creates a linked list of {@link GroupState} objects that maintain the state of each group for
- * multi-record mappings, and a special group for all the inline mappings (group number isn't used for inline mappings).
+ * When initialised, this creates a linked list of {@link GroupState} objects that maintain the state of each group for multi-record mappings, and a
+ * special group for all the inline mappings (group number isn't used for inline mappings).
  */
 public class RecordSetIterator implements Iterator<List<String>> {
 
@@ -29,18 +28,19 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	 */
 	private GroupState groupState;
 
-	/** The list of results that this iterator is initialised with.
-	 * 
+	/**
+	 * The list of results that this iterator is initialised with.
 	 */
 	private List<MappingRecord> results;
 
-	/** The total number of records that this iterator will return.  Used for unit testing and debugging mostly.
-	 * 
+	/**
+	 * The total number of records that this iterator will return. Used for unit testing and debugging mostly.
 	 */
 	private int totalResults;
 
 	/**
-	 * Initalises a new iterator.  Usually called by {@link RecordSet#iterator()}.
+	 * Initalises a new iterator. Usually called by {@link RecordSet#iterator()}.
+	 *
 	 * @param results the set of results that we're going to iterate;
 	 */
 	public RecordSetIterator(List<MappingRecord> results) {
@@ -51,6 +51,7 @@ public class RecordSetIterator implements Iterator<List<String>> {
 
 	/**
 	 * Creates a list of values, ready to be output in to a CSV file.
+	 *
 	 * @return a possibly empty string containing a mixture of null and non-null values.
 	 */
 	private List<String> createCsvValues() {
@@ -67,13 +68,10 @@ public class RecordSetIterator implements Iterator<List<String>> {
 				case DISCARD:
 				case ERROR:
 				case WARN:
-					record.reset();
-					if (record.hasNext()) {
-						csvFields.add(record.next());
-					}
-					/* Inline is very simple, for every output record, just output all the fields */
+					csvFields.add(record.getFirstOrDefault());
+					break;
+				/* Inline is very simple, for every output record, just output all the fields */
 				case INLINE:
-					record.reset();
 					for (String value : record) {
 						csvFields.add(value);
 					}
@@ -83,8 +81,8 @@ public class RecordSetIterator implements Iterator<List<String>> {
 					csvFields.add(record.getValueAt(valueIndex));
 					break;
 				case DEFAULT:
-					throw new BugException(
-									"Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by Mapping.getMultiValueBehaviour().");
+					throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
+									+ "Mapping.getMultiValueBehaviour().");
 				default:
 					throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().", record.getMultiValueBehaviour());
 
@@ -94,30 +92,6 @@ public class RecordSetIterator implements Iterator<List<String>> {
 			LOG.debug("Created record as follows ({})", StringUtil.collectionToString(csvFields, ",", null));
 		}
 		return csvFields;
-	}
-
-	/**
-	 * Calculates the active group number for {@link #next()}.
-	 * <p>
-	 * This is done by looking for the lowest "group" number in all the fields making up a {@link RecordSet} that still has a value to yield (i.e.
-	 * {@link MappingRecord#hasNext()} returns <code>true</code>.
-	 * <p>
-	 * This must not be called unless {@link #hasNext()} has returned <code>true</code>.
-	 *
-	 * @return the number of the active group, a natural number less than (but not equal to) {@link Integer.MAX_VALUE}.
-	 */
-	private int getActiveGroupNumber(int greaterThan) {
-		int groupNumber = Integer.MAX_VALUE;
-		for (MappingRecord record : this.results) {
-			if (record.hasNext()) {
-				groupNumber = Math.min(groupNumber, record.getMapping().getGroupNumber());
-			}
-		}
-		if (groupNumber == Integer.MAX_VALUE) {
-			throw new BugException(
-							"getActiveGroupNumber found no active groups, which means that hasNext() should never have allowed us to get this far.");
-		}
-		return groupNumber;
 	}
 
 	private int getIndexForGroup(int group) {
@@ -140,7 +114,7 @@ public class RecordSetIterator implements Iterator<List<String>> {
 
 	/**
 	 * Get the total number of records expected to be returned.
-	 * 
+	 *
 	 * @return calculates the total number of records that will be returned when iterated.
 	 */
 	public int getTotalNumberOfRecords() {
@@ -173,6 +147,7 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	/**
 	 * Determines whether there are any more records to iterate over based on whether all of the mappings have had all their outputs returned from the
 	 * iterator.
+	 *
 	 * @return true if calling {@link #next()} would yield a record, false otherwise.
 	 */
 	@Override
@@ -184,9 +159,6 @@ public class RecordSetIterator implements Iterator<List<String>> {
 		}
 	}
 
-	/**
-	 * Returns the current record and moves to the next one ready.
-	 */
 	@Override
 	public List<String> next() {
 		if (!hasNext()) {
@@ -198,11 +170,11 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	}
 
 	/**
-	 * Not supported, so will throw {@link NotImplementedException}.
+	 * Not supported, so will throw {@link UnsupportedOperationException}.
 	 */
 	@Override
 	public void remove() {
-		throw new NotImplementedException("remove() should never be called on RecordSet: %s", this);
+		throw new UnsupportedOperationException("remove() should never be called on RecordSet: " + this);
 	}
 
 }

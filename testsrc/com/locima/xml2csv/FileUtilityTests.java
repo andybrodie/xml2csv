@@ -1,11 +1,10 @@
 package com.locima.xml2csv;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,9 +42,10 @@ public class FileUtilityTests {
 		for (String testCase : validTestCases) {
 			assertEquals(testCase, FileUtility.convertToPOSIXCompliantFilename(testCase));
 		}
-		String[] adjustedTestCases = new String[] { "-----", "", "ABC!\"£$%^-", "ABC-", "  A", "A", "1234567890ABCDEFGH", "1234567890ABCD",
-						"----1234567890ABCDEFGH", "1234567890ABCD"};
-		for (int i = 0; i < adjustedTestCases.length - 1; i += 2) {
+		String[] adjustedTestCases =
+						new String[] { "-----", "", "ABC!\"£$%^-", "ABC-", "  A", "A", "1234567890ABCDEFGH", "1234567890ABCD",
+										"----1234567890ABCDEFGH", "1234567890ABCD" };
+		for (int i = 0; i < (adjustedTestCases.length - 1); i += 2) {
 			assertEquals(adjustedTestCases[i + 1], FileUtility.convertToPOSIXCompliantFilename(adjustedTestCases[i]));
 		}
 

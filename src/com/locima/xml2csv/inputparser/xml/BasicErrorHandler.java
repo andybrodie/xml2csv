@@ -27,6 +27,7 @@ public class BasicErrorHandler implements ErrorHandler {
 
 	/**
 	 * Creates a nice, human readable error for a parser exception.
+	 * 
 	 * @param errorType type of error that has occurred (warn, fatal, error).
 	 * @param spe the exception that was thrown for the error.
 	 * @return a nice, human readable error for a parser exception.

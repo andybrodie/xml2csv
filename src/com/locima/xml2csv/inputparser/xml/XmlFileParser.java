@@ -60,7 +60,7 @@ public class XmlFileParser implements IConfigParser {
 	private SAXParser getParser() throws SAXException, ParserConfigurationException {
 
 		// Where the XSD file is within my application resources, just one so far, but others will follow.
-		final String[] schemaResourceNames = new String[] {"com/locima/xml2csv/inputparser/xml/MappingConfiguration.xsd" };
+		final String[] schemaResourceNames = new String[] { "com/locima/xml2csv/inputparser/xml/MappingConfiguration.xsd" };
 
 		// So far, so good.
 		SAXParserFactory factory = SAXParserFactory.newInstance();

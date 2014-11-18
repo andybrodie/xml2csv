@@ -50,7 +50,7 @@ public class FileUtility {
 	}
 
 	/**
-	 * Creates a POSIX-compliant file name bsased on the parameter passed.  The returned string will be:
+	 * Creates a POSIX-compliant file name bsased on the parameter passed. The returned string will be:
 	 * <p>
 	 * Note we only permit characters that are fully POSIX compliant, this means:
 	 * <ol>
@@ -66,11 +66,12 @@ public class FileUtility {
 		if (str == null) {
 			return null;
 		}
+		final int maxPosixFileNameLength = 14;
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; (i < str.length()) && (sb.length() < 14); i++) {
+		for (int i = 0; (i < str.length()) && (sb.length() < maxPosixFileNameLength); i++) {
 			char ch = str.charAt(i);
 			if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')) || ((ch >= '0') && (ch <= '9')) || (ch == '.') || (ch == '_')
-							|| (ch == '-' && sb.length()>0)) {
+							|| (ch == '-' && sb.length() > 0)) {
 				sb.append(ch);
 			}
 		}

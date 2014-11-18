@@ -1,81 +1,66 @@
 package com.locima.xml2csv.model;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import com.locima.xml2csv.NotImplementedException;
+import com.locima.xml2csv.ArgumentException;
 
-public class MappingRecord implements Iterator<String>, Iterable<String> {
-	private Mapping mapping;
-	private int nextValueIndex = 0;
-	private List<String> values;
+/**
+ * Contains both a {#IMapping} and the results of executing that mapping on a single input.
+ */
+public class MappingRecord extends ArrayList<String> {
+	private static final long serialVersionUID = -7528682553696301462L;
+	private IMapping mapping;
 
-	public MappingRecord(Mapping mapping, List<String> values) {
+	/**
+	 * Creates a instance that ties together a mapping and the values it yielded.
+	 *
+	 * @param mapping the mapping that creates the <code>values</code> passed.
+	 * @param values the values created by executing the <code>mapping</code> against a single input document.
+	 */
+	public MappingRecord(Mapping mapping, Collection<? extends String> values) {
+		super(values);
+		if (mapping == null) {
+			throw new ArgumentException("mapping must not be null.");
+		}
 		this.mapping = mapping;
-		this.values = values;
 	}
 
-	public Mapping getMapping() {
+	/**
+	 * Returns the first element of the list, or null if the list is empty.
+	 *
+	 * @return the first element of the list, or null if the list is empty.
+	 */
+	public String getFirstOrDefault() {
+		return getValueAt(0);
+	}
+
+	/**
+	 * Retrieves mapping that created these results.
+	 *
+	 * @return the mapping that creates these results, never null.
+	 */
+	public IMapping getMapping() {
 		return this.mapping;
 	}
 
+	/**
+	 * Retrieves the multi value behaviour for this mapping.
+	 *
+	 * @return the multi value behaviour for this mapping.
+	 */
 	public MultiValueBehaviour getMultiValueBehaviour() {
 		return this.mapping.getMultiValueBehaviour();
 	}
 
-	@Override
-	public boolean hasNext() {
-		return this.nextValueIndex < (this.values.size());
-	}
-
-	@Override
-	public Iterator<String> iterator() {
-		// TODO Oops, need to put the iterator in another class.
-		return this;
-	}
-	
-	@Override
-	public String next() {
-		String valueToReturn = peek();
-		if (nextValueIndex>=values.size()) {
-			throw new NoSuchElementException();
-		}
-		this.nextValueIndex++;
-		return valueToReturn;
-	}
-	
-	public String peek() {
-		return this.nextValueIndex >= size() ? null : this.values.get(this.nextValueIndex);
-	}
-
-
-
-	@Override
-	public void remove() {
-		throw new NotImplementedException("Cannot remove items from MappingRecord");
-	}
-
-	/** Resets the iterator to its original state before any calls to {@link #next()}. */
-	public void reset() {
-		this.nextValueIndex = 0;
-	}
-
 	/**
-	 * Returns the number of values found by this mapping.
+	 * Returns the value within this record at the <code>index</code> passed, or null if it exceeds the number of values available.
 	 *
-	 * @return an integer of value zero or greater.
+	 * @param index the index of the element to return.
+	 * @return either a valid value at the index, or null if out of range.
 	 */
-	public int size() {
-		return this.values.size();
-	}
-
 	public String getValueAt(int index) {
-		if (index >= this.values.size()) {
-			return null;
-		} else {
-			return this.values.get(index);
-		}
+		return index >= size() ? null : get(index);
 	}
-}
 
+}

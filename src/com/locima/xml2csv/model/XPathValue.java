@@ -54,12 +54,12 @@ public class XPathValue {
 	public String getSource() {
 		return this.xPathExpr;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.xPathExpr.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

@@ -9,22 +9,24 @@ public class XMLException extends ProgramException {
 
 	/**
 	 * Constructs an instance using the details provided.
+	 * 
 	 * @param inner The cause.
 	 * @param fmt A formatting string, passed to String.format.
 	 * @param parameters Parameters passed to the formatting string.
 	 */
 
 	public XMLException(Exception inner, String fmt, Object... parameters) {
-        super(inner, fmt, parameters);
-    }
+		super(inner, fmt, parameters);
+	}
 
 	/**
 	 * Constructs an instance using the details provided.
+	 * 
 	 * @param fmt A formatting string, passed to String.format.
 	 * @param parameters Parameters passed to the formatting string.
 	 */
-    public XMLException(String fmt, Object... parameters) {
-        super(null, fmt, parameters);
-    }
+	public XMLException(String fmt, Object... parameters) {
+		super(null, fmt, parameters);
+	}
 
 }

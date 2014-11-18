@@ -2,7 +2,6 @@ package com.locima.xml2csv.model;
 
 import java.util.List;
 
-
 /**
  * Used for objects that contain ordered collections of mappings of field name to XPath.
  */

@@ -47,21 +47,17 @@ public class DirectCsvWriter extends AbstractCsvWriter {
 	 * @throws OutputManagerException if an error occurred writing the files.
 	 */
 	@Override
-	public void writeRecords(RecordSet data) throws OutputManagerException {
-		// if (writerTuple == null) {
-		// throw new OutputManagerException("Attempt to write to non-existant writer: %1$s", writerName);
-		// }
-		//
-		// for (List<String> record : getRecords(data)) {
-		// String outputLine = collectionToString(record, ",", null);
-		// try {
-		// LOG.trace("Writing output {}: {}", writerFileName, outputLine);
-		// writer.write(outputLine);
-		// writer.write(LINE_SEPARATOR);
-		// } catch (IOException ioe) {
-		// throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", writerName, writerFileName, outputLine);
-		// }
-		// }
+	public void writeRecords(String writerName, RecordSet data) throws OutputManagerException {
+//		for (List<String> record : getRecords(data)) {
+//			String outputLine = collectionToString(record, ",", null);
+//			try {
+//				LOG.trace("Writing output {}: {}", writerFileName, outputLine);
+//				writer.write(outputLine);
+//				writer.write(LINE_SEPARATOR);
+//			} catch (IOException ioe) {
+//				throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", writerName, writerFileName, outputLine);
+//			}
+//		}
 	}
 
 }

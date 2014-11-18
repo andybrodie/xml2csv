@@ -35,6 +35,7 @@ public class StringUtil {
 
 	/**
 	 * Converts an array of Strings to a comma separated list within a single String.
+	 * 
 	 * @param strings the array to convert, may be null or empty, in which case an empty string is returned.
 	 * @return a string, possibly empty, of all the members of the passed array, separated by commas.
 	 */
@@ -106,6 +107,14 @@ public class StringUtil {
 		return sb.toString();
 	}
 
+	/**
+	 * Converts the collection passed to a list of strings.
+	 * 
+	 * @param inputCollection the collection to convert to a list of strings.
+	 * @param converter a method that converts each element of <code>inputCollection</code> to a string.
+	 * @param <T> the type of object in <code>inputCollection</code>.
+	 * @return a list of strings.
+	 */
 	public static <T> List<String> toStringList(Collection<T> inputCollection, IConverter<T> converter) {
 		List<String> output = new ArrayList<String>(inputCollection.size());
 		for (T t : inputCollection) {
@@ -113,20 +122,39 @@ public class StringUtil {
 		}
 		return output;
 	}
-	
-	public static interface IConverter<T> {
+
+	/**
+	 * Used with {@link StringUtil#toStringList}.
+	 * 
+	 * @param <T> the input object type that will be converted to a string.
+	 */
+	public interface IConverter<T> {
+		/**
+		 * Converts the <code>input</code> to a string.
+		 * 
+		 * @param input an input object, may be null.
+		 * @return a string that represents the <code>input</code> object.
+		 */
 		String convert(T input);
 	}
 
-	public static <T> T[] concatenate (T[] A, T[] B) {
-	    int aLen = A.length;
-	    int bLen = B.length;
+	/**
+	 * Concatenates two arrays together to make one array.
+	 * 
+	 * @param first the first array that will form the first elements of the concanenated array.
+	 * @param second the second array that will form the last elements of the concanenated array.
+	 * @param <T> the type of object used for all the arrays.
+	 * @return an array formed of the elements in the first and second arrays.
+	 */
+	public static <T> T[] concatenate(T[] first, T[] second) {
+		int aLen = first.length;
+		int bLen = second.length;
 
-	    @SuppressWarnings("unchecked")
-	    T[] C = (T[]) Array.newInstance(A.getClass().getComponentType(), aLen+bLen);
-	    System.arraycopy(A, 0, C, 0, aLen);
-	    System.arraycopy(B, 0, C, aLen, bLen);
+		@SuppressWarnings("unchecked")
+		T[] concatenated = (T[]) Array.newInstance(first.getClass().getComponentType(), aLen + bLen);
+		System.arraycopy(first, 0, concatenated, 0, aLen);
+		System.arraycopy(second, 0, concatenated, aLen, bLen);
 
-	    return C;
+		return concatenated;
 	}
 }

@@ -27,23 +27,23 @@ public class GroupState {
 					inlineGroup = new InlineGroupState(record);
 				}
 				inlineGroup.addRecord(record);
-				continue;
-			}
-
-			int groupNum = record.getMapping().getGroupNumber();
-
-			GroupState existingGroup = initialState == null ? null : GroupState.searchByGroup(initialState, groupNum);
-
-			if (existingGroup == null) {
-				GroupState newState = new GroupState(groupNum, record);
-
-				if (initialState == null) {
-					initialState = newState;
-				} else {
-					initialState.insert(newState);
-				}
 			} else {
-				existingGroup.addRecord(record);
+
+				int groupNum = record.getMapping().getGroupNumber();
+
+				// Either add to an existing group managing that group number, or create a new one
+				if (initialState == null) {
+					initialState = new GroupState(groupNum, record);
+				} else {
+					GroupState existingGroup = GroupState.searchByGroup(initialState, groupNum);
+
+					if (existingGroup == null) {
+						GroupState newState = new GroupState(groupNum, record);
+						initialState.insert(newState);
+					} else {
+						existingGroup.addRecord(record);
+					}
+				}
 			}
 		}
 
@@ -56,23 +56,24 @@ public class GroupState {
 		}
 
 		if (inlineGroup != null) {
-			if (firstState != null)
+			if (firstState != null) {
 				firstState.insert(inlineGroup);
+			}
 			firstState = inlineGroup;
 		}
 
 		return firstState;
 	}
 
-	private static GroupState searchByGroup(GroupState initialState, int searchGroup) {
-		if (initialState == null) {
+	private static GroupState searchByGroup(GroupState state, int searchGroup) {
+		if (state == null) {
 			return null;
 		}
-		if (initialState.groupNumber == searchGroup) {
-			return initialState;
+		if (state.groupNumber == searchGroup) {
+			return state;
 		} else {
-			// Searh forward from initialState
-			GroupState current = initialState;
+			// Search forward from initialState
+			GroupState current = state;
 			do {
 				if (current.groupNumber == searchGroup) {
 					return current;
@@ -80,7 +81,7 @@ public class GroupState {
 				current = current.next;
 			} while (current != null);
 			// Search backwards from initialState
-			current = initialState;
+			current = state;
 			do {
 				if (current.groupNumber == searchGroup) {
 					return current;
@@ -104,7 +105,7 @@ public class GroupState {
 	public GroupState(int groupNum, MappingRecord record) {
 		this.groupNumber = groupNum;
 		this.groupSize = record.size();
-		this.records = new ArrayList<MappingRecord>();
+		this.records = new ArrayList<MappingRecord>(1);
 		this.records.add(record);
 	}
 
@@ -127,7 +128,7 @@ public class GroupState {
 
 	public boolean hasNext() {
 		boolean hasNext;
-		if (isExhausted() == false) {
+		if (!isExhausted()) {
 			hasNext = true;
 		} else {
 			hasNext = (this.next != null) && this.next.hasNext();

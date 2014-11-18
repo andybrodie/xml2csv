@@ -42,9 +42,9 @@ public class NameFormat {
 	public static final NameFormat WITH_COUNT = new NameFormat("%1$s_%2$d");
 
 	public static final NameFormat WITH_COUNT_AND_PARENT_COUNT = new NameFormat("%1$s_%4$d_%2$d");
-	
+
 	public static final NameFormat WITH_PARENT_COUNT = new NameFormat("%1$s_%4$d");
-	
+
 	/**
 	 * The formatting string of this instance.
 	 */
@@ -52,7 +52,8 @@ public class NameFormat {
 
 	/**
 	 * Creates an inline format with a specific syntax (see {@link NameFormat} for a description of that syntax).
-	 * @param format the string that defined the inline format.  Must not be null.
+	 * 
+	 * @param format the string that defined the inline format. Must not be null.
 	 */
 	public NameFormat(String format) {
 		if (null == format) {
@@ -63,18 +64,19 @@ public class NameFormat {
 
 	/**
 	 * Applies this inline format to the parameters passed to give a full column name.
+	 * 
 	 * @param baseColumnName the base column name of the mapping; e.g. <code>Name</code>, <code>Age</code> or <code>Address Line</code>
-	 * @param iterationNumber a number, starting at 0, that indicates the index of the value we've found, then encountering multiple
-	 * values for a single mapping.
+	 * @param iterationNumber a number, starting at 0, that indicates the index of the value we've found, then encountering multiple values for a
+	 *            single mapping.
 	 * @param parentName the name of the parent of this mapping, typically {@link IMappingContainer#getOutputName()}.
-	 * @param parentIterationNumber a number, starting at 0, that indicates the index of the value of the parent. 
+	 * @param parentIterationNumber a number, starting at 0, that indicates the index of the value of the parent.
 	 * @return a formatted string, used as a column name.
 	 */
 	public String format(String baseColumnName, int iterationNumber, String parentName, int parentIterationNumber) {
 		return String.format(this.format, baseColumnName, iterationNumber + 1, parentName, parentIterationNumber + 1);
 	}
-	
-	/**
+
+/**
 	 * Parse the predefined format name or bespoke format specification in to an {@link NameFormat} instance.
 	 *
 	 * @param predefinedFormatName the name of a specific style.
@@ -106,6 +108,5 @@ public class NameFormat {
 		}
 		return format;
 	}
-
 
 }

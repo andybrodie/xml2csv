@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.NotImplementedException;
 import com.locima.xml2csv.Tuple;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.RecordSet;
@@ -22,7 +21,7 @@ public class MockOutputManager implements IOutputManager {
 
 	private Queue<Tuple<String, String[]>> _expectedResults = new LinkedList<Tuple<String, String[]>>();
 
-	public void addExpectedResult(String writerName, String[] values) {
+	public void addExpectedResult(String writerName, String... values) {
 		this._expectedResults.add(new Tuple<String, String[]>(writerName, values));
 	}
 
@@ -42,9 +41,11 @@ public class MockOutputManager implements IOutputManager {
 	}
 
 	@Override
-	public void writeRecords(RecordSet records) throws OutputManagerException {
+	public void writeRecords(String writerName, RecordSet records) throws OutputManagerException {
 		for (List<String> values : records) {
 			Tuple<String, String[]> s = this._expectedResults.poll();
+			Assert.assertEquals(s.getFirst(), writerName);
+			Assert.assertArrayEquals(s.getSecond(), values.toArray(new String[0]));
 		}
 	}
 
