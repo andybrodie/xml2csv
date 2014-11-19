@@ -22,8 +22,7 @@ import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.IConfigParser;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.output.IOutputManager;
-import com.locima.xml2csv.output.OutputManagerFactory;
+import com.locima.xml2csv.output.OutputManager;
 
 /**
  * Main entry point and logic for the program.
@@ -81,10 +80,9 @@ public class Program {
 		MappingConfiguration mappingConfig = configParser.getMappings();
 
 		// Create headers for all the output files
-		IOutputManager outputMgr = OutputManagerFactory.create(mappingConfig);
-		outputMgr.setDirectory(outputDirectory);
+		OutputManager outputMgr = new OutputManager();
 		try {
-			outputMgr.initialise(mappingConfig, appendOutput);
+			outputMgr.initialise(outputDirectory, mappingConfig, appendOutput);
 
 			// Parse the input XML files
 			XmlDataExtractor extractor = new XmlDataExtractor();

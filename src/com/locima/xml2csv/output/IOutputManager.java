@@ -6,33 +6,32 @@ import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.RecordSet;
 
 /**
- * Provided ONLY for unit testing.
+ * Manages writing a set of CSV files for a specific {@link MappingConfiguration}.
  */
 public interface IOutputManager {
 
 	/**
-	 * Finalises all the output files.
-	 * @throws OutputManagerException if an error occurs whilst closing an output file.
+	 * Finalises all the writers that this manager is managing.
+	 * 
+	 * @throws OutputManagerException if an error occurs whilst closing any of the {@link ICsvWriter}.
 	 */
 	void close() throws OutputManagerException;
 
 	/**
-	 * Creates the CSV files that will be used for the different writers.
+	 * Initialises this output manager so that it's ready to receive outputs via {@link #writeRecords(String, RecordSet)}.
 	 *
-	 * @param config the mapping configuration that determines what outputs will be written. Must not be null.
-	 * @param appendOutput true if output should be appended to existing files, false if new files should overwrite existing ones.
-	 * @throws OutputManagerException if an unrecoverable error occurs whilst creating the output files or writing to them.
+	 * @param config the mapping configuration that determines what fields will be written to the CSV file.
+	 * @param outputDirectory the directory that all outputs will be written to.
+	 * @param appendOutput true if output should be appended to an existing files (if present), false if we should overwrite an existing file.
+	 * @throws OutputManagerException if an unrecoverable error occurs whilst initialising the output file.
 	 */
-	void initialise(MappingConfiguration config, boolean appendOutput) throws OutputManagerException;
+	void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException;
 
-	/**
-	 * Sets the directory to which output files will be written.
-	 *
-	 * @param outputDirectoryName the name of the output directory. Directory must exist and be writeable.
-	 * @throws OutputManagerException If the directory does not exist.
+	/** Writes the records created by the XML data extractor to the output file managed by this instance
+	 * 
+	 * @param records the records to write out.
+	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
-	void setDirectory(File outputDirectoryName) throws OutputManagerException;
-
-	void writeRecords(String writerName, RecordSet records) throws OutputManagerException;
+	void writeRecords(String outputName, RecordSet records) throws OutputManagerException;
 
 }

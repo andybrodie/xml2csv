@@ -32,13 +32,6 @@ public class MockOutputManager implements IOutputManager {
 		}
 	}
 
-	@Override
-	public void initialise(MappingConfiguration config, boolean appendOutput) throws OutputManagerException {
-	}
-
-	@Override
-	public void setDirectory(File outputDirectoryName) throws OutputManagerException {
-	}
 
 	@Override
 	public void writeRecords(String writerName, RecordSet records) throws OutputManagerException {
@@ -61,6 +54,11 @@ public class MockOutputManager implements IOutputManager {
 			LOG.trace("Actual \"{}\"", toFlatString(values));
 		}
 		Assert.assertArrayEquals(s.getSecond(), values);
+	}
+
+	@Override
+	public void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException {
+		// No-op
 	}
 
 }

@@ -67,7 +67,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 *
 	 * @param maps a set of mappings, must not be null and must have a unique {@link MappingList#getOutputName()} value.
 	 */
-	public void addMappings(IMappingContainer maps) {
+	public IMappingContainer addMappings(IMappingContainer maps) {
 		if (maps == null) {
 			throw new ArgumentNullException("maps");
 		}
@@ -80,6 +80,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 			throw new ArgumentException("maps", "must contain a unique name");
 		}
 		this.mappings.add(maps);
+		return maps;
 	}
 
 	/**
