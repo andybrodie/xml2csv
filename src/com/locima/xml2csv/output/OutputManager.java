@@ -50,27 +50,6 @@ public class OutputManager implements IOutputManager {
 	}
 
 	/**
-	 * This is the logic to determine which {@link IOutputManager} is appropriate.
-	 *
-	 * @param container the mapping container to search for unbounded inline mappings within.
-	 * @return true if an bounded inline mapping was found, false otherwise.
-	 */
-	private boolean includesUnboundedInline(IMappingContainer container) {
-		LOG.debug("Checking {} for inline multi-value behaviour", container);
-		for (IMapping mapping : container) {
-			MultiValueBehaviour mvb = mapping.getMultiValueBehaviour();
-			if ((mvb == MultiValueBehaviour.INLINE) || (mvb == MultiValueBehaviour.WARN)) {
-				LOG.debug("MappingConfiguraton contains a inline configuration for {}, therefore returning true", mapping);
-				return true;
-			}
-			if (mapping instanceof IMappingContainer) {
-				return includesUnboundedInline((IMappingContainer) mapping);
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Creates an appropriate {@link IOutputManager} based on the mapping configuration provided. The decision logic for which implementation to use
 	 * is based on whether a mapping configuration contains any unbounded inline mappings. These produce a variable number of field values in any
 	 * given record. If one is found then it means that we can't directly stream out a CSV file using {@link DirectCsvWriter} (because we wouldn't
@@ -86,12 +65,12 @@ public class OutputManager implements IOutputManager {
 		for (IMappingContainer mappingContainer : config) {
 			String outputName = mappingContainer.getContainerName();
 			ICsvWriter writer;
-			if (includesUnboundedInline(mappingContainer)) {
-				LOG.info("Unbounded inline detected for {}, therefore creating InlineCsvWriter", outputName);
-				writer = new InlineCsvWriter();
-			} else {
+			if (mappingContainer.hasFixedOutputCardinality()) {
 				LOG.info("No unbounded mappings detected for {}, therefore using the DirectCsvWriter", outputName);
 				writer = new DirectCsvWriter();
+			} else {
+				LOG.info("Unbounded inline detected for {}, therefore creating InlineCsvWriter", outputName);
+				writer = new InlineCsvWriter();
 			}
 			writer.initialise(outputDirectory, mappingContainer, appendOutput);
 			this.outputToWriter.put(outputName, writer);

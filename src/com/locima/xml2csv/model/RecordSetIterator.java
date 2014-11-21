@@ -56,27 +56,19 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	 */
 	private List<String> createCsvValues() {
 		List<String> csvFields = new ArrayList<String>();
-
+		
 		for (MappingRecord record : this.results) {
-
 			switch (record.getMultiValueBehaviour()) {
-			/*
-			 * In the case that multi-valued where all but the first element should be discarded, produce a warning or error, only ever go after the
-			 * first one. Note that throw an error for "ERROR" case is handled previous in the code (when the record is generated). I.e. no matter
-			 * what happens just keep repeating the first record
-			 */
-				case DISCARD:
-				case ERROR:
-				case WARN:
-					csvFields.add(record.getFirstOrDefault());
-					break;
-				/* Inline is very simple, for every output record, just output all the fields */
 				case INLINE:
+					/* Inline is very simple, for every output record, just output all the fields */
 					for (String value : record) {
 						csvFields.add(value);
 					}
 					break;
 				case MULTI_RECORD:
+					/*
+					 * The most typical option: one new record for each value found
+					 */
 					int valueIndex = getIndexForGroup(record.getMapping().getGroupNumber());
 					csvFields.add(record.getValueAt(valueIndex));
 					break;

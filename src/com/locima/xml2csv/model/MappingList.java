@@ -87,8 +87,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		this.namespaceMappings = namespaceMap;
 	}
 
-	public void add(FieldDefinition fd) {
-	}
 
 	@Override
 	public RecordSet evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
@@ -190,8 +188,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public NameFormat getNameFormat() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -265,6 +262,23 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public int getGroupNumber() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	/**
+	 * Look at all our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we
+	 * can't guarantee how many fields are output, so return <code>false</code>.
+	 */
+	@Override
+	public boolean hasFixedOutputCardinality() {
+		boolean isFixed = true;
+		for (IMapping mapping : this) {
+			if (!mapping.hasFixedOutputCardinality()) {
+				isFixed = false;
+				break;
+			}
+		}
+		LOG.info("MappingList {} hasFixedOutputCardinality = {}", this, isFixed);
+		return isFixed;
 	}
 
 }

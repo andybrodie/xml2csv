@@ -35,4 +35,6 @@ public interface IMapping {
 
 	int getGroupNumber();
 
+	boolean hasFixedOutputCardinality();
+
 }

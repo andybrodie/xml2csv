@@ -41,6 +41,7 @@ public class TestHelpers {
 				fail(String.format("Unable to compare line %d as actual has run out of lines (expected %d).", i + 1, expected.length));
 			}
 			assertEquals(String.format("Mismatch at line %d", i + 1), expected[i], actual[i]);
+			LOG.debug("Successfully compared line {}: {}", i, actual[i]);
 		}
 		assertEquals("More lines in actual than expected.", expected.length, actual.length);
 	}

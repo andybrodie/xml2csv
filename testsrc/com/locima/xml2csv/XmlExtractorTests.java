@@ -77,13 +77,13 @@ public class XmlExtractorTests {
 	@Test
 	public void testBasicMappingsWithRoot() throws Exception {
 		MappingConfiguration config = new MappingConfiguration();
-		
+
 		MappingList parents = new MappingList();
 		parents.setOutputName("Parents");
 		parents.setMappingRoot("/root/parent");
 		addMapping(parents, null, "data", "data");
 		config.addMappings(parents);
-		
+
 		MappingList children = new MappingList();
 		children.setOutputName("Children");
 		children.setMappingRoot("/root/parent/child");
@@ -180,6 +180,59 @@ public class XmlExtractorTests {
 	}
 
 	@Test
+	public void testMinValueMapping() throws Exception {
+		MappingList mappings = new MappingList();
+		mappings.setOutputName("Test");
+
+		Mapping m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/name"), 3, 0);
+		mappings.add(m);
+		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
+		mappings.add(m);
+		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/address"), 0, 0);
+		mappings.add(m);
+
+		MappingConfiguration s = new MappingConfiguration();
+		s.addMappings(mappings);
+
+		XmlDataExtractor x = new XmlDataExtractor();
+		x.setMappingConfiguration(s);
+
+		MockOutputManager om = new MockOutputManager();
+		om.addExpectedResult("Test", new String[] { "Andy", "", "", "21", "22", "Home" });
+
+		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><age>22</age><address>Home</address></person>");
+
+		x.extractTo(testDoc, om);
+	}
+
+	@Test
+	public void testMaxValueMapping() throws Exception {
+		MappingList mappings = new MappingList();
+		mappings.setOutputName("Test");
+
+		Mapping m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/name"), 0, 0);
+		mappings.add(m);
+		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/age"), 0, 1);
+		mappings.add(m);
+		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/address"), 0, 2);
+		mappings.add(m);
+
+		MappingConfiguration s = new MappingConfiguration();
+		s.addMappings(mappings);
+
+		XmlDataExtractor x = new XmlDataExtractor();
+		x.setMappingConfiguration(s);
+
+		MockOutputManager om = new MockOutputManager();
+		om.addExpectedResult("Test", new String[] { "Andy", "Andy2", "Andy3", "21", "Home", "Away" });
+
+		XdmNode testDoc = createFromString("<person><name>Andy</name><name>Andy2</name><name>Andy3</name>"
+						+ "<age>21</age><age>22</age><age>23</age><address>Home</address><address>Away</address><address>Both</address></person>");
+
+		x.extractTo(testDoc, om);
+	}
+
+	@Test
 	public void testSimpleMappingsWithNamespaces() throws Exception {
 		Map<String, String> prefixUriMap = new HashMap<String, String>();
 
@@ -210,7 +263,7 @@ public class XmlExtractorTests {
 
 	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, String valueXPathExpression) throws XMLException {
 		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
-		Mapping m = new Mapping(baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, valueXPath);
+		Mapping m = new Mapping(baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, valueXPath, 0, 0);
 		mappings.add(m);
 	}
 
@@ -269,7 +322,6 @@ public class XmlExtractorTests {
 		for (XdmItem item : xpathSelector) {
 			LOG.info(item.toString());
 		}
-
 	}
 
 }

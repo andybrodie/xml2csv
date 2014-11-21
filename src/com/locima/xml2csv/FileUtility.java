@@ -59,24 +59,27 @@ public class FileUtility {
 	 * <li>The first character may not be a minus/hyphen.</li>
 	 * </ol>
 	 *
-	 * @param str a string that needs to be converted to a file name.
+	 * @param baseName a string that needs to be converted to a file name.
 	 * @return a string that only contains POSIX-compliant filename characters and length.
 	 */
-	public static String convertToPOSIXCompliantFilename(String str) {
-		if (str == null) {
+	public static String convertToPOSIXCompliantFileName(String baseName, boolean ignoreLength) {
+		if (baseName == null) {
 			return null;
 		}
-		final int maxPosixFileNameLength = 14;
+		/*
+		 * TODO Fix this up properly, extension must often be preserved, then you want "trimleft" and "trimright" options.
+		 */
+		final int maxPermittedLength = ignoreLength ? Integer.MAX_VALUE : 14;
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; (i < str.length()) && (sb.length() < maxPosixFileNameLength); i++) {
-			char ch = str.charAt(i);
+		for (int i = 0; (i < baseName.length()) && (sb.length() < maxPermittedLength); i++) {
+			char ch = baseName.charAt(i);
 			if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')) || ((ch >= '0') && (ch <= '9')) || (ch == '.') || (ch == '_')
-							|| (ch == '-' && sb.length() > 0)) {
+							|| ((ch == '-') && (sb.length() > 0))) {
 				sb.append(ch);
 			}
 		}
 		String fileName = sb.toString();
-		LOG.info("Created file name {} from {}", fileName, str);
+		LOG.info("Created file name {} from {}", fileName, baseName);
 		return fileName;
 	}
 

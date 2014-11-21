@@ -17,8 +17,8 @@ import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.inputparser.FileParserException;
-import com.locima.xml2csv.model.FieldDefinition;
 import com.locima.xml2csv.model.IMappingContainer;
+import com.locima.xml2csv.model.Mapping;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.MappingList;
 import com.locima.xml2csv.model.MultiValueBehaviour;
@@ -46,6 +46,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 	private static final String MAPPING_ROOT_ATTR = "mappingRoot";
+	private static final String MAX_VALUES_ATTR = "maxValues";
+	private static final String MIN_VALUES_ATTR = "minValues";
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
@@ -88,7 +90,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
-					String multiValueBehaviour) throws SAXException {
+					String multiValueBehaviour, int minValues, int maxValues) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
 		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
 		String fieldName;
@@ -104,9 +106,11 @@ public class ConfigContentHandler extends DefaultHandler {
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field %s as there was a problem with the XPath value \"%s\"", name, xPath);
 		}
-		FieldDefinition fieldDefinition =
-						new FieldDefinition(fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath);
-		current.add(fieldDefinition);
+
+		Mapping mapping =
+						new Mapping(fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath, minValues,
+										maxValues);
+		current.add(mapping);
 	}
 
 	/**
@@ -170,9 +174,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field");
 		}
-		FieldDefinition fieldDefinition =
-						new FieldDefinition(fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath);
-		current.add(fieldDefinition);
+		throw new UnsupportedOperationException("Haven't implemented pivot mappings yet!");
 	}
 
 	/**
@@ -346,7 +348,8 @@ public class ConfigContentHandler extends DefaultHandler {
 			switch (elementName) {
 				case Mapping:
 					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
-									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR),
+									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0), getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case PivotMapping:
 					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,

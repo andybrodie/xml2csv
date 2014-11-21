@@ -109,4 +109,8 @@ public class NameFormat {
 		return format;
 	}
 
+	@Override
+	public String toString() {
+		return "NameFormat(" + this.format + ")";
+	}
 }

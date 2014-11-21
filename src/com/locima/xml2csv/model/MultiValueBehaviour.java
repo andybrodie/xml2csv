@@ -7,19 +7,9 @@ import com.locima.xml2csv.StringUtil;
  */
 public enum MultiValueBehaviour {
 	/**
-	 * Use default behaviour. Default behaviour depends whether this is used on a {@link MappingConfiguration}, {@link MappingList} or {@link Mapping}
-	 * .
+	 * Use default behaviour. Default behaviour depends whether this is used on a {@link MappingConfiguration}, {@link MappingList} or {@link Mapping}.
 	 */
 	DEFAULT,
-	/**
-	 * All values other than the first are discarded.
-	 */
-	DISCARD,
-	/**
-	 * An error will be issued on the console (and in the log) if multiple values for a field are encountered in the input data and processing will
-	 * stop.
-	 */
-	ERROR,
 	/**
 	 * Multiple values for a field are expected and will be inlined in a single record.
 	 */
@@ -27,12 +17,7 @@ public enum MultiValueBehaviour {
 	/**
 	 * Multiple values for a field are expected and will cause multiple records to be generated for each value.
 	 */
-	MULTI_RECORD,
-	/**
-	 * As per {@link MultiValueBehaviour#DISCARD}, except that a warning will be issued on the console (and in the log) if multiple values for a field
-	 * are encountered in the input data. All values other than the first are discarded.
-	 */
-	WARN;
+	MULTI_RECORD;
 
 	public static MultiValueBehaviour parse(String multiValueBehaviourAsString) {
 		if (StringUtil.isNullOrEmpty(multiValueBehaviourAsString)) {

@@ -7,18 +7,29 @@ import com.locima.xml2csv.EqualsUtil;
 
 public abstract class AbstractMapping implements IMapping {
 
-	private static final Logger LOG = LoggerFactory.getLogger(Mapping.class);
-
+	/**
+	 * To understand how groups work, see {@link GroupState}.
+	 */
 	private int groupNumber;
+
 	/**
 	 * Tracks the number of instances found at once by this mapping. This is needed when doing inline mappings.
 	 */
 	private int maxInstanceCount;
 
-	private int minimumInstanceCount = 1;
-
+	/**
+	 * The behaviour for this mapping to use when encountering multiple values for a single execution.
+	 */
 	private MultiValueBehaviour multiValueBehaviour;
+
+	/**
+	 * How to format the name of the mapping when outputting.
+	 */
 	private NameFormat nameFormat;
+
+	/**
+	 * The XPath to execute against an input document to find values for this mapping.
+	 */
 	private XPathValue valueXPath;
 
 	/**
@@ -56,15 +67,11 @@ public abstract class AbstractMapping implements IMapping {
 		return this.groupNumber;
 	}
 
-	public int getMaxInstanceCount() {
-		return Math.max(this.maxInstanceCount, this.minimumInstanceCount);
-	}
-
 	@Override
 	public MultiValueBehaviour getMultiValueBehaviour() {
 		if (this.multiValueBehaviour == MultiValueBehaviour.DEFAULT) {
 			// TODO Implement inheritence from parent (currently a mapping has no concept of parent container!)
-			return MultiValueBehaviour.INLINE;
+			return MultiValueBehaviour.MULTI_RECORD;
 		} else {
 			return this.multiValueBehaviour;
 		}

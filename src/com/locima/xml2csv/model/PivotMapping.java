@@ -57,7 +57,8 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 				baseName = baseName.trim();
 			}
 
-			Mapping mapping = new Mapping(baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath());
+			// TODO Think about whether pivot mappings should permit min and max values
+			Mapping mapping = new Mapping(baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath(), 0 ,0);
 			RecordSet pivotEntryResults = mapping.evaluate((XdmNode) item, true);
 			rs.addAll(pivotEntryResults);
 		}
@@ -75,7 +76,7 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("FieldDefinition(");
+		StringBuilder sb = new StringBuilder("PivotMapping(");
 		sb.append(this.baseNameXPath.getSource());
 		sb.append(',');
 		sb.append(getNameFormat());
@@ -93,6 +94,15 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	/**
+	 * By their nature, pivot mappings cannot predict how many fields they will return, always returns <code>false</code> 
+	 */
+	@Override
+	public boolean hasFixedOutputCardinality() {
+		LOG.info("PivotMapping {} hasFixedOutputCardinality = false", this);
+		return false;
 	}
 
 }

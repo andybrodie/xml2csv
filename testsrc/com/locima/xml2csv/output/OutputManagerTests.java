@@ -22,7 +22,6 @@ import org.junit.rules.TemporaryFolder;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
-import com.locima.xml2csv.model.IMapping;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.Mapping;
 import com.locima.xml2csv.model.MappingConfiguration;
@@ -52,17 +51,19 @@ public class OutputManagerTests {
 		for (Map.Entry<String, List<String>> entry : config.entrySet()) {
 			String outputName = entry.getKey();
 			List<String> fieldNames = entry.getValue();
-			IMappingContainer container = createMappingList(outputName,  fieldNames.toArray(new String[0]));
+			IMappingContainer container = createMappingList(outputName, fieldNames.toArray(new String[0]));
 			mappingConfig.addMappings(container);
 		}
 		return mappingConfig;
 	}
-	
+
 	private IMappingContainer createMappingList(String containerName, String... fieldNames) throws XMLException {
 		MappingList container = new MappingList();
 		container.setOutputName(containerName);
 		for (String fieldName : fieldNames) {
-			Mapping mapping = new Mapping(fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."));
+			Mapping mapping =
+							new Mapping(fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0,
+											0);
 			container.add(mapping);
 		}
 		return container;
@@ -70,25 +71,25 @@ public class OutputManagerTests {
 
 	private RecordSet createRs(MappingList mapping, String... values) {
 		RecordSet rs = new RecordSet();
-		for (int i=0; i<values.length; i++) {
+		for (int i = 0; i < values.length; i++) {
 			List<String> valueList = new ArrayList<String>(1);
 			valueList.add(values[i]);
-			rs.addResults((Mapping)mapping.get(i), valueList);
+			rs.addResults((Mapping) mapping.get(i), valueList);
 		}
 		return rs;
+	}
+
+	private IOutputManager createTempOutputManager(File outputDir, MappingConfiguration mappingConfiguration, boolean appendToFiles)
+					throws IOException, OutputManagerException {
+		IOutputManager om = new OutputManager();
+		om.initialise(outputDir, mappingConfiguration, appendToFiles);
+		return om;
 	}
 
 	private IOutputManager createTempOutputManager(MappingConfiguration mappingConfiguration, boolean appendToFiles) throws IOException,
 	OutputManagerException {
 		File newTempFolder = this.testOutputDir.newFolder();
 		return createTempOutputManager(newTempFolder, mappingConfiguration, appendToFiles);
-	}
-
-	private IOutputManager createTempOutputManager(File outputDir, MappingConfiguration mappingConfiguration, boolean appendToFiles) throws IOException,
-	OutputManagerException {
-		IOutputManager om = new OutputManager();
-		om.initialise(outputDir, mappingConfiguration, appendToFiles);
-		return om;
 	}
 
 	@Before
@@ -106,7 +107,7 @@ public class OutputManagerTests {
 		MappingList test = (MappingList) mappingConfig.addMappings(createMappingList("test", "col1", "col2", "col3"));
 		MappingList test2 = (MappingList) mappingConfig.addMappings(createMappingList("test2", "colA", "colB", "colC"));
 		File tempFolder = this.testOutputDir.newFolder();
-		
+
 		IOutputManager om = new OutputManager();
 		om.initialise(tempFolder, mappingConfig, false);
 

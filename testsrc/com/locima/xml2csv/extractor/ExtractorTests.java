@@ -16,6 +16,8 @@ import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.output.IOutputManager;
+import com.locima.xml2csv.output.OutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
 public class ExtractorTests {
@@ -24,12 +26,12 @@ public class ExtractorTests {
 
 	@Test
 	public void testInstanceCounts() throws Exception {
-		TemporaryFolder outputFolder = testInstanceCounts("HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 }, "HeavilyNestedInstance.xml");
+		File outputFolder = testInstanceCounts("HeavilyNestedConfig.xml", new int[] { 4, 1, 1, 3, 1, 6 }, "HeavilyNestedInstance.xml");
 
-		assertCsvEquals(TestHelpers.createFile("HeavilyNestedInstance1.csv"), new File(outputFolder.getRoot(), "HeavilyNestedInstance.csv"));
+		assertCsvEquals("HeavilyNestedInstance1.csv", outputFolder, "HeavilyNestedInstance.csv");
 	}
 
-	private TemporaryFolder testInstanceCounts(String configFile, int[] instanceCounts, String... inputFiles) throws IOException, XMLException,
+	private File testInstanceCounts(String configFile, int[] instanceCounts, String... inputFiles) throws IOException, XMLException,
 	FileParserException, OutputManagerException, DataExtractorException {
 		MappingConfiguration config = loadMappingConfiguration(configFile);
 
@@ -41,10 +43,13 @@ public class ExtractorTests {
 		extractor.setMappingConfiguration(config);
 
 		File inputFile = TestHelpers.createFile("HeavilyNestedInstance.xml");
+		
+		IOutputManager om = new OutputManager();
+		om.initialise(outputFolder.getRoot(), config, false);
 
-		extractor.extractTo(XmlUtil.loadXmlFile(inputFile), null);
+		extractor.extractTo(XmlUtil.loadXmlFile(inputFile), om);
 
-		return outputFolder;
+		return outputFolder.getRoot();
 	}
 
 }

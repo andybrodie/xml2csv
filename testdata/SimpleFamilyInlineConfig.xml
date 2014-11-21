@@ -12,9 +12,9 @@
 
 			<!-- Include the properties of the family members -->
 			<!-- Name comes from the child element "name" under person -->
-			<m:Mapping name="Name" xPath="name" inlineStyle="WithParentCount" />
+			<m:Mapping name="Name" xPath="name" behaviour="MultiRecord" />
 			<!-- Age comes from the age attribute of the mappingRoot -->
-			<m:Mapping name="Age" xPath="@age" inlineStyle="WithParentCount" />
+			<m:Mapping name="Age" xPath="@age" behaviour="MultiRecord" />
 		</m:MappingList>
 
 		<m:Mapping name="Address" xPath="address" />

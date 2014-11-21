@@ -192,7 +192,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public void setDefaultMultiValueBehaviour(MultiValueBehaviour defaultMultiValueBehaviour) {
 		this.defaultMultiValueBehaviour =
-						(defaultMultiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.DISCARD : defaultMultiValueBehaviour;
+						(defaultMultiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.MULTI_RECORD : defaultMultiValueBehaviour;
 	}
 
 	public void setDefaultNameFormat(NameFormat format) {

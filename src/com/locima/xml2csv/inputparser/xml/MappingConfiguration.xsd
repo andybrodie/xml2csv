@@ -40,7 +40,7 @@
 		</annotation>
 		<choice minOccurs="1" maxOccurs="unbounded">
 			<element name="Mapping" type="tns:Mapping" />
-			<element name="PivotMapping" type="tns:PivotMapping"/>
+			<element name="PivotMapping" type="tns:PivotMapping" />
 			<element name="MappingList" type="tns:MappingList">
 				<annotation>
 					<documentation>I'm not sure I need this any more with group numbers and multi-value behaviour, but keeping it just in case.</documentation>
@@ -88,6 +88,22 @@
 			</annotation>
 		</attribute>
 		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
+		<attribute name="minValues" type="tns:NaturalNumber" use="optional">
+			<annotation>
+				<documentation>Set a minimum number of values that will be returned
+					by this mapping. If a mapping returns fewer values than this limit then extra null or empty values will be added to make
+					up to this number.  If ommitted, no limit will apply.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="maxValues" type="tns:NaturalNumber" use="optional">
+			<annotation>
+				<documentation>Set a maxmimum number of values that will be returned
+					by this mapping. If a mapping returns more values than this limit then subsequent values will be discarded. Typcially
+					used with inline mappings, but will apply to all.  If ommitted, no limit will apply.
+				</documentation>
+			</annotation>
+		</attribute>
 		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
 		<attribute name="group" type="tns:MappingGroup" use="optional" />
 	</complexType>
@@ -190,6 +206,12 @@
 			<enumeration value="WithParentCount" />
 			<enumeration value="WithCountAndParentCount" />
 			<enumeration value="Custom" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="NaturalNumber">
+		<restriction base="int">
+			<minInclusive value="1" />
 		</restriction>
 	</simpleType>
 

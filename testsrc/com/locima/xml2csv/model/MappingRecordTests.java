@@ -18,7 +18,7 @@ public class MappingRecordTests {
 
 	@Test
 	public void testEmptyMappingRecord() throws Exception {
-		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."));
+		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
 		MappingRecord record = new MappingRecord(mapping, new ArrayList<String>());
 
 		Assert.assertNull(record.getFirstOrDefault());
@@ -29,7 +29,7 @@ public class MappingRecordTests {
 
 	@Test
 	public void testMappingRecord() throws Exception {
-		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."));
+		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
 		MappingRecord record = new MappingRecord(mapping, toStringList("A", "B"));
 
 		Assert.assertEquals("A", record.getFirstOrDefault());
