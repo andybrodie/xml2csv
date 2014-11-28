@@ -1,4 +1,4 @@
-package com.locima.xml2csv.model;
+package com.locima.xml2csv.output;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +12,11 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.model.ExtractedField;
+import com.locima.xml2csv.model.GroupState;
+import com.locima.xml2csv.model.MappingRecord;
+import com.locima.xml2csv.model.MultiValueBehaviour;
+import com.locima.xml2csv.model.RecordSet;
 
 /**
  * Iterates over a {@link RecordSet} to output a set of CSV output lines.
@@ -19,9 +24,9 @@ import com.locima.xml2csv.StringUtil;
  * When initialised, this creates a linked list of {@link GroupState} objects that maintain the state of each group for multi-record mappings, and a
  * special group for all the inline mappings (group number isn't used for inline mappings).
  */
-public class RecordSetIterator implements Iterator<List<String>> {
+public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RecordSetIterator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RecordSetCsvIterator.class);
 
 	/**
 	 * The group state with the lowest group number. Set up by {@link GroupState#createGroupStateList(java.util.Collection)} in {{@link #iterator()}.
@@ -43,7 +48,7 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	 *
 	 * @param results the set of results that we're going to iterate;
 	 */
-	public RecordSetIterator(List<MappingRecord> results) {
+	public RecordSetCsvIterator(List<MappingRecord> results) {
 		this.results = results;
 		this.groupState = GroupState.createGroupStateList(results);
 		this.totalResults = getTotalNumberOfRecords();
@@ -54,20 +59,20 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	 *
 	 * @return a possibly empty string containing a mixture of null and non-null values.
 	 */
-	private List<String> createCsvValues() {
-		List<String> csvFields = new ArrayList<String>();
+	private List<ExtractedField> createCsvValues() {
+		List<ExtractedField> csvFields = new ArrayList<ExtractedField>();
 		
 		for (MappingRecord record : this.results) {
 			switch (record.getMultiValueBehaviour()) {
-				case INLINE:
-					/* Inline is very simple, for every output record, just output all the fields */
-					for (String value : record) {
+				case GREEDY:
+					/* Greedy mappings output as much as they can */
+					for (ExtractedField value : record) {
 						csvFields.add(value);
 					}
 					break;
-				case MULTI_RECORD:
+				case LAZY:
 					/*
-					 * The most typical option: one new record for each value found
+					 * The most typical option: just process the next value and move on
 					 */
 					int valueIndex = getIndexForGroup(record.getMapping().getGroupNumber());
 					csvFields.add(record.getValueAt(valueIndex));
@@ -86,6 +91,10 @@ public class RecordSetIterator implements Iterator<List<String>> {
 		return csvFields;
 	}
 
+	/** Determines the current index of the passed <code>group<code> in the results set iteation.
+	 * @param group the group to get the current index of.  Must be a valid group.
+	 * @return the index of the result to return (min 0, unbounded max)
+	 */
 	private int getIndexForGroup(int group) {
 		GroupState existingGroup = this.groupState.findByGroup(group);
 		if (existingGroup == null) {
@@ -94,16 +103,7 @@ public class RecordSetIterator implements Iterator<List<String>> {
 		return existingGroup.getCurrentIndex();
 	}
 
-	private List<MappingRecord> getRecordsForGroup(int group) {
-		List<MappingRecord> records = new ArrayList<MappingRecord>();
-		for (MappingRecord record : this.results) {
-			if (record.getMapping().getGroupNumber() == group) {
-				records.add(record);
-			}
-		}
-		return records;
-	}
-
+	
 	/**
 	 * Get the total number of records expected to be returned.
 	 *
@@ -118,7 +118,7 @@ public class RecordSetIterator implements Iterator<List<String>> {
 		for (MappingRecord record : this.results) {
 			int group = record.getMapping().getGroupNumber();
 			int size = record.size();
-			if ((size > 0) && (record.getMultiValueBehaviour() == MultiValueBehaviour.MULTI_RECORD)) {
+			if ((size > 0) && (record.getMultiValueBehaviour() == MultiValueBehaviour.LAZY)) {
 				if (groupSizes.containsKey(group)) {
 					if (record.size() > groupSizes.get(group)) {
 						groupSizes.put(group, record.size());
@@ -144,19 +144,18 @@ public class RecordSetIterator implements Iterator<List<String>> {
 	 */
 	@Override
 	public boolean hasNext() {
-		if (this.groupState == null) {
-			return false;
-		} else {
-			return this.groupState.hasNext();
-		}
+		return (this.groupState == null) ? false : this.groupState.hasNext();
 	}
 
+	/**
+	 * Moves on to the next record, preparing the CSV values and returning them.
+	 */
 	@Override
-	public List<String> next() {
+	public List<ExtractedField> next() {
 		if (!hasNext()) {
 			throw new NoSuchElementException();
 		}
-		List<String> values = createCsvValues();
+		List<ExtractedField> values = createCsvValues();
 		this.groupState.increment();
 		return values;
 	}

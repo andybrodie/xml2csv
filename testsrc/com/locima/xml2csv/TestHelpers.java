@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
+import com.locima.xml2csv.model.ExtractedField;
 import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.MultiValueBehaviour;
 
 public class TestHelpers {
 
@@ -36,6 +38,12 @@ public class TestHelpers {
 		String[] expected = loadFile(expectedFile);
 		String[] actual = loadFile(actualFile);
 
+		int lineNo = 1;
+		for (String actualLine : actual) {
+			LOG.trace("Actual {}: {}", lineNo, actualLine);
+			lineNo++;
+		}
+		
 		for (int i = 0; i < expected.length; i++) {
 			if (i >= actual.length) {
 				fail(String.format("Unable to compare line %d as actual has run out of lines (expected %d).", i + 1, expected.length));
@@ -45,7 +53,7 @@ public class TestHelpers {
 		}
 		assertEquals("More lines in actual than expected.", expected.length, actual.length);
 	}
-	
+
 	public static void assertCsvEquals(String expectedFileName, File actualRootDirectory, String actualFileName) throws Exception {
 		assertCsvEquals(new File(RES_DIR, expectedFileName), new File(actualRootDirectory, actualFileName));
 	}
@@ -103,6 +111,21 @@ public class TestHelpers {
 
 	}
 
+	public static ExtractedField[] toExtractedFieldArray(String... strings) {
+		return toExtractedFieldList(strings).toArray(new ExtractedField[0]);
+
+	}
+
+	public static List<ExtractedField> toExtractedFieldList(String... strings) {
+		List<ExtractedField> list = new ArrayList<ExtractedField>();
+		for (String string : strings) {
+			ExtractedField field = new ExtractedField("0", string);
+			list.add(field);
+		}
+		return list;
+
+	}
+
 	public static String toFlatString(Collection<? extends Object> second) {
 		StringBuffer buf = new StringBuffer();
 		if ((second != null) && (second.size() > 0)) {
@@ -128,15 +151,13 @@ public class TestHelpers {
 		}
 		return buf.toString();
 	}
-	
 
-	public static List<String> toStringList(String... string) {
-		List<String> list = new ArrayList<String>(string.length);
-		for (int i=0; i<string.length; i++) {
-			list.add(string[i]);
+	public static List<String> toStringList(String... strings) {
+		List<String> list = new ArrayList<String>(strings.length);
+		for (String string : strings) {
+			list.add(string);
 		}
 		return list;
 	}
-
 
 }

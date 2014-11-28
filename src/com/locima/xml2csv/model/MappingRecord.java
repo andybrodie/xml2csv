@@ -8,8 +8,8 @@ import com.locima.xml2csv.ArgumentException;
 /**
  * Contains both a {#IMapping} and the results of executing that mapping on a single input.
  */
-public class MappingRecord extends ArrayList<String> {
-	private static final long serialVersionUID = -7528682553696301462L;
+public class MappingRecord extends ArrayList<ExtractedField> {
+
 	private IMapping mapping;
 
 	/**
@@ -18,7 +18,7 @@ public class MappingRecord extends ArrayList<String> {
 	 * @param mapping the mapping that creates the <code>values</code> passed.
 	 * @param values the values created by executing the <code>mapping</code> against a single input document.
 	 */
-	public MappingRecord(Mapping mapping, Collection<? extends String> values) {
+	public MappingRecord(Mapping mapping, Collection<? extends ExtractedField> values) {
 		super(values);
 		if (mapping == null) {
 			throw new ArgumentException("mapping must not be null.");
@@ -31,7 +31,7 @@ public class MappingRecord extends ArrayList<String> {
 	 *
 	 * @return the first element of the list, or null if the list is empty.
 	 */
-	public String getFirstOrDefault() {
+	public ExtractedField getFirstOrDefault() {
 		return getValueAt(0);
 	}
 
@@ -59,7 +59,7 @@ public class MappingRecord extends ArrayList<String> {
 	 * @param index the index of the element to return.
 	 * @return either a valid value at the index, or null if out of range.
 	 */
-	public String getValueAt(int index) {
+	public ExtractedField getValueAt(int index) {
 		return index >= size() ? null : get(index);
 	}
 

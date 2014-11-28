@@ -8,7 +8,7 @@ import java.io.Serializable;
  * @param <T> the type of the first member of the tuple.
  * @param <U> the type of the second member of the tuple.
  */
-public class Tuple<T extends Serializable, U> {
+public class Tuple<T, U> {
 
 	private final T first;
 	private final U second;

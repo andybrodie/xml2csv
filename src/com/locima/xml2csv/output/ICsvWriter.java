@@ -32,4 +32,13 @@ public interface ICsvWriter {
 	 */
 	void writeRecords(RecordSet records) throws OutputManagerException;
 
+	/**
+	 * Causes this writer to abort, releasing as many resources as possible. No exceptions should be thrown from this method, only output log entries
+	 * for problems.
+	 * <p>
+	 * This is not the same as {@link #close()}, which may attempt significant processing to bring everything to a graceful conclusion (especially
+	 * in the case of {@link InlineCsvWriter#close()}.
+	 */
+	void abort();
+
 }

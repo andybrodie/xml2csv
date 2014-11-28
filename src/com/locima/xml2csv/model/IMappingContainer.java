@@ -15,6 +15,12 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 	 */
 	String getContainerName();
 
+	/**
+	 * Retrieve all the field names for this mapping container.
+	 * @param parentName
+	 * @param parentIterationNumber
+	 * @return
+	 */
 	List<String> getFieldNames(String parentName, int parentIterationNumber);
 
 }

@@ -8,23 +8,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.Tuple;
+import com.locima.xml2csv.output.RecordSetCsvIterator;
+import com.locima.xml2csv.output.RecordSetInlineIterator;
 
 /**
- * Represents a set of records created by a mapping execution.
+ * Represents an ordered set of records created by executing a top-level mapping list against a single XML document.
  * <p>
  * Each mapping, when executed against a document as configured, will yield 0 or more field values. Each value will be converted to CSV output,
  * however the following are subject to the configuration:
  * <ol>
  * <li>The position of the field within a record.</li>
  * <li>The handling of multi-valued fields with respect to whether multiple values are presented in a single record (known as "inline" mappings) or
- * over multiple records (known as multi-record mappings).
+ * over multiple records (known as multi-record mappings).</li>
  * </ol>
  */
-public class RecordSet implements Iterable<List<String>> {
+public class RecordSet implements Iterable<List<ExtractedField>> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RecordSet.class);
-
-	private String outputName;
 
 	List<MappingRecord> results;
 
@@ -52,7 +53,9 @@ public class RecordSet implements Iterable<List<String>> {
 	}
 
 	/**
-	 * Adds a new result of executing a mapping to this record set.
+	 * Adds a new result of executing a mapping to this record set.<p>
+	 * If there is already a set of results for the mapping associated with the <code>record</code> then these results are
+	 * merged in to the existing {@link MappingRecord}. 
 	 *
 	 * @param record the record to add. Must not be null.
 	 */
@@ -60,10 +63,12 @@ public class RecordSet implements Iterable<List<String>> {
 		boolean addedToExisting = false;
 		for (MappingRecord existingRecord : this.results) {
 			if (existingRecord.getMapping() == record.getMapping()) {
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("Merging {} in to existing record {} for {}", record, existingRecord, record.getMapping());
+				}
 				existingRecord.addAll(record);
 				addedToExisting = true;
 				break;
-				// throw new IllegalStateException("Attempted to add a second set of results for mapping " + record.getMapping());
 			}
 		}
 		if (!addedToExisting) {
@@ -77,7 +82,7 @@ public class RecordSet implements Iterable<List<String>> {
 	 * @param mapping the mapping configuration that yielded the <code>values</code>.
 	 * @param values the values generated from the passed <code>mapping</code>.
 	 */
-	public void addResults(Mapping mapping, List<String> values) {
+	public void addResults(Mapping mapping, List<ExtractedField> values) {
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Adding values to {}: {}", mapping, StringUtil.collectionToString(values, ",", "\""));
 		}
@@ -85,8 +90,8 @@ public class RecordSet implements Iterable<List<String>> {
 	}
 
 	@Override
-	public Iterator<List<String>> iterator() {
-		return new RecordSetIterator(this.results);
+	public Iterator<List<ExtractedField>> iterator() {
+		return new RecordSetCsvIterator(this.results);
 	}
-
+	
 }

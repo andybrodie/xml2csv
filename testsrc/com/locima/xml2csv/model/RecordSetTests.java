@@ -1,5 +1,7 @@
 package com.locima.xml2csv.model;
 
+import static com.locima.xml2csv.TestHelpers.toExtractedFieldArray;
+import static com.locima.xml2csv.TestHelpers.toExtractedFieldList;
 import static com.locima.xml2csv.TestHelpers.toStringList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -16,29 +18,35 @@ import org.junit.rules.ExpectedException;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.output.RecordSetCsvIterator;
 
 public class RecordSetTests {
 
-	private final static String[] ESA = new String[0];
+	private final static ExtractedField[] ESA = new ExtractedField[0];
 
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 
+	private MappingRecord createMappingRecord(Mapping mapping, List<String> valueList) {
+		MappingRecord record = new MappingRecord(mapping, toExtractedFieldList(valueList.toArray(new String[0])));
+		return record;
+	}
+
 	@Test
 	public void testDuplicateFieldNames() throws XMLException {
-		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
+		Mapping mapping = new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		RecordSet rs = new RecordSet();
-		rs.add(new MappingRecord(mapping, toStringList("A")));
-		rs.add(new MappingRecord(mapping, toStringList("B")));
-		rs.add(new MappingRecord(mapping, toStringList("C")));
-		Iterator<List<String>> iterator = rs.iterator();
-		assertArrayEquals(new String[] { "A", "B", "C" }, iterator.next().toArray(ESA));
+		rs.add(createMappingRecord(mapping, toStringList("A")));
+		rs.add(createMappingRecord(mapping, toStringList("B")));
+		rs.add(createMappingRecord(mapping, toStringList("C")));
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
+		assertArrayEquals(toExtractedFieldArray("A", "B", "C"), iterator.next().toArray(ESA));
 	}
 
 	@Test
 	public void testEmpty() throws Exception {
 		RecordSet rs = new RecordSet();
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		assertTrue(!iterator.hasNext());
 		this.exception.expect(NoSuchElementException.class);
 		iterator.next();
@@ -47,23 +55,26 @@ public class RecordSetTests {
 	@Test
 	public void testIMISameGroupRecord() throws Exception {
 		RecordSet rs = new RecordSet();
-		Mapping ilMapping = new Mapping("ILField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
+		Mapping ilMapping =
+						new Mapping(null, "ILField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] ilValues = new String[] { "A", "B" };
-		rs.addResults(ilMapping, toStringList(ilValues));
+		rs.addResults(ilMapping, toExtractedFieldList(ilValues));
 		Mapping mrMapping =
-						new Mapping("MRField1", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField1", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues = new String[] { "C", "D" };
-		rs.addResults(mrMapping, toStringList(mrValues));
-		Mapping ilMapping2 = new Mapping("ILField2", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
+		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
+		Mapping ilMapping2 =
+						new Mapping(null, "ILField2", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] ilValues2 = new String[] { "E", "F" };
-		rs.addResults(ilMapping2, toStringList(ilValues2));
+		rs.addResults(ilMapping2, toExtractedFieldList(ilValues2));
 
-		List<String> values;
-		Iterator<List<String>> iterator = rs.iterator();
+		List<ExtractedField> values;
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "B", "C", "E", "F" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "B", "C", "E", "F"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "B", "D", "E", "F" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "B", "D", "E", "F"), values.toArray(ESA));
 
 		assertTrue(!iterator.hasNext());
 	}
@@ -71,25 +82,27 @@ public class RecordSetTests {
 	@Test
 	public void testInlineAndMultiRecord() throws Exception {
 		RecordSet rs = new RecordSet();
-		Mapping ilMapping = new Mapping("ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
+		Mapping ilMapping =
+						new Mapping(null, "ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] ilValues = new String[] { "E", "F", "G", "H" };
-		rs.addResults(ilMapping, toStringList(ilValues));
+		rs.addResults(ilMapping, toExtractedFieldList(ilValues));
 		Mapping mrMapping =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues = new String[] { "A", "B", "C", "D" };
-		rs.addResults(mrMapping, toStringList(mrValues));
+		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 
-		List<String> values;
+		List<ExtractedField> values;
 
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		values = iterator.next();
-		assertArrayEquals(new String[] { "E", "F", "G", "H", "A" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("E", "F", "G", "H", "A"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "E", "F", "G", "H", "B" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("E", "F", "G", "H", "B"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "E", "F", "G", "H", "C" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("E", "F", "G", "H", "C"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "E", "F", "G", "H", "D" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("E", "F", "G", "H", "D"), values.toArray(ESA));
 
 		assertTrue(!iterator.hasNext());
 	}
@@ -98,23 +111,26 @@ public class RecordSetTests {
 	public void testMIMSameGroupRecord() throws Exception {
 		RecordSet rs = new RecordSet();
 		Mapping mrMapping =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues = new String[] { "A", "B" };
-		rs.addResults(mrMapping, toStringList(mrValues));
-		Mapping ilMapping = new Mapping("ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
+		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
+		Mapping ilMapping =
+						new Mapping(null, "ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] ilValues = new String[] { "C", "D" };
-		rs.addResults(ilMapping, toStringList(ilValues));
+		rs.addResults(ilMapping, toExtractedFieldList(ilValues));
 		Mapping mrMapping2 =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues2 = new String[] { "E", "F" };
-		rs.addResults(mrMapping2, toStringList(mrValues2));
+		rs.addResults(mrMapping2, toExtractedFieldList(mrValues2));
 
-		List<String> values;
-		Iterator<List<String>> iterator = rs.iterator();
+		List<ExtractedField> values;
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "C", "D", "E" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "C", "D", "E"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B", "C", "D", "F" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "C", "D", "F"), values.toArray(ESA));
 
 		assertTrue(!iterator.hasNext());
 	}
@@ -126,17 +142,17 @@ public class RecordSetTests {
 		int count = 0;
 		for (String[] record : records) {
 			Mapping mapping =
-							new Mapping("Field" + count, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0,
-											0);
+							new Mapping(null, "Field" + count, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
+											"."), 0, 0);
 			count++;
-			MappingRecord mappingRecord = new MappingRecord(mapping, toStringList(record));
+			MappingRecord mappingRecord = createMappingRecord(mapping, toStringList(record));
 			rs.add(mappingRecord);
 		}
 
-		List<String> values;
-		Iterator<List<String>> iterator = rs.iterator();
+		List<ExtractedField> values;
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		values = iterator.next();
-		assertArrayEquals(StringUtil.concatenate(records[0], records[1]), values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray(StringUtil.concatenate(records[0], records[1])), values.toArray(ESA));
 		assertTrue(!iterator.hasNext());
 	}
 
@@ -144,52 +160,56 @@ public class RecordSetTests {
 	public void testMultiMRGroupsAsc() throws Exception {
 		RecordSet rs = new RecordSet();
 		Mapping mrMapping =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues = new String[] { "A", "B" };
-		rs.addResults(mrMapping, toStringList(mrValues));
+		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 		Mapping mrMapping2 =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues2 = new String[] { "C", "D" };
-		rs.addResults(mrMapping2, toStringList(mrValues2));
+		rs.addResults(mrMapping2, toExtractedFieldList(mrValues2));
 
-		List<String> values;
+		List<ExtractedField> values;
 
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "C" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "C"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B", "C" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "C"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "D" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "D"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B", "D" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "D"), values.toArray(ESA));
 	}
 
 	@Test
 	public void testMultiMRGroupsDesc() throws Exception {
 		RecordSet rs = new RecordSet();
 		Mapping mrMapping =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues = new String[] { "A", "B" };
-		rs.addResults(mrMapping, toStringList(mrValues));
+		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 		Mapping mrMapping2 =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] mrValues2 = new String[] { "C", "D" };
-		rs.addResults(mrMapping2, toStringList(mrValues2));
+		rs.addResults(mrMapping2, toExtractedFieldList(mrValues2));
 
-		List<String> values;
+		List<ExtractedField> values;
 
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "C" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "C"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "D" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "D"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B", "C" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "C"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B", "D" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "D"), values.toArray(ESA));
 
 		assertTrue(!iterator.hasNext());
 	}
@@ -197,41 +217,45 @@ public class RecordSetTests {
 	@Test
 	public void testMultipleResultsForSameMapping() throws Exception {
 		RecordSet rs = new RecordSet();
-		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
-		rs.addResults(mapping, new MappingRecord(mapping, toStringList("A", "B")));
-		rs.addResults(mapping, new MappingRecord(mapping, toStringList("C")));
-		rs.addResults(mapping, new MappingRecord(mapping, toStringList("D", "E")));
+		Mapping mapping =
+						new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0,
+										0);
+		rs.addResults(mapping, createMappingRecord(mapping, toStringList("A", "B")));
+		rs.addResults(mapping, createMappingRecord(mapping, toStringList("C")));
+		rs.addResults(mapping, createMappingRecord(mapping, toStringList("D", "E")));
 
-		Iterator<List<String>> iterator = rs.iterator();
-		assertArrayEquals(new String[] { "A" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "B" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "C" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "D" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "E" }, iterator.next().toArray(ESA));
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
+		assertArrayEquals(toExtractedFieldArray("A"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("C"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("D"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("E"), iterator.next().toArray(ESA));
 	}
 
 	@Test
 	public void testMultiRecordAndInline() throws Exception {
 		RecordSet rs = new RecordSet();
 		Mapping mapping1 =
-						new Mapping("MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+										0, 0);
 		String[] values1 = new String[] { "A", "B", "C", "D" };
-		rs.addResults(mapping1, toStringList(values1));
-		Mapping mapping2 = new Mapping("ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
+		rs.addResults(mapping1, toExtractedFieldList(values1));
+		Mapping mapping2 =
+						new Mapping(null, "ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] values2 = new String[] { "E", "F", "G", "H" };
-		rs.addResults(mapping2, toStringList(values2));
+		rs.addResults(mapping2, toExtractedFieldList(values2));
 
-		List<String> values;
+		List<ExtractedField> values;
 
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A", "E", "F", "G", "H" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "E", "F", "G", "H"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B", "E", "F", "G", "H" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "E", "F", "G", "H"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "C", "E", "F", "G", "H" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("C", "E", "F", "G", "H"), values.toArray(ESA));
 		values = iterator.next();
-		assertArrayEquals(new String[] { "D", "E", "F", "G", "H" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("D", "E", "F", "G", "H"), values.toArray(ESA));
 
 		assertTrue(!iterator.hasNext());
 	}
@@ -240,14 +264,14 @@ public class RecordSetTests {
 	public void testSingleInlineRecord() throws Exception {
 		RecordSet rs = new RecordSet();
 		String[] expectedValues = new String[] { "A", "B", "C", "D" };
-		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "."), 0, 0);
-		MappingRecord record = new MappingRecord(mapping, toStringList(expectedValues));
+		Mapping mapping = new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		MappingRecord record = createMappingRecord(mapping, toStringList(expectedValues));
 		rs.add(record);
 
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		assertTrue(iterator.hasNext());
-		List<String> values = iterator.next();
-		assertArrayEquals(expectedValues, values.toArray(ESA));
+		List<ExtractedField> values = iterator.next();
+		assertArrayEquals(toExtractedFieldArray(expectedValues), values.toArray(ESA));
 
 		assertTrue(!iterator.hasNext());
 		this.exception.expect(NoSuchElementException.class);
@@ -258,25 +282,27 @@ public class RecordSetTests {
 	public void testSingleMultiRecord() throws Exception {
 		RecordSet rs = new RecordSet();
 		String[] expectedValues = new String[] { "A", "B", "C", "D" };
-		Mapping mapping = new Mapping("Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
-		MappingRecord record = new MappingRecord(mapping, toStringList(expectedValues));
+		Mapping mapping =
+						new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0,
+										0);
+		MappingRecord record = createMappingRecord(mapping, toStringList(expectedValues));
 		rs.add(record);
 
-		List<String> values;
+		List<ExtractedField> values;
 
-		Iterator<List<String>> iterator = rs.iterator();
+		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		assertTrue(iterator.hasNext());
 		values = iterator.next();
-		assertArrayEquals(new String[] { "A" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A"), values.toArray(ESA));
 		assertTrue(iterator.hasNext());
 		values = iterator.next();
-		assertArrayEquals(new String[] { "B" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B"), values.toArray(ESA));
 		assertTrue(iterator.hasNext());
 		values = iterator.next();
-		assertArrayEquals(new String[] { "C" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("C"), values.toArray(ESA));
 		assertTrue(iterator.hasNext());
 		values = iterator.next();
-		assertArrayEquals(new String[] { "D" }, values.toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("D"), values.toArray(ESA));
 		assertTrue(!iterator.hasNext());
 
 		this.exception.expect(NoSuchElementException.class);
@@ -289,27 +315,54 @@ public class RecordSetTests {
 		Mapping mapping;
 		MappingRecord record;
 
-		mapping = new Mapping("Field1", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
-		record = new MappingRecord(mapping, toStringList(new String[] { "A", "B" }));
+		MappingList ml = new MappingList();
+		ml.setOutputName("Test");
+
+		mapping = new Mapping(ml, "Field1", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "A", "B" }));
 		rs.add(record);
-		mapping = new Mapping("Field2", NameFormat.NO_COUNTS, 2, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
-		record = new MappingRecord(mapping, toStringList(new String[] { "C", "D" }));
+		mapping = new Mapping(ml, "Field2", NameFormat.NO_COUNTS, 2, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "C", "D" }));
 		rs.add(record);
-		mapping = new Mapping("Field3", NameFormat.NO_COUNTS, 3, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0, 0);
-		record = new MappingRecord(mapping, toStringList(new String[] { "E", "F" }));
+		mapping = new Mapping(ml, "Field3", NameFormat.NO_COUNTS, 3, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "E", "F" }));
 		rs.add(record);
 
-		RecordSetIterator iterator = (RecordSetIterator) rs.iterator();
+		RecordSetCsvIterator iterator = (RecordSetCsvIterator) rs.iterator();
 		assertEquals(8, iterator.getTotalNumberOfRecords());
 		assertTrue(iterator.hasNext());
-		assertArrayEquals(new String[] { "A", "C", "E" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "B", "C", "E" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "A", "D", "E" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "B", "D", "E" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "A", "C", "F" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "B", "C", "F" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "A", "D", "F" }, iterator.next().toArray(ESA));
-		assertArrayEquals(new String[] { "B", "D", "F" }, iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "C", "E"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "C", "E"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "D", "E"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "D", "E"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "C", "F"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "C", "F"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("A", "D", "F"), iterator.next().toArray(ESA));
+		assertArrayEquals(toExtractedFieldArray("B", "D", "F"), iterator.next().toArray(ESA));
 	}
+	
+	@Test
+	public void testDifferentSizeMRGroups() throws Exception {
+		RecordSet rs = new RecordSet();
+		Mapping mapping;
+		MappingRecord record;
 
+		MappingList ml = new MappingList();
+		ml.setOutputName("Test");
+
+		mapping = new Mapping(ml, "Field1", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "A" }));
+		rs.add(record);
+		mapping = new Mapping(ml, "Field2", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "C", "D" }));
+		rs.add(record);
+
+		RecordSetCsvIterator iterator = (RecordSetCsvIterator) rs.iterator();
+		assertEquals(2, iterator.getTotalNumberOfRecords());
+		assertTrue(iterator.hasNext());
+		assertArrayEquals(toExtractedFieldArray("A", "C"), iterator.next().toArray(ESA));
+		assertTrue(iterator.hasNext());
+		assertArrayEquals(toExtractedFieldArray(null, "D"), iterator.next().toArray(ESA));
+		assertTrue(!iterator.hasNext());
+	}
 }

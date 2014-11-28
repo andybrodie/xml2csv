@@ -19,7 +19,6 @@ public class EndToEndTests {
 	@Test
 	public void testEndToEndWithInline() throws Exception {
 		TemporaryFolder outputFolder = processFiles("SimpleFamilyInlineConfig.xml", "SimpleFamily1.xml", "SimpleFamily2.xml");
-
 		assertCsvEquals("SimpleFamilyInlineOutput.csv", outputFolder.getRoot(), "family.csv");
 	}
 

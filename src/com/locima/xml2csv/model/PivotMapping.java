@@ -32,9 +32,9 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	 * @return a new Mapping instance configured with the parameters passed.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public PivotMapping(XPathValue baseNameXPath, XPathValue valueXPath, NameFormat nameFormat, int groupNumber,
+	public PivotMapping(IMappingContainer parent, XPathValue baseNameXPath, XPathValue valueXPath, NameFormat nameFormat, int groupNumber,
 					MultiValueBehaviour multiValueBehaviour) throws XMLException {
-		super(nameFormat, groupNumber, multiValueBehaviour, valueXPath);
+		super(parent, nameFormat, groupNumber, multiValueBehaviour, valueXPath);
 		this.baseNameXPath = baseNameXPath;
 	}
 
@@ -46,7 +46,7 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	 * @throws DataExtractorException if anything goes wrong finding the field definitions.
 	 */
 	@Override
-	public RecordSet evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
+	public RecordSet evaluate(XdmNode rootNode, ExtractionContext ctx, boolean trimWhitespace) throws DataExtractorException {
 		XPathSelector keysIterator = this.baseNameXPath.evaluate(rootNode);
 		RecordSet rs = new RecordSet();
 		int keyCount = 0;
@@ -58,8 +58,9 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 			}
 
 			// TODO Think about whether pivot mappings should permit min and max values
-			Mapping mapping = new Mapping(baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath(), 0 ,0);
-			RecordSet pivotEntryResults = mapping.evaluate((XdmNode) item, true);
+			// TODO THink about whether PivotMappings are mappings or mapping containers.
+			Mapping mapping = new Mapping(getParent(), baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath(), 0 ,0);
+			RecordSet pivotEntryResults = mapping.evaluate((XdmNode) item, ctx, true);
 			rs.addAll(pivotEntryResults);
 		}
 		if (LOG.isDebugEnabled()) {

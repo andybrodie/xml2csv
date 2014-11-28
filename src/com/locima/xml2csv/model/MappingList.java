@@ -1,6 +1,7 @@
 package com.locima.xml2csv.model;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -71,11 +72,23 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private Map<String, String> namespaceMappings;
 
+	private IMappingContainer parent;
+
+	private MultiValueBehaviour multiValueBehaviour;
+
 	/**
 	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
 	 */
 	public MappingList() {
 		this(null);
+	}
+
+	public void setParent(IMappingContainer parent) {
+		this.parent = parent;
+	}
+
+	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
+		this.multiValueBehaviour = (multiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.GREEDY : multiValueBehaviour;
 	}
 
 	/**
@@ -87,34 +100,38 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		this.namespaceMappings = namespaceMap;
 	}
 
-
+	/**
+	 * Execute this mapping for the passed XML document by:
+	 * <ol>
+	 * <li>Getting the mapping root(s) of the mapping, relative to the rootNode passed.</li>
+	 * <li>If there isn't a mapping root, use the root node passed.</li>
+	 * <li>Execute this mapping for each of the root(s).</li>
+	 * <li>Each execution results in a single call to om (one CSV line).</li>
+	 * </ol>
+	 */
 	@Override
-	public RecordSet evaluate(XdmNode rootNode, boolean trimWhitespace) throws DataExtractorException {
-		/**
-		 * Execute this mapping for the passed XML document by: 1. Getting the mapping root(s) of the mapping. 2. If there isn't a mapping root, use
-		 * the root node passed. 3. Execute this mapping for each of the root(s). 4. Each execution results in a single call to om (one CSV line).
-		 */
-
+	public RecordSet evaluate(XdmNode rootNode, ExtractionContext ctx, boolean trimWhitespace) throws DataExtractorException {
 		int instanceCount = 0;
 		RecordSet rs = new RecordSet();
 		if (this.mappingRoot != null) {
-			XPathSelector rootIterator;
-			rootIterator = getNodeIterator(rootNode, this.mappingRoot);
+			XPathSelector rootIterator = getNodeIterator(rootNode, this.mappingRoot);
 			for (XdmItem item : rootIterator) {
 				if (item instanceof XdmNode) {
+					evaluate((XdmNode) item, ctx, rs, trimWhitespace);
 					instanceCount++;
-					evaluate((XdmNode) item, rs, trimWhitespace);
 				} else {
 					LOG.warn("Expected to find only elements after executing XPath on mapping list, got {}", item.getClass().getName());
 				}
 			}
 		} else {
-			evaluate(rootNode, rs, trimWhitespace);
+			evaluate(rootNode, ctx, rs, trimWhitespace);
 		}
 
 		this.maximumResultCount = Math.max(this.maximumResultCount, instanceCount);
 
-		LOG.trace("Completed all mappings against document");
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("Completed mapping container {} against document", this);
+		}
 		return rs;
 	}
 
@@ -127,9 +144,16 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
-	private void evaluate(XdmNode node, RecordSet outputLine, boolean trimWhitespace) throws DataExtractorException {
+	private void evaluate(XdmNode node, ExtractionContext ctx, RecordSet outputLine, boolean trimWhitespace) throws DataExtractorException {
 		for (IMapping mapping : this) {
-			RecordSet records = mapping.evaluate(node, trimWhitespace);
+			if (this.multiValueBehaviour == MultiValueBehaviour.LAZY) {
+				ctx.addContext(0);
+			}
+			RecordSet records = mapping.evaluate(node, ctx, trimWhitespace);
+			if (this.multiValueBehaviour == MultiValueBehaviour.LAZY) {
+				ctx.removeContext();
+			}
+			ctx.increment();
 			outputLine.addAll(records);
 		}
 	}
@@ -250,9 +274,15 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 		StringBuilder sb = new StringBuilder("MappingList(");
 		sb.append(this.containerName);
+		sb.append(", ");
+		sb.append(this.multiValueBehaviour);
 		sb.append(")[");
-		for (IMapping mapping : this) {
-			sb.append(mapping.toString());
+		Iterator<IMapping> mappings = this.iterator();
+		while (mappings.hasNext()) {
+			sb.append(mappings.next().toString());
+			if (mappings.hasNext()) {
+				sb.append(", ");
+			}
 		}
 		sb.append("]");
 		return sb.toString();
@@ -265,8 +295,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	/**
-	 * Look at all our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we
-	 * can't guarantee how many fields are output, so return <code>false</code>.
+	 * Look at all our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we can't guarantee how
+	 * many fields are output, so return <code>false</code>.
 	 */
 	@Override
 	public boolean hasFixedOutputCardinality() {
@@ -279,6 +309,12 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 		LOG.info("MappingList {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
+	}
+
+	@Override
+	public IMappingContainer getParent() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

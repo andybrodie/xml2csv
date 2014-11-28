@@ -184,11 +184,11 @@ public class XmlExtractorTests {
 		MappingList mappings = new MappingList();
 		mappings.setOutputName("Test");
 
-		Mapping m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/name"), 3, 0);
+		Mapping m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/name"), 3, 0);
 		mappings.add(m);
-		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
+		m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
 		mappings.add(m);
-		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/address"), 0, 0);
+		m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/address"), 0, 0);
 		mappings.add(m);
 
 		MappingConfiguration s = new MappingConfiguration();
@@ -210,11 +210,11 @@ public class XmlExtractorTests {
 		MappingList mappings = new MappingList();
 		mappings.setOutputName("Test");
 
-		Mapping m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/name"), 0, 0);
+		Mapping m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/name"), 0, 0);
 		mappings.add(m);
-		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/age"), 0, 1);
+		m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 0, 1);
 		mappings.add(m);
-		m = new Mapping("Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.INLINE, XmlUtil.createXPathValue(null, "person/address"), 0, 2);
+		m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/address"), 0, 2);
 		mappings.add(m);
 
 		MappingConfiguration s = new MappingConfiguration();
@@ -263,7 +263,7 @@ public class XmlExtractorTests {
 
 	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, String valueXPathExpression) throws XMLException {
 		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
-		Mapping m = new Mapping(baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, valueXPath, 0, 0);
+		Mapping m = new Mapping(mappings, baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, valueXPath, 0, 0);
 		mappings.add(m);
 	}
 

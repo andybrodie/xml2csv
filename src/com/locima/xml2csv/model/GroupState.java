@@ -22,7 +22,7 @@ public class GroupState {
 		GroupState initialState = null;
 
 		for (MappingRecord record : records) {
-			if (record.getMultiValueBehaviour() != MultiValueBehaviour.MULTI_RECORD) {
+			if (record.getMultiValueBehaviour() != MultiValueBehaviour.LAZY) {
 				if (inlineGroup == null) {
 					inlineGroup = new InlineGroupState(record);
 				}

@@ -9,10 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.model.IMapping;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.MultiValueBehaviour;
 import com.locima.xml2csv.model.RecordSet;
 
 /**
@@ -35,6 +33,15 @@ public class OutputManager implements IOutputManager {
 	public OutputManager() {
 	}
 
+	@Override
+	public void abort() {
+		LOG.info("Aborting {} ICsvWriters", this.outputToWriter.size());
+		for (Entry<String, ICsvWriter> entry : this.outputToWriter.entrySet()) {
+			LOG.info("Aborting {} {} ({})", entry.getKey().getClass().getName(), entry.getKey(), entry.getValue());
+			entry.getValue().abort();
+		}
+	}
+
 	/**
 	 * Finalises all the output writers managed by this instance.
 	 *
@@ -44,7 +51,7 @@ public class OutputManager implements IOutputManager {
 	public void close() throws OutputManagerException {
 		LOG.info("Closing {} ICsvWriters", this.outputToWriter.size());
 		for (Entry<String, ICsvWriter> entry : this.outputToWriter.entrySet()) {
-			LOG.info("Closing ICsvWriter {} ({})", entry.getKey(), entry.getValue());
+			LOG.info("Closing {} {} ({})", entry.getKey().getClass().getName(), entry.getKey(), entry.getValue());
 			entry.getValue().close();
 		}
 	}

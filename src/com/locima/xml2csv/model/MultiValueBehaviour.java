@@ -1,29 +1,44 @@
 package com.locima.xml2csv.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.locima.xml2csv.StringUtil;
 
 /**
  * Defines how the mapper should behaviour when multiple values are encountered for a single mapping.
  */
 public enum MultiValueBehaviour {
+
 	/**
-	 * Use default behaviour. Default behaviour depends whether this is used on a {@link MappingConfiguration}, {@link MappingList} or {@link Mapping}.
+	 * Use default behaviour. Default behaviour depends whether this is used on a {@link MappingConfiguration}, {@link MappingList} or {@link Mapping}
+	 * .
+	 * <p>
+	 * {@link MappingList}s are greedy by default. {@link Mapping}s are lazy by default.
 	 */
 	DEFAULT,
 	/**
-	 * Multiple values for a field are expected and will be inlined in a single record.
+	 * A greedy mapping tries to output all of its results at once.
+	 * <p>
+	 * This is typically used for "inlining" multiple values; i.e. making multiple values for a single mapping appear in a single record.
 	 */
-	INLINE,
+	GREEDY,
 	/**
-	 * Multiple values for a field are expected and will cause multiple records to be generated for each value.
+	 * A lazy mapping outputs a single field then moves on.
 	 */
-	MULTI_RECORD;
+	LAZY;
+
+	private static final Logger LOG = LoggerFactory.getLogger(MultiValueBehaviour.class);
 
 	public static MultiValueBehaviour parse(String multiValueBehaviourAsString) {
 		if (StringUtil.isNullOrEmpty(multiValueBehaviourAsString)) {
+			LOG.debug("Parsing {} to {}", multiValueBehaviourAsString == null ? "(null)" : multiValueBehaviourAsString, MultiValueBehaviour.DEFAULT);
 			return DEFAULT;
 		}
 		String uc = multiValueBehaviourAsString.toUpperCase();
-		return MultiValueBehaviour.valueOf(uc);
+		MultiValueBehaviour retVal = ("GREEDY".equals(uc) || "INLINE".equals(uc)) ? GREEDY : LAZY;
+		LOG.debug("Parsing {} to {}", multiValueBehaviourAsString, retVal);
+		return retVal;
 	}
+
 }

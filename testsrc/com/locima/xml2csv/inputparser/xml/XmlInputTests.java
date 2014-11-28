@@ -18,6 +18,8 @@ import com.locima.xml2csv.model.IMapping;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.Mapping;
 import com.locima.xml2csv.model.MappingConfiguration;
+import com.locima.xml2csv.model.MappingList;
+import com.locima.xml2csv.model.MultiValueBehaviour;
 
 public class XmlInputTests {
 
@@ -70,6 +72,31 @@ public class XmlInputTests {
 		assertNotNull("Couldn't find family mapping", mapping1);
 		IMappingContainer mapping2 = set.getContainerByName("FamilyMembersWithNamespaces");
 		assertNotNull("Couldn't find family mapping", mapping2);
+	}
+	
+	@Test
+	public void testMappingParser() throws Exception {
+		XmlFileParser parser = new XmlFileParser();
+		List<File> files = new ArrayList<File>();
+		files.add(TestHelpers.createFile("SimpleFamilyInlineConfig.xml"));
+		parser.load(files);
+		MappingConfiguration config = parser.getMappings();
+		assertNotNull("MappingSet was null, should be non-null", config);
+		assertEquals(1, config.size());
+
+		MappingList topLevelMappingList = (MappingList) config.getContainerByName("Family");
+		assertEquals(3, topLevelMappingList.size());
+		assertEquals("Family", topLevelMappingList.getContainerName());
+		Mapping nameMapping = (Mapping) topLevelMappingList.get(0);
+		
+		MappingList membersMappingList = (MappingList) topLevelMappingList.get(1);
+		assertEquals(2, membersMappingList.size());
+		Mapping firstNameMapping = (Mapping) membersMappingList.get(0);
+		assertEquals(MultiValueBehaviour.GREEDY, firstNameMapping.getMultiValueBehaviour());
+		Mapping ageMapping = (Mapping) membersMappingList.get(1);
+		assertEquals(MultiValueBehaviour.GREEDY, ageMapping.getMultiValueBehaviour());
+		
+		Mapping addressMapping = (Mapping) topLevelMappingList.get(2);
 	}
 
 }

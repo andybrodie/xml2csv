@@ -48,6 +48,8 @@ public class ExtractorTests {
 		om.initialise(outputFolder.getRoot(), config, false);
 
 		extractor.extractTo(XmlUtil.loadXmlFile(inputFile), om);
+		
+		om.close();
 
 		return outputFolder.getRoot();
 	}

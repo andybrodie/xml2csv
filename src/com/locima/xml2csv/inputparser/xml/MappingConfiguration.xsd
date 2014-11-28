@@ -185,12 +185,9 @@
 
 	<simpleType name="MultiValueBehaviour">
 		<restriction base="string">
-			<enumeration value="Discard" />
-			<enumeration value="Error" />
 			<enumeration value="Default" />
-			<enumeration value="Inline" />
-			<enumeration value="MultiRecord" />
-			<enumeration value="Warn" />
+			<enumeration value="Greedy" />
+			<enumeration value="Lazy" />
 		</restriction>
 	</simpleType>
 

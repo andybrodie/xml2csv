@@ -1,5 +1,6 @@
 package com.locima.xml2csv.output;
 
+import static com.locima.xml2csv.TestHelpers.toExtractedFieldArray;
 import static com.locima.xml2csv.TestHelpers.toFlatString;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.Tuple;
+import com.locima.xml2csv.model.ExtractedField;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.RecordSet;
 
@@ -20,6 +22,11 @@ public class MockOutputManager implements IOutputManager {
 	private static final Logger LOG = LoggerFactory.getLogger(MockOutputManager.class);
 
 	private Queue<Tuple<String, String[]>> _expectedResults = new LinkedList<Tuple<String, String[]>>();
+
+	@Override
+	public void abort() {
+		// No-op
+	}
 
 	public void addExpectedResult(String writerName, String... values) {
 		this._expectedResults.add(new Tuple<String, String[]>(writerName, values));
@@ -32,14 +39,27 @@ public class MockOutputManager implements IOutputManager {
 		}
 	}
 
+	@Override
+	public void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException {
+		// No-op
+	}
 
 	@Override
 	public void writeRecords(String writerName, RecordSet records) throws OutputManagerException {
-		for (List<String> values : records) {
+		for (List<ExtractedField> values : records) {
 			Tuple<String, String[]> s = this._expectedResults.poll();
 			Assert.assertEquals(s.getFirst(), writerName);
-			Assert.assertArrayEquals(s.getSecond(), values.toArray(new String[0]));
+			Assert.assertArrayEquals(s.getSecond(), toValuesOnlyArray(values));
 		}
+	}
+
+	private String[] toValuesOnlyArray(List<ExtractedField> values) {
+		if (values==null) return new String[0];
+		String[] array = new String[values.size()];
+		for (int i=0; i<array.length; i++) {
+			array[i] = values.get(i).getValue();
+		}
+		return array;
 	}
 
 	public void writeRecords(String writerName, String[] values) throws OutputManagerException {
@@ -54,11 +74,6 @@ public class MockOutputManager implements IOutputManager {
 			LOG.trace("Actual \"{}\"", toFlatString(values));
 		}
 		Assert.assertArrayEquals(s.getSecond(), values);
-	}
-
-	@Override
-	public void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException {
-		// No-op
 	}
 
 }

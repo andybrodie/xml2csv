@@ -27,11 +27,20 @@ public interface IOutputManager {
 	 */
 	void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException;
 
-	/** Writes the records created by the XML data extractor to the output file managed by this instance
+	/**
+	 * Writes the records created by the XML data extractor to the output file managed by this instance
 	 * 
 	 * @param records the records to write out.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
 	void writeRecords(String outputName, RecordSet records) throws OutputManagerException;
+
+	/**
+	 * Causes this output manager to abort all the writers, releasing as many resources as possible. No exceptions should be thrown from this method, only output log entries
+	 * for problems.
+	 * <p>
+	 * This is not the same as {@link #close()}, which may attempt significant processing to bring everything to a graceful conclusion.
+	 */
+	void abort();
 
 }

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.FileUtility;
 import com.locima.xml2csv.StringUtil;
+import com.locima.xml2csv.model.ExtractedField;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.RecordSet;
 
@@ -62,12 +64,16 @@ public class DirectCsvWriter implements ICsvWriter {
 			boolean createdNew = !file.exists();
 			Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, appendOutput), encoding));
 			if (createdNew) {
-				writeFieldNames(container, writer);
+				CsvWriterUtil.writeFieldNames(this.outputName, container, writer);
 			} else {
 				LOG.info("File {} already exists, therefore not writing field names", file.getAbsolutePath());
 			}
 			LOG.info("Successfully opened output file for writer {}", file.getAbsolutePath());
 			return writer;
+		} catch(OutputManagerException ome) {
+			// Possibly thrown by writeFieldNames
+			abort();
+			throw ome;
 		} catch (FileNotFoundException fileNotFoundException) {
 			// If we can't even create an output file, throw an exception up to abort
 			throw new OutputManagerException(fileNotFoundException, "Unable to create output file %s", file.getAbsolutePath());
@@ -91,22 +97,6 @@ public class DirectCsvWriter implements ICsvWriter {
 	}
 
 	/**
-	 * Writes the first row of each file to contain the comma-separated field names.
-	 */
-	public void writeFieldNames(IMappingContainer container, Writer newWriter) throws OutputManagerException {
-		try {
-			List<String> fieldNames = container.getFieldNames(null, 0);
-			String escapedFieldNames = StringUtil.toCsvRecord(fieldNames);
-			LOG.info("Writing field names to {}: {}", this.outputName, escapedFieldNames);
-			newWriter.write(escapedFieldNames);
-			newWriter.write(StringUtil.getLineSeparator());
-		} catch (IOException ioe) {
-			close();
-			throw new OutputManagerException(ioe, "Unable to write field names to %s (%s)", this.outputName, this.outputFile.getAbsolutePath());
-		}
-	}
-
-	/**
 	 * Writes a set of values out to the specified writer using CSV notation.
 	 *
 	 * @param data the values to write in a CSV format.
@@ -114,8 +104,8 @@ public class DirectCsvWriter implements ICsvWriter {
 	 */
 	@Override
 	public void writeRecords(RecordSet data) throws OutputManagerException {
-		for (List<String> record : data) {
-			String outputLine = StringUtil.toCsvRecord(record);
+		for (List<ExtractedField> record : data) {
+			String outputLine = DirectCsvWriter.toCsvRecord(record);
 			try {
 				LOG.trace("Writing output {}: {}", this.outputFile.getAbsolutePath(), outputLine);
 				this.writer.write(outputLine);
@@ -126,6 +116,21 @@ public class DirectCsvWriter implements ICsvWriter {
 		}
 	}
 	
+	public static String toCsvRecord(Collection<ExtractedField> inputCollection) {
+		return StringUtil.toString(inputCollection, ",", new StringUtil.IConverter<ExtractedField>() {
+
+			@Override
+			public String convert(ExtractedField input) {
+				if (input == null) {
+					return null;
+				} else {
+					return StringUtil.escapeForCsv(input.getValue());
+				}
+			}
+
+		});
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -135,6 +140,14 @@ public class DirectCsvWriter implements ICsvWriter {
 		sb.append(this.outputFile);
 		sb.append(")");
 		return sb.toString();
+	}
+
+	/**
+	 * In the case of a direct CSV writer, all we can do is attempt to close the file.
+	 */
+	@Override
+	public void abort() {
+		close();
 	}
 
 }

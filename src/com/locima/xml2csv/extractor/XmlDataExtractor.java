@@ -13,6 +13,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
+import com.locima.xml2csv.model.ExtractionContext;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.model.RecordSet;
@@ -107,12 +108,9 @@ public class XmlDataExtractor {
 	public void extractTo(XdmNode xmlDoc, IOutputManager outputManager) throws DataExtractorException, OutputManagerException {
 		LOG.trace("Executing {} sets of mappingConfiguration.", this.mappingConfiguration.size());
 		for (IMappingContainer mapping : this.mappingConfiguration) {
-			RecordSet records = mapping.evaluate(xmlDoc, this.trimWhitespace);
-			if (outputManager != null) {
-				outputManager.writeRecords(mapping.getContainerName(), records);
-			} else {
-				LOG.trace("No IOutputManager passed so not writing any output.");
-			}
+			ExtractionContext ctx = new ExtractionContext(mapping, this.trimWhitespace);
+			RecordSet records = ctx.evaluate(xmlDoc);
+			outputManager.writeRecords(mapping.getContainerName(), records);
 		}
 	}
 

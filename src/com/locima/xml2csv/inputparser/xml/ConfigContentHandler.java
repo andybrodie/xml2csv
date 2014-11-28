@@ -48,7 +48,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String MAPPING_ROOT_ATTR = "mappingRoot";
 	private static final String MAX_VALUES_ATTR = "maxValues";
 	private static final String MIN_VALUES_ATTR = "minValues";
-	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "multiValueBehaviour";
+	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "behaviour";
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
 	private static final String XPATH_ATTR = "xPath";
@@ -108,7 +108,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 
 		Mapping mapping =
-						new Mapping(fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath, minValues,
+						new Mapping(current, fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath, minValues,
 										maxValues);
 		current.add(mapping);
 	}
@@ -143,6 +143,7 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(e, "Invalid XPath \"%s\" found in mapping root for mapping list", mappingRoot);
 		}
 		newMapping.setOutputName(outputName);
+		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour));
 		this.mappingListStack.push(newMapping);
 	}
 

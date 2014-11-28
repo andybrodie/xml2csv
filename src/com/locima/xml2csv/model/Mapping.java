@@ -42,15 +42,16 @@ public class Mapping extends AbstractMapping implements IMapping {
 	/**
 	 * Creates a new immutable Field Definition.
 	 *
+	 * @param parent the parent mapping container.
 	 * @param baseName the outputName of the field, must a string of length > 0.
 	 * @param valueXPath a compiled XPath expression that will extract the values required for this field.
 	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
 	 * @param groupNumber the group number for this field definition.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 */
-	public Mapping(String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour, XPathValue valueXPath,
-					int minValueCount, int maxValueCount) {
-		super(format, groupNumber, multiValueBehaviour, valueXPath);
+	public Mapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
+					XPathValue valueXPath, int minValueCount, int maxValueCount) {
+		super(parent, format, groupNumber, multiValueBehaviour, valueXPath);
 		this.baseName = baseName;
 		this.minValueCount = minValueCount;
 		this.maxValueCount = maxValueCount;
@@ -71,25 +72,32 @@ public class Mapping extends AbstractMapping implements IMapping {
 	}
 
 	@Override
-	public RecordSet evaluate(XdmNode mappingRoot, boolean trimWhitespace) throws DataExtractorException {
+	public RecordSet evaluate(XdmNode mappingRoot, ExtractionContext ctx, boolean trimWhitespace) throws DataExtractorException {
 		String fieldName = getBaseName();
-		LOG.trace("Extracting value for {} using {}", fieldName, getValueXPath().getSource());
-		List<String> values = new ArrayList<String>();
+		LOG.trace("Extracting value for \"{}\" using XPath \"{}\"", fieldName, getValueXPath().getSource());
+		List<ExtractedField> values = new ArrayList<ExtractedField>();
 
+		// If there is no mapping root, that means that the XPath
 		if (mappingRoot != null) {
 			XPathSelector selector = getValueXPath().evaluate(mappingRoot);
 			int valueCount;
 			Iterator<XdmItem> resultIter = selector.iterator();
-			for (valueCount = 1; resultIter.hasNext(); valueCount++) {
+			for (valueCount = 1; resultIter.hasNext(); valueCount++) { // Value count is just a counter, so start at one as it makes more sense for
+																		// the user, and makes the comparison with maxValueCount simpler.
 				String value = resultIter.next().getStringValue();
 				if ((value != null) && trimWhitespace) {
 					value = value.trim();
 				}
-				values.add(value);
+				ExtractedField ef = new ExtractedField(ctx.toContextString(), value);
+				ctx.increment();
+				values.add(ef);
+
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Field \"{}\" found {} value(s) \"{}\" found after executing XPath \"{}\"", fieldName, values.size(), value,
+					LOG.debug("Field \"{}\" found {} value(s) \"{}\" found after executing XPath \"{}\"", fieldName, values.size(), ef,
 									getValueXPath().getSource());
 				}
+
+				// If we've found values up to this.maxValueCount then abort the loop.
 				if ((this.maxValueCount > 0) && (valueCount == this.maxValueCount)) {
 					if (resultIter.hasNext()) {
 						if (LOG.isWarnEnabled()) {
@@ -103,10 +111,8 @@ public class Mapping extends AbstractMapping implements IMapping {
 				LOG.info("Adding another {} empty values to {} mapping to take up to minValueCount of {}", this.minValueCount - values.size(), this,
 								this.minValueCount);
 			}
-			for (int i = values.size(); i < this.minValueCount; i++) {
-				values.add("");
-			}
 		}
+
 		this.maxResultsFound = Math.max(this.maxResultsFound, values.size());
 
 		RecordSet rs = new RecordSet();
@@ -120,17 +126,23 @@ public class Mapping extends AbstractMapping implements IMapping {
 
 	@Override
 	public int getFieldNames(List<String> fieldNames, String parentName, int parentIterationNumber) {
-		int numNames = this.maxResultsFound;
+		/*
+		 * The number of fields output is the maximum number of values found in a single execution of this mapping, constrained by this.minValueCount
+		 * and this.maxValueCount.
+		 */
+		int numNames = Math.max(this.maxResultsFound, this.minValueCount);
+		if (this.maxValueCount > 0) {
+			numNames = Math.min(this.maxValueCount, numNames);
+		}
 		int fieldCount = 0;
 		switch (getMultiValueBehaviour()) {
-			case MULTI_RECORD:
-				fieldNames.add(getBaseName());
+			case LAZY:
+				fieldNames.add(getNameFormat().format(this.baseName, 0, parentName, parentIterationNumber));
 				fieldCount++;
 				break;
-			case INLINE:
-				for (int i = 0; i < numNames; i++) {
-					fieldCount++;
-					fieldNames.add(getNameFormat().format(this.baseName, i, parentName, parentIterationNumber));
+			case GREEDY:
+				for (; fieldCount < numNames; fieldCount++) {
+					fieldNames.add(getNameFormat().format(this.baseName, fieldCount, parentName, parentIterationNumber));
 				}
 				break;
 			default:
@@ -146,9 +158,8 @@ public class Mapping extends AbstractMapping implements IMapping {
 	@Override
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
-						(getMultiValueBehaviour() == MultiValueBehaviour.MULTI_RECORD)
-						|| 
-						(this.maxValueCount == this.minValueCount && this.minValueCount>0);
+						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
+										|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
 		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
 	}

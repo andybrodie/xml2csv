@@ -22,6 +22,7 @@ import org.junit.rules.TemporaryFolder;
 import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.model.ExtractedField;
 import com.locima.xml2csv.model.IMappingContainer;
 import com.locima.xml2csv.model.Mapping;
 import com.locima.xml2csv.model.MappingConfiguration;
@@ -62,8 +63,8 @@ public class OutputManagerTests {
 		container.setOutputName(containerName);
 		for (String fieldName : fieldNames) {
 			Mapping mapping =
-							new Mapping(fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.MULTI_RECORD, XmlUtil.createXPathValue(null, "."), 0,
-											0);
+							new Mapping(container, fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(
+											null, "."), 0, 0);
 			container.add(mapping);
 		}
 		return container;
@@ -72,8 +73,8 @@ public class OutputManagerTests {
 	private RecordSet createRs(MappingList mapping, String... values) {
 		RecordSet rs = new RecordSet();
 		for (int i = 0; i < values.length; i++) {
-			List<String> valueList = new ArrayList<String>(1);
-			valueList.add(values[i]);
+			List<ExtractedField> valueList = new ArrayList<ExtractedField>(1);
+			valueList.add(new ExtractedField("1", values[i]));
 			rs.addResults((Mapping) mapping.get(i), valueList);
 		}
 		return rs;
@@ -87,7 +88,7 @@ public class OutputManagerTests {
 	}
 
 	private IOutputManager createTempOutputManager(MappingConfiguration mappingConfiguration, boolean appendToFiles) throws IOException,
-	OutputManagerException {
+					OutputManagerException {
 		File newTempFolder = this.testOutputDir.newFolder();
 		return createTempOutputManager(newTempFolder, mappingConfiguration, appendToFiles);
 	}
