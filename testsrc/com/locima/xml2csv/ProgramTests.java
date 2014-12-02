@@ -1,5 +1,7 @@
 package com.locima.xml2csv;
+
 import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,12 +39,10 @@ public class ProgramTests {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
-		p.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), true, false);
-		
-		assertCsvEquals("SimpleFamilyOutput1.csv",
-						outputFolder.getRoot(), "family.csv");
-		assertCsvEquals("SimpleFamilyOutput2.csv",
-						outputFolder.getRoot(), "people.csv");
+		p.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), false);
+
+		assertCsvEquals("SimpleFamilyOutput1.csv", outputFolder.getRoot(), "family.csv");
+		assertCsvEquals("SimpleFamilyOutput2.csv", outputFolder.getRoot(), "people.csv");
 	}
 
 }

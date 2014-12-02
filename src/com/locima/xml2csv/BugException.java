@@ -25,7 +25,7 @@ public class BugException extends RuntimeException {
 	/**
 	 * Creates a new instance with the message specified by <code>fmt</code> and <code>parameters</code> (see {@link String#format(String, Object...)}
 	 * ) for details.
-	 * 
+	 *
 	 * @param cause the exception that caused this exception to be thrown. May be null.
 	 * @param fmt a formatting string.
 	 * @param parameters parameters that will be used in the formatting string.
@@ -37,7 +37,7 @@ public class BugException extends RuntimeException {
 	/**
 	 * Creates a new instance with the message specified by <code>fmt</code> and <code>parameters</code> (see {@link String#format(String, Object...)}
 	 * ) for details.
-	 * 
+	 *
 	 * @param fmt a formatting string.
 	 * @param parameters parameters that will be used in the formatting string.
 	 */

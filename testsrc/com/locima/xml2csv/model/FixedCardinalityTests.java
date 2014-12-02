@@ -5,7 +5,11 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.configuration.Mapping;
+import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.util.XmlUtil;
 
 public class FixedCardinalityTests {
 
@@ -60,8 +64,7 @@ public class FixedCardinalityTests {
 
 		assertEquals(false,
 						createMappingList("Test", createMapping("Test", MultiValueBehaviour.LAZY, 0, 0),
-										createMapping("Test", MultiValueBehaviour.LAZY, 1, 1),
-										createMapping("Test", MultiValueBehaviour.LAZY, 2, 7),
+										createMapping("Test", MultiValueBehaviour.LAZY, 1, 1), createMapping("Test", MultiValueBehaviour.LAZY, 2, 7),
 										createMapping("Test", MultiValueBehaviour.LAZY, 5, 7),
 										createMapping("Test", MultiValueBehaviour.GREEDY, 0, 0)).hasFixedOutputCardinality());
 
@@ -69,15 +72,13 @@ public class FixedCardinalityTests {
 						createMappingList("Test", createMapping("Test", MultiValueBehaviour.LAZY, 0, 0),
 										createMapping("Test", MultiValueBehaviour.LAZY, 1, 1),
 										createMapping("Test", MultiValueBehaviour.GREEDY, 2, 2),
-										createMapping("Test", MultiValueBehaviour.LAZY, 5, 7),
-										createMapping("Test", MultiValueBehaviour.LAZY, 0, 0)).hasFixedOutputCardinality());
+										createMapping("Test", MultiValueBehaviour.LAZY, 5, 7), createMapping("Test", MultiValueBehaviour.LAZY, 0, 0)).hasFixedOutputCardinality());
 
 		assertEquals(false,
 						createMappingList("Test", createMapping("Test", MultiValueBehaviour.LAZY, 0, 0),
 										createMapping("Test", MultiValueBehaviour.LAZY, 1, 1),
 										createMapping("Test", MultiValueBehaviour.GREEDY, 0, 0),
-										createMapping("Test", MultiValueBehaviour.LAZY, 5, 7),
-										createMapping("Test", MultiValueBehaviour.LAZY, 0, 0)).hasFixedOutputCardinality());
+										createMapping("Test", MultiValueBehaviour.LAZY, 5, 7), createMapping("Test", MultiValueBehaviour.LAZY, 0, 0)).hasFixedOutputCardinality());
 
 	}
 }

@@ -13,10 +13,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.model.ExtractionContext;
-import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.Mapping;
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -89,17 +89,12 @@ public class XmlDataExtractor {
 	private MappingConfiguration mappingConfiguration;
 
 	/**
-	 * If set, then all whitespace will be trimmed from the beginning and end of element and attribute values.
-	 */
-	private boolean trimWhitespace;
-
-	/**
 	 * Executes the mappingConfiguration set by {@link #setMappingConfiguration(MappingConfiguration)} against a document <code>xmlDoc</code> and
 	 * passes the results to <code>outputManager</code>.
 	 * <p>
 	 * Note that all filtering (application of {@link MappingConfiguration#include(java.io.File)} and {@link MappingConfiguration#include(XdmNode)}
 	 * should be done by the caller before executing this method.
-	 * 
+	 *
 	 * @param xmlDoc The XML document to extract information from.
 	 * @param outputManager The output manager to send the extracted data to. May be null if no output is required.
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
@@ -108,8 +103,8 @@ public class XmlDataExtractor {
 	public void extractTo(XdmNode xmlDoc, IOutputManager outputManager) throws DataExtractorException, OutputManagerException {
 		LOG.trace("Executing {} sets of mappingConfiguration.", this.mappingConfiguration.size());
 		for (IMappingContainer mapping : this.mappingConfiguration) {
-			ExtractionContext ctx = new ExtractionContext(mapping, this.trimWhitespace);
-			RecordSet records = ctx.evaluate(xmlDoc);
+			ExtractionContext ctx = ExtractionContextManager.get(null, mapping);
+			ExtractedRecordList records = ctx.evaluate(xmlDoc);
 			outputManager.writeRecords(mapping.getContainerName(), records);
 		}
 	}
@@ -121,16 +116,5 @@ public class XmlDataExtractor {
 	 */
 	public void setMappingConfiguration(MappingConfiguration mappingConfiguration) {
 		this.mappingConfiguration = mappingConfiguration;
-	}
-
-	/**
-	 * If set to true, then all whitespace will be trimmed from the beginning and end of values extracted from XML. If false, they will be left alone.
-	 * <p>
-	 * The typically required behaviour is to set this to true.
-	 *
-	 * @param trimWhitespace whether to trim whitespace from the beginning and end of values extracted from XML.
-	 */
-	public void setTrimWhitespace(boolean trimWhitespace) {
-		this.trimWhitespace = trimWhitespace;
 	}
 }

@@ -9,7 +9,7 @@ public class ArgumentNullException extends ArgumentException {
 
 	/**
 	 * Thrown when an argument or parameter to a method was null when this is not allowed.
-	 * 
+	 *
 	 * @param argumentName the name of the argument or parameter that was null.
 	 */
 	public ArgumentNullException(String argumentName) {

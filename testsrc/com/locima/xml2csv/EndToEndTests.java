@@ -23,6 +23,12 @@ public class EndToEndTests {
 	}
 
 	@Test
+	public void testFilters() throws Exception {
+		TemporaryFolder outputFolder = processFiles("PeopleFilterConfig.xml", "Person1.xml", "Person2.xml", "Person3.xml");
+		assertCsvEquals("PeopleFiltered.csv", outputFolder.getRoot(), "PeopleFiltered.csv");
+	}
+
+	@Test
 	public void testNamespaces() throws Exception {
 		TemporaryFolder outputFolder = processFiles("FamilyConfigWithNamespaces.xml", "FamilyWithNamespaces.xml");
 		assertCsvEquals("FamilyWithNamespaces.csv", outputFolder.getRoot(), "FamilyWithNamespaces.csv");
@@ -33,11 +39,5 @@ public class EndToEndTests {
 	public void testPeople() throws Exception {
 		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
 		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
-	}
-	
-	@Test
-	public void testFilters() throws Exception {
-		TemporaryFolder outputFolder = processFiles("PeopleFilterConfig.xml", "Person1.xml", "Person2.xml", "Person3.xml");
-		assertCsvEquals("PeopleFiltered.csv", outputFolder.getRoot(), "PeopleFiltered.csv");
 	}
 }

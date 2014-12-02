@@ -13,6 +13,9 @@ import net.sf.saxon.s9api.XdmNode;
 import org.junit.Test;
 
 import com.locima.xml2csv.TestHelpers;
+import com.locima.xml2csv.configuration.filter.FileNameInputFilter;
+import com.locima.xml2csv.configuration.filter.IInputFilter;
+import com.locima.xml2csv.configuration.filter.XPathInputFilter;
 import com.locima.xml2csv.extractor.DataExtractorException;
 
 public class FilterTests {

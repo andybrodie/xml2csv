@@ -9,7 +9,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.configuration.Mapping;
+import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.MappingExtractionContext;
+import com.locima.xml2csv.extractor.ExtractedRecord;
+import com.locima.xml2csv.util.XmlUtil;
 
 public class MappingRecordTests {
 
@@ -20,7 +27,7 @@ public class MappingRecordTests {
 	public void testEmptyMappingRecord() throws Exception {
 		MappingList ml = new MappingList();
 		Mapping mapping = new Mapping(ml, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
-		MappingRecord record = new MappingRecord(mapping, new ArrayList<ExtractedField>());
+		ExtractedRecord record = new ExtractedRecord(new MappingExtractionContext(mapping), new ArrayList<ExtractedField>());
 
 		Assert.assertNull(record.getFirstOrDefault());
 		Assert.assertNull(record.getValueAt(0));
@@ -32,11 +39,11 @@ public class MappingRecordTests {
 	public void testMappingRecord() throws Exception {
 		MappingList ml = new MappingList();
 		Mapping mapping = new Mapping(ml, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
-		MappingRecord record = new MappingRecord(mapping, toExtractedFieldList("A", "B"));
+		ExtractedRecord record = new ExtractedRecord(new MappingExtractionContext(mapping), toExtractedFieldList("A", "B"));
 
-		Assert.assertEquals(new ExtractedField("0","A"), record.getFirstOrDefault());
-		Assert.assertEquals(new ExtractedField("0","A"), record.getValueAt(0));
-		Assert.assertEquals(new ExtractedField("0","B"),record.getValueAt(1));
+		Assert.assertEquals(new ExtractedField("0", "A"), record.getFirstOrDefault());
+		Assert.assertEquals(new ExtractedField("0", "A"), record.getValueAt(0));
+		Assert.assertEquals(new ExtractedField("0", "B"), record.getValueAt(1));
 		Assert.assertNull(record.getValueAt(2));
 	}
 

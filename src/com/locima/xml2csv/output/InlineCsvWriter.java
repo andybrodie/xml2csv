@@ -8,20 +8,15 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.FileUtility;
-import com.locima.xml2csv.Tuple;
-import com.locima.xml2csv.model.ExtractedField;
-import com.locima.xml2csv.model.IMapping;
-import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.util.FileUtility;
 
 /**
  * Manages the output for a single CSV file where the results of conversion from XML when the mapping configuration contains a variable number of
@@ -39,10 +34,10 @@ public class InlineCsvWriter implements ICsvWriter {
 	private static final Logger LOG = LoggerFactory.getLogger(InlineCsvWriter.class);
 
 	private File csiOutputFile;
-	private String outputName;
 	private Writer csiWriter;
-
 	private File csvOutputFile;
+
+	private String outputName;
 
 	@Override
 	public void abort() {
@@ -53,14 +48,8 @@ public class InlineCsvWriter implements ICsvWriter {
 	@Override
 	public void close() throws OutputManagerException {
 		closeFile(this.outputName, this.csiOutputFile.getAbsolutePath(), this.csiWriter);
-		
-		convertCsiToCsv();
-	}
 
-	private void convertCsiToCsv() {
-		// Base the CSV file name off of the CSI filename by just changing the last letter of the extension.
-		LOG.info("Converting output CSI file {} to output CSV file {}", this.csiOutputFile.getAbsolutePath(), this.csvOutputFile.getAbsolutePath());
-		throw new UnsupportedOperationException();
+		convertCsiToCsv();
 	}
 
 	private void closeFile(String outputName, String fileName, Writer writer) throws OutputManagerException {
@@ -77,6 +66,12 @@ public class InlineCsvWriter implements ICsvWriter {
 		} catch (IOException ioe) {
 			throw new OutputManagerException(ioe, "Unable to close output file %s", fileName);
 		}
+	}
+
+	private void convertCsiToCsv() {
+		// Base the CSV file name off of the CSI filename by just changing the last letter of the extension.
+		LOG.info("Converting output CSI file {} to output CSV file {}", this.csiOutputFile.getAbsolutePath(), this.csvOutputFile.getAbsolutePath());
+		throw new UnsupportedOperationException();
 	}
 
 	private Writer createWriter(IMappingContainer container, File file, boolean appendOutput) throws OutputManagerException {
@@ -113,12 +108,12 @@ public class InlineCsvWriter implements ICsvWriter {
 	}
 
 	@Override
-	public void writeRecords(RecordSet records) throws OutputManagerException {
+	public void writeRecords(ExtractedRecordList records) throws OutputManagerException {
 
 		for (List<ExtractedField> fields : records) {
 			throw new UnsupportedOperationException();
 		}
-		
+
 	}
 
 }

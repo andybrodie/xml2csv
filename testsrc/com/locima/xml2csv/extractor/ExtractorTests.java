@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.inputparser.FileParserException;
-import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
+import com.locima.xml2csv.util.XmlUtil;
 
 public class ExtractorTests {
 
@@ -32,23 +32,22 @@ public class ExtractorTests {
 	}
 
 	private File testInstanceCounts(String configFile, int[] instanceCounts, String... inputFiles) throws IOException, XMLException,
-	FileParserException, OutputManagerException, DataExtractorException {
+					FileParserException, OutputManagerException, DataExtractorException {
 		MappingConfiguration config = loadMappingConfiguration(configFile);
 
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
 		XmlDataExtractor extractor = new XmlDataExtractor();
-		extractor.setTrimWhitespace(true);
 		extractor.setMappingConfiguration(config);
 
 		File inputFile = TestHelpers.createFile("HeavilyNestedInstance.xml");
-		
+
 		IOutputManager om = new OutputManager();
 		om.initialise(outputFolder.getRoot(), config, false);
 
 		extractor.extractTo(XmlUtil.loadXmlFile(inputFile), om);
-		
+
 		om.close();
 
 		return outputFolder.getRoot();

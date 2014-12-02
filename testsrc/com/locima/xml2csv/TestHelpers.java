@@ -22,11 +22,11 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.extractor.ExtractedField;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
-import com.locima.xml2csv.model.ExtractedField;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.MultiValueBehaviour;
+import com.locima.xml2csv.util.XmlUtil;
 
 public class TestHelpers {
 
@@ -43,7 +43,7 @@ public class TestHelpers {
 			LOG.trace("Actual {}: {}", lineNo, actualLine);
 			lineNo++;
 		}
-		
+
 		for (int i = 0; i < expected.length; i++) {
 			if (i >= actual.length) {
 				fail(String.format("Unable to compare line %d as actual has run out of lines (expected %d).", i + 1, expected.length));
@@ -105,7 +105,7 @@ public class TestHelpers {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 		File outputDirectory = outputFolder.getRoot();
-		p.execute(configFiles, xmlInputFiles, outputDirectory, true, false);
+		p.execute(configFiles, xmlInputFiles, outputDirectory, false);
 
 		return outputFolder;
 

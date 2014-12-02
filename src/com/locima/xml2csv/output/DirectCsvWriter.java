@@ -14,11 +14,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.FileUtility;
-import com.locima.xml2csv.StringUtil;
-import com.locima.xml2csv.model.ExtractedField;
-import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.util.FileUtility;
+import com.locima.xml2csv.util.StringUtil;
 
 /**
  * Manages the output of a single CSV file where the results of conversion from XML when the mapping configuration prohibits a variable number of
@@ -32,11 +32,34 @@ public class DirectCsvWriter implements ICsvWriter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DirectCsvWriter.class);
 
+	public static String toCsvRecord(Collection<ExtractedField> inputCollection) {
+		return StringUtil.toString(inputCollection, ",", new StringUtil.IConverter<ExtractedField>() {
+
+			@Override
+			public String convert(ExtractedField input) {
+				if (input == null) {
+					return null;
+				} else {
+					return StringUtil.escapeForCsv(input.getValue());
+				}
+			}
+
+		});
+	}
+
 	private File outputFile;
 
 	private String outputName;
 
 	private Writer writer;
+
+	/**
+	 * In the case of a direct CSV writer, all we can do is attempt to close the file.
+	 */
+	@Override
+	public void abort() {
+		close();
+	}
 
 	@Override
 	public void close() {
@@ -70,7 +93,7 @@ public class DirectCsvWriter implements ICsvWriter {
 			}
 			LOG.info("Successfully opened output file for writer {}", file.getAbsolutePath());
 			return writer;
-		} catch(OutputManagerException ome) {
+		} catch (OutputManagerException ome) {
 			// Possibly thrown by writeFieldNames
 			abort();
 			throw ome;
@@ -92,43 +115,8 @@ public class DirectCsvWriter implements ICsvWriter {
 	public void initialise(File outputDirectory, IMappingContainer container, boolean appendOutput) throws OutputManagerException {
 		this.outputName = container.getContainerName();
 		String fileNameBasis = this.outputName + ".csv";
-		this.outputFile = new File(outputDirectory, FileUtility.convertToPOSIXCompliantFileName(fileNameBasis,true));
+		this.outputFile = new File(outputDirectory, FileUtility.convertToPOSIXCompliantFileName(fileNameBasis, true));
 		this.writer = createWriter(container, this.outputFile, appendOutput);
-	}
-
-	/**
-	 * Writes a set of values out to the specified writer using CSV notation.
-	 *
-	 * @param data the values to write in a CSV format.
-	 * @throws OutputManagerException if an error occurred writing the files.
-	 */
-	@Override
-	public void writeRecords(RecordSet data) throws OutputManagerException {
-		for (List<ExtractedField> record : data) {
-			String outputLine = DirectCsvWriter.toCsvRecord(record);
-			try {
-				LOG.trace("Writing output {}: {}", this.outputFile.getAbsolutePath(), outputLine);
-				this.writer.write(outputLine);
-				this.writer.write(StringUtil.getLineSeparator());
-			} catch (IOException ioe) {
-				throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", this.outputFile.getAbsolutePath(), outputLine);
-			}
-		}
-	}
-	
-	public static String toCsvRecord(Collection<ExtractedField> inputCollection) {
-		return StringUtil.toString(inputCollection, ",", new StringUtil.IConverter<ExtractedField>() {
-
-			@Override
-			public String convert(ExtractedField input) {
-				if (input == null) {
-					return null;
-				} else {
-					return StringUtil.escapeForCsv(input.getValue());
-				}
-			}
-
-		});
 	}
 
 	@Override
@@ -143,11 +131,23 @@ public class DirectCsvWriter implements ICsvWriter {
 	}
 
 	/**
-	 * In the case of a direct CSV writer, all we can do is attempt to close the file.
+	 * Writes a set of values out to the specified writer using CSV notation.
+	 *
+	 * @param data the values to write in a CSV format.
+	 * @throws OutputManagerException if an error occurred writing the files.
 	 */
 	@Override
-	public void abort() {
-		close();
+	public void writeRecords(ExtractedRecordList data) throws OutputManagerException {
+		for (List<ExtractedField> record : data) {
+			String outputLine = DirectCsvWriter.toCsvRecord(record);
+			try {
+				LOG.trace("Writing output {}: {}", this.outputFile.getAbsolutePath(), outputLine);
+				this.writer.write(outputLine);
+				this.writer.write(StringUtil.getLineSeparator());
+			} catch (IOException ioe) {
+				throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", this.outputFile.getAbsolutePath(), outputLine);
+			}
+		}
 	}
 
 }

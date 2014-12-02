@@ -2,8 +2,8 @@ package com.locima.xml2csv.output;
 
 import java.io.File;
 
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
 
 /**
  * Manages writing a set of CSV files for a specific {@link MappingConfiguration}.
@@ -11,14 +11,22 @@ import com.locima.xml2csv.model.RecordSet;
 public interface IOutputManager {
 
 	/**
+	 * Causes this output manager to abort all the writers, releasing as many resources as possible. No exceptions should be thrown from this method,
+	 * only output log entries for problems.
+	 * <p>
+	 * This is not the same as {@link #close()}, which may attempt significant processing to bring everything to a graceful conclusion.
+	 */
+	void abort();
+
+	/**
 	 * Finalises all the writers that this manager is managing.
-	 * 
+	 *
 	 * @throws OutputManagerException if an error occurs whilst closing any of the {@link ICsvWriter}.
 	 */
 	void close() throws OutputManagerException;
 
 	/**
-	 * Initialises this output manager so that it's ready to receive outputs via {@link #writeRecords(String, RecordSet)}.
+	 * Initialises this output manager so that it's ready to receive outputs via {@link #writeRecords(String, ExtractedRecordList)}.
 	 *
 	 * @param config the mapping configuration that determines what fields will be written to the CSV file.
 	 * @param outputDirectory the directory that all outputs will be written to.
@@ -29,18 +37,10 @@ public interface IOutputManager {
 
 	/**
 	 * Writes the records created by the XML data extractor to the output file managed by this instance
-	 * 
+	 *
 	 * @param records the records to write out.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
-	void writeRecords(String outputName, RecordSet records) throws OutputManagerException;
-
-	/**
-	 * Causes this output manager to abort all the writers, releasing as many resources as possible. No exceptions should be thrown from this method, only output log entries
-	 * for problems.
-	 * <p>
-	 * This is not the same as {@link #close()}, which may attempt significant processing to bring everything to a graceful conclusion.
-	 */
-	void abort();
+	void writeRecords(String outputName, ExtractedRecordList records) throws OutputManagerException;
 
 }

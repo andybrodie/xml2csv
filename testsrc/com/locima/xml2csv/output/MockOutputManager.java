@@ -1,6 +1,5 @@
 package com.locima.xml2csv.output;
 
-import static com.locima.xml2csv.TestHelpers.toExtractedFieldArray;
 import static com.locima.xml2csv.TestHelpers.toFlatString;
 
 import java.io.File;
@@ -12,10 +11,10 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.Tuple;
-import com.locima.xml2csv.model.ExtractedField;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.util.Tuple;
 
 public class MockOutputManager implements IOutputManager {
 
@@ -44,22 +43,24 @@ public class MockOutputManager implements IOutputManager {
 		// No-op
 	}
 
+	private String[] toValuesOnlyArray(List<ExtractedField> values) {
+		if (values == null) {
+			return new String[0];
+		}
+		String[] array = new String[values.size()];
+		for (int i = 0; i < array.length; i++) {
+			array[i] = values.get(i).getValue();
+		}
+		return array;
+	}
+
 	@Override
-	public void writeRecords(String writerName, RecordSet records) throws OutputManagerException {
+	public void writeRecords(String writerName, ExtractedRecordList records) throws OutputManagerException {
 		for (List<ExtractedField> values : records) {
 			Tuple<String, String[]> s = this._expectedResults.poll();
 			Assert.assertEquals(s.getFirst(), writerName);
 			Assert.assertArrayEquals(s.getSecond(), toValuesOnlyArray(values));
 		}
-	}
-
-	private String[] toValuesOnlyArray(List<ExtractedField> values) {
-		if (values==null) return new String[0];
-		String[] array = new String[values.size()];
-		for (int i=0; i<array.length; i++) {
-			array[i] = values.get(i).getValue();
-		}
-		return array;
 	}
 
 	public void writeRecords(String writerName, String[] values) throws OutputManagerException {

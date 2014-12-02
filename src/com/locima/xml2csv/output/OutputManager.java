@@ -9,9 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
 
 /**
  * Used to create {@link IOutputManager} instances, using a concrete implementation that is suitable for the mapping configuration passed.
@@ -108,7 +108,7 @@ public class OutputManager implements IOutputManager {
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
 	@Override
-	public void writeRecords(String outputName, RecordSet records) throws OutputManagerException {
+	public void writeRecords(String outputName, ExtractedRecordList records) throws OutputManagerException {
 		ICsvWriter writer = this.outputToWriter.get(outputName);
 		if (writer != null) {
 			writer.writeRecords(records);

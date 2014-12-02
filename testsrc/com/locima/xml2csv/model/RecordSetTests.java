@@ -15,10 +15,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.XmlUtil;
-import com.locima.xml2csv.output.RecordSetCsvIterator;
+import com.locima.xml2csv.configuration.Mapping;
+import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ExtractedRecord;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.extractor.RecordSetCsvIterator;
+import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.XmlUtil;
 
 public class RecordSetTests {
 
@@ -27,15 +34,41 @@ public class RecordSetTests {
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 
-	private MappingRecord createMappingRecord(Mapping mapping, List<String> valueList) {
-		MappingRecord record = new MappingRecord(mapping, toExtractedFieldList(valueList.toArray(new String[0])));
-		return record;
+	private ExtractedRecord createMappingRecord(Mapping mapping, List<String> valueList) {
+		// ExtractedRecord record = new ExtractedRecord(mapping, toExtractedFieldList(valueList.toArray(new String[0])));
+		// return record;
+		return null;
+	}
+
+	@Test
+	public void testDifferentSizeMRGroups() throws Exception {
+		ExtractedRecordList rs = new ExtractedRecordList();
+		Mapping mapping;
+		ExtractedRecord record;
+
+		MappingList ml = new MappingList();
+		ml.setOutputName("Test");
+
+		mapping = new Mapping(ml, "Field1", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "A" }));
+		rs.add(record);
+		mapping = new Mapping(ml, "Field2", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		record = createMappingRecord(mapping, toStringList(new String[] { "C", "D" }));
+		rs.add(record);
+
+		RecordSetCsvIterator iterator = (RecordSetCsvIterator) rs.iterator();
+		assertEquals(2, iterator.getTotalNumberOfRecords());
+		assertTrue(iterator.hasNext());
+		assertArrayEquals(toExtractedFieldArray("A", "C"), iterator.next().toArray(ESA));
+		assertTrue(iterator.hasNext());
+		assertArrayEquals(toExtractedFieldArray(null, "D"), iterator.next().toArray(ESA));
+		assertTrue(!iterator.hasNext());
 	}
 
 	@Test
 	public void testDuplicateFieldNames() throws XMLException {
 		Mapping mapping = new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		rs.add(createMappingRecord(mapping, toStringList("A")));
 		rs.add(createMappingRecord(mapping, toStringList("B")));
 		rs.add(createMappingRecord(mapping, toStringList("C")));
@@ -45,7 +78,7 @@ public class RecordSetTests {
 
 	@Test
 	public void testEmpty() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Iterator<List<ExtractedField>> iterator = rs.iterator();
 		assertTrue(!iterator.hasNext());
 		this.exception.expect(NoSuchElementException.class);
@@ -54,14 +87,13 @@ public class RecordSetTests {
 
 	@Test
 	public void testIMISameGroupRecord() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Mapping ilMapping =
 						new Mapping(null, "ILField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] ilValues = new String[] { "A", "B" };
 		rs.addResults(ilMapping, toExtractedFieldList(ilValues));
 		Mapping mrMapping =
-						new Mapping(null, "MRField1", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField1", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues = new String[] { "C", "D" };
 		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 		Mapping ilMapping2 =
@@ -81,14 +113,13 @@ public class RecordSetTests {
 
 	@Test
 	public void testInlineAndMultiRecord() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Mapping ilMapping =
 						new Mapping(null, "ILField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] ilValues = new String[] { "E", "F", "G", "H" };
 		rs.addResults(ilMapping, toExtractedFieldList(ilValues));
 		Mapping mrMapping =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues = new String[] { "A", "B", "C", "D" };
 		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 
@@ -109,10 +140,9 @@ public class RecordSetTests {
 
 	@Test
 	public void testMIMSameGroupRecord() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Mapping mrMapping =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues = new String[] { "A", "B" };
 		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 		Mapping ilMapping =
@@ -120,8 +150,7 @@ public class RecordSetTests {
 		String[] ilValues = new String[] { "C", "D" };
 		rs.addResults(ilMapping, toExtractedFieldList(ilValues));
 		Mapping mrMapping2 =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues2 = new String[] { "E", "F" };
 		rs.addResults(mrMapping2, toExtractedFieldList(mrValues2));
 
@@ -137,7 +166,7 @@ public class RecordSetTests {
 
 	@Test
 	public void testMultiInlineRecords() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		String[][] records = new String[][] { new String[] { "A", "B", "C", "D" }, new String[] { "E", "F", "G", "H" } };
 		int count = 0;
 		for (String[] record : records) {
@@ -145,7 +174,7 @@ public class RecordSetTests {
 							new Mapping(null, "Field" + count, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
 											"."), 0, 0);
 			count++;
-			MappingRecord mappingRecord = createMappingRecord(mapping, toStringList(record));
+			ExtractedRecord mappingRecord = createMappingRecord(mapping, toStringList(record));
 			rs.add(mappingRecord);
 		}
 
@@ -158,15 +187,13 @@ public class RecordSetTests {
 
 	@Test
 	public void testMultiMRGroupsAsc() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Mapping mrMapping =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues = new String[] { "A", "B" };
 		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 		Mapping mrMapping2 =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues2 = new String[] { "C", "D" };
 		rs.addResults(mrMapping2, toExtractedFieldList(mrValues2));
 
@@ -186,15 +213,13 @@ public class RecordSetTests {
 
 	@Test
 	public void testMultiMRGroupsDesc() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Mapping mrMapping =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues = new String[] { "A", "B" };
 		rs.addResults(mrMapping, toExtractedFieldList(mrValues));
 		Mapping mrMapping2 =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] mrValues2 = new String[] { "C", "D" };
 		rs.addResults(mrMapping2, toExtractedFieldList(mrValues2));
 
@@ -216,10 +241,8 @@ public class RecordSetTests {
 
 	@Test
 	public void testMultipleResultsForSameMapping() throws Exception {
-		RecordSet rs = new RecordSet();
-		Mapping mapping =
-						new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0,
-										0);
+		ExtractedRecordList rs = new ExtractedRecordList();
+		Mapping mapping = new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		rs.addResults(mapping, createMappingRecord(mapping, toStringList("A", "B")));
 		rs.addResults(mapping, createMappingRecord(mapping, toStringList("C")));
 		rs.addResults(mapping, createMappingRecord(mapping, toStringList("D", "E")));
@@ -234,10 +257,8 @@ public class RecordSetTests {
 
 	@Test
 	public void testMultiRecordAndInline() throws Exception {
-		RecordSet rs = new RecordSet();
-		Mapping mapping1 =
-						new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-										0, 0);
+		ExtractedRecordList rs = new ExtractedRecordList();
+		Mapping mapping1 = new Mapping(null, "MRField", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
 		String[] values1 = new String[] { "A", "B", "C", "D" };
 		rs.addResults(mapping1, toExtractedFieldList(values1));
 		Mapping mapping2 =
@@ -262,10 +283,10 @@ public class RecordSetTests {
 
 	@Test
 	public void testSingleInlineRecord() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		String[] expectedValues = new String[] { "A", "B", "C", "D" };
 		Mapping mapping = new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "."), 0, 0);
-		MappingRecord record = createMappingRecord(mapping, toStringList(expectedValues));
+		ExtractedRecord record = createMappingRecord(mapping, toStringList(expectedValues));
 		rs.add(record);
 
 		Iterator<List<ExtractedField>> iterator = rs.iterator();
@@ -280,12 +301,10 @@ public class RecordSetTests {
 
 	@Test
 	public void testSingleMultiRecord() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		String[] expectedValues = new String[] { "A", "B", "C", "D" };
-		Mapping mapping =
-						new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0,
-										0);
-		MappingRecord record = createMappingRecord(mapping, toStringList(expectedValues));
+		Mapping mapping = new Mapping(null, "Field", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
+		ExtractedRecord record = createMappingRecord(mapping, toStringList(expectedValues));
 		rs.add(record);
 
 		List<ExtractedField> values;
@@ -311,9 +330,9 @@ public class RecordSetTests {
 
 	@Test
 	public void testThreeMRGroups() throws Exception {
-		RecordSet rs = new RecordSet();
+		ExtractedRecordList rs = new ExtractedRecordList();
 		Mapping mapping;
-		MappingRecord record;
+		ExtractedRecord record;
 
 		MappingList ml = new MappingList();
 		ml.setOutputName("Test");
@@ -339,30 +358,5 @@ public class RecordSetTests {
 		assertArrayEquals(toExtractedFieldArray("B", "C", "F"), iterator.next().toArray(ESA));
 		assertArrayEquals(toExtractedFieldArray("A", "D", "F"), iterator.next().toArray(ESA));
 		assertArrayEquals(toExtractedFieldArray("B", "D", "F"), iterator.next().toArray(ESA));
-	}
-	
-	@Test
-	public void testDifferentSizeMRGroups() throws Exception {
-		RecordSet rs = new RecordSet();
-		Mapping mapping;
-		MappingRecord record;
-
-		MappingList ml = new MappingList();
-		ml.setOutputName("Test");
-
-		mapping = new Mapping(ml, "Field1", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
-		record = createMappingRecord(mapping, toStringList(new String[] { "A" }));
-		rs.add(record);
-		mapping = new Mapping(ml, "Field2", NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."), 0, 0);
-		record = createMappingRecord(mapping, toStringList(new String[] { "C", "D" }));
-		rs.add(record);
-
-		RecordSetCsvIterator iterator = (RecordSetCsvIterator) rs.iterator();
-		assertEquals(2, iterator.getTotalNumberOfRecords());
-		assertTrue(iterator.hasNext());
-		assertArrayEquals(toExtractedFieldArray("A", "C"), iterator.next().toArray(ESA));
-		assertTrue(iterator.hasNext());
-		assertArrayEquals(toExtractedFieldArray(null, "D"), iterator.next().toArray(ESA));
-		assertTrue(!iterator.hasNext());
 	}
 }

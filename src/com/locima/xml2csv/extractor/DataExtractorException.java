@@ -11,7 +11,7 @@ public class DataExtractorException extends ProgramException {
 
 	/**
 	 * Constructs an instance using the details provided.
-	 * 
+	 *
 	 * @param inner The cause.
 	 * @param fmt A formatting string, passed to String.format.
 	 * @param parameters Parameters passed to the formatting string.
@@ -22,7 +22,7 @@ public class DataExtractorException extends ProgramException {
 
 	/**
 	 * Constructs an instance using the details provided.
-	 * 
+	 *
 	 * @param fmt A formatting string, passed to String.format.
 	 * @param parameters Parameters passed to the formatting string.
 	 */

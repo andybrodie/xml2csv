@@ -19,17 +19,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.XmlUtil;
-import com.locima.xml2csv.model.ExtractedField;
-import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.Mapping;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.MappingList;
-import com.locima.xml2csv.model.MultiValueBehaviour;
-import com.locima.xml2csv.model.NameFormat;
-import com.locima.xml2csv.model.RecordSet;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.Mapping;
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.XmlUtil;
 
 public class OutputManagerTests {
 
@@ -63,19 +63,19 @@ public class OutputManagerTests {
 		container.setOutputName(containerName);
 		for (String fieldName : fieldNames) {
 			Mapping mapping =
-							new Mapping(container, fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(
-											null, "."), 0, 0);
+							new Mapping(container, fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
+											0, 0);
 			container.add(mapping);
 		}
 		return container;
 	}
 
-	private RecordSet createRs(MappingList mapping, String... values) {
-		RecordSet rs = new RecordSet();
+	private ExtractedRecordList createRs(MappingList mapping, String... values) {
+		ExtractedRecordList rs = new ExtractedRecordList();
 		for (int i = 0; i < values.length; i++) {
 			List<ExtractedField> valueList = new ArrayList<ExtractedField>(1);
 			valueList.add(new ExtractedField("1", values[i]));
-			rs.addResults((Mapping) mapping.get(i), valueList);
+			rs.addResults(mapping.get(i), valueList);
 		}
 		return rs;
 	}
@@ -88,7 +88,7 @@ public class OutputManagerTests {
 	}
 
 	private IOutputManager createTempOutputManager(MappingConfiguration mappingConfiguration, boolean appendToFiles) throws IOException,
-					OutputManagerException {
+	OutputManagerException {
 		File newTempFolder = this.testOutputDir.newFolder();
 		return createTempOutputManager(newTempFolder, mappingConfiguration, appendToFiles);
 	}

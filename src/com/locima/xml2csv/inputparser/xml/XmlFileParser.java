@@ -16,9 +16,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.IConfigParser;
-import com.locima.xml2csv.model.MappingConfiguration;
 
 /**
  * Reads configuration from an XML input file.
@@ -85,7 +85,7 @@ public class XmlFileParser implements IConfigParser {
 
 	/**
 	 * Given an array of resource names for XSD files, this retrieves {@link Source} versions of all of them, by opening all the resources in turn.
-	 * 
+	 *
 	 * @param schemaResourceNames a list of resource names, retrieves from the current class loader, of XSD files.
 	 * @return an array of {@link Source} objects, suitable to use with {@link SAXParserFactory#setSchema(javax.xml.validation.Schema)}.
 	 */

@@ -7,8 +7,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.StringUtil;
-import com.locima.xml2csv.model.IMappingContainer;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.util.StringUtil;
 
 public class CsvWriterUtil {
 

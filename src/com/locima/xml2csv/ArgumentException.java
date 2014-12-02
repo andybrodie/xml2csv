@@ -9,7 +9,7 @@ public class ArgumentException extends IllegalArgumentException {
 
 	/**
 	 * Throws if an argument to a method was invalid with a default message.
-	 * 
+	 *
 	 * @param argumentName the name of the argument / parameter than was invalid.
 	 */
 	public ArgumentException(String argumentName) {
@@ -18,7 +18,7 @@ public class ArgumentException extends IllegalArgumentException {
 
 	/**
 	 * Throws if an argument to a method was invalid.
-	 * 
+	 *
 	 * @param argumentName the name of the argument / parameter than was invalid.
 	 * @param reason a reason as to why the argument was invalid.
 	 */

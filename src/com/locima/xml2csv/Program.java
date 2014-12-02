@@ -18,11 +18,14 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.IConfigParser;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
-import com.locima.xml2csv.model.MappingConfiguration;
 import com.locima.xml2csv.output.OutputManager;
+import com.locima.xml2csv.util.FileUtility;
+import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.XmlUtil;
 
 /**
  * Main entry point and logic for the program.
@@ -58,7 +61,7 @@ public class Program {
 	 * so if the user isn't hasn't tried to get logging working, then let's get it to quietly STFU.
 	 */
 	private static void shutLogbackUp() {
-
+		// TODO Not implemented yet
 	}
 
 	/**
@@ -71,8 +74,7 @@ public class Program {
 	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean trimWhitespace, boolean appendOutput)
-					throws ProgramException {
+	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean appendOutput) throws ProgramException {
 
 		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
@@ -86,7 +88,6 @@ public class Program {
 
 			// Parse the input XML files
 			XmlDataExtractor extractor = new XmlDataExtractor();
-			extractor.setTrimWhitespace(trimWhitespace);
 			extractor.setMappingConfiguration(mappingConfig);
 
 			// Iterate over all files that pass filters and write out all the records to the output, managed by the OutputManager
@@ -120,7 +121,7 @@ public class Program {
 	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean trimWhitespace, boolean appendOutput)
+	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean appendOutput)
 					throws ProgramException {
 		File xmlInputDirectory;
 		try {
@@ -142,7 +143,7 @@ public class Program {
 			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
 		}
 		List<File> xmlInputFiles = FileUtility.getFiles(xmlInputDirectory, false);
-		execute(configFiles, xmlInputFiles, outputDirectory, trimWhitespace, appendOutput);
+		execute(configFiles, xmlInputFiles, outputDirectory, appendOutput);
 	}
 
 	/**
@@ -169,8 +170,7 @@ public class Program {
 			boolean trimWhitespace = Boolean.parseBoolean(trimWhitespaceValue);
 			String appendOutputValue = cmdLine.getOptionValue(OPT_APPEND_OUTPUT);
 			boolean appendOutput = Boolean.parseBoolean(appendOutputValue);
-			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR),
-							trimWhitespace, appendOutput);
+			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR), appendOutput);
 			System.out.println("Completed succesfully.");
 		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program

@@ -13,20 +13,20 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.StringUtil;
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.XmlUtil;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.Mapping;
+import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.configuration.XPathValue;
+import com.locima.xml2csv.configuration.filter.FileNameInputFilter;
+import com.locima.xml2csv.configuration.filter.IInputFilter;
+import com.locima.xml2csv.configuration.filter.XPathInputFilter;
 import com.locima.xml2csv.inputparser.FileParserException;
-import com.locima.xml2csv.model.IMappingContainer;
-import com.locima.xml2csv.model.Mapping;
-import com.locima.xml2csv.model.MappingConfiguration;
-import com.locima.xml2csv.model.MappingList;
-import com.locima.xml2csv.model.MultiValueBehaviour;
-import com.locima.xml2csv.model.NameFormat;
-import com.locima.xml2csv.model.XPathValue;
-import com.locima.xml2csv.model.filter.FileNameInputFilter;
-import com.locima.xml2csv.model.filter.IInputFilter;
-import com.locima.xml2csv.model.filter.XPathInputFilter;
+import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.XmlUtil;
 
 /**
  * The SAX Content Handler for input XML files.
@@ -108,8 +108,8 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 
 		Mapping mapping =
-						new Mapping(current, fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath, minValues,
-										maxValues);
+						new Mapping(current, fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath,
+										minValues, maxValues);
 		current.add(mapping);
 	}
 
