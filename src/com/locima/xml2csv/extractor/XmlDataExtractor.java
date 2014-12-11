@@ -31,6 +31,10 @@ import com.locima.xml2csv.output.OutputManagerException;
  */
 public class XmlDataExtractor {
 
+	public XmlDataExtractor() {
+//		this.contextManager = new ExtractionContextManager();
+	}
+	
 	/**
 	 * Provides a convenience wrapper that allows us to iterate over {@link NodeList} instances.
 	 */
@@ -101,11 +105,14 @@ public class XmlDataExtractor {
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
 	public void extractTo(XdmNode xmlDoc, IOutputManager outputManager) throws DataExtractorException, OutputManagerException {
-		LOG.trace("Executing {} sets of mappingConfiguration.", this.mappingConfiguration.size());
+		LOG.info("Executing {} sets of mappingConfiguration", this.mappingConfiguration.size());
+		this.mappingConfiguration.log();
+		int index = 0;
 		for (IMappingContainer mapping : this.mappingConfiguration) {
-			ExtractionContext ctx = ExtractionContextManager.get(null, mapping);
-			ExtractedRecordList records = ctx.evaluate(xmlDoc);
-			outputManager.writeRecords(mapping.getContainerName(), records);
+			ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, index);
+			ctx.evaluate(xmlDoc);
+			outputManager.writeRecords(mapping.getContainerName(), ctx);
+			index++;
 		}
 	}
 

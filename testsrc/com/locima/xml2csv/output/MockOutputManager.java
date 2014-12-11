@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.extractor.ExtractedField;
-import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.StringUtil.IConverter;
 import com.locima.xml2csv.util.Tuple;
 
 public class MockOutputManager implements IOutputManager {
@@ -49,17 +50,24 @@ public class MockOutputManager implements IOutputManager {
 		}
 		String[] array = new String[values.size()];
 		for (int i = 0; i < array.length; i++) {
-			array[i] = values.get(i).getValue();
+			array[i] = values.get(i) == null ? "<NULL ENTRY>" : values.get(i).getFieldValue();
 		}
 		return array;
 	}
 
 	@Override
-	public void writeRecords(String writerName, ExtractedRecordList records) throws OutputManagerException {
+	public void writeRecords(String writerName, Iterable<List<ExtractedField>> records) throws OutputManagerException {
 		for (List<ExtractedField> values : records) {
 			Tuple<String, String[]> s = this._expectedResults.poll();
 			Assert.assertEquals(s.getFirst(), writerName);
-			Assert.assertArrayEquals(s.getSecond(), toValuesOnlyArray(values));
+			LOG.debug("Expected: {}", StringUtil.toString(s.getSecond()));
+			LOG.debug("Actual: {}", StringUtil.toString(values, ", ", new IConverter<ExtractedField>() {
+				@Override
+				public String convert(ExtractedField input) {
+					return (input == null) ? "<NULL>" : input.toString();
+				}
+			}));
+			 Assert.assertArrayEquals(s.getSecond(), toValuesOnlyArray(values));
 		}
 	}
 

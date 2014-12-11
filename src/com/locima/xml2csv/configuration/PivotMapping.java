@@ -2,17 +2,10 @@ package com.locima.xml2csv.configuration;
 
 import java.util.List;
 
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.extractor.ContainerExtractionContext;
-import com.locima.xml2csv.extractor.DataExtractorException;
-import com.locima.xml2csv.extractor.ExtractedRecordList;
 
 public class PivotMapping extends AbstractMapping implements IMapping {
 
@@ -40,37 +33,37 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 		this.baseNameXPath = baseNameXPath;
 	}
 
-	/**
-	 * Evaluate this pivot mapping but executing the value extracting XPath for every key found by executing the base name XPath.
-	 *
-	 * @param rootNode the context node from which to execute the key-finding XPath expression.
-	 * @return a (possibly empty) records set.
-	 * @throws DataExtractorException if anything goes wrong finding the field definitions.
-	 */
-	public ExtractedRecordList evaluate(XdmNode rootNode, ContainerExtractionContext ctx, boolean trimWhitespace) throws DataExtractorException {
-		XPathSelector keysIterator = this.baseNameXPath.evaluate(rootNode);
-		ExtractedRecordList rs = new ExtractedRecordList();
-		int keyCount = 0;
-		for (XdmItem item : keysIterator) {
-			keyCount++;
-			String baseName = item.getStringValue();
-			if (baseName != null) {
-				baseName = baseName.trim();
-			}
-
-			// TODO Think about whether pivot mappings should permit min and max values
-			// TODO THink about whether PivotMappings are mappings or mapping containers.
-			// Mapping mapping = new Mapping(getParent(), baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath(), 0
-			// ,0);
-			// ExtractedRecordList pivotEntryResults = mapping.evaluate((XdmNode) item, ctx, true);
-			// rs.addAll(pivotEntryResults);
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("{} found {} field definition(s) after executing XPath {}", this, keyCount, this.baseNameXPath.getSource(),
-							this.baseNameXPath.getSource());
-		}
-		return rs;
-	}
+	// /**
+	// * Evaluate this pivot mapping but executing the value extracting XPath for every key found by executing the base name XPath.
+	// *
+	// * @param rootNode the context node from which to execute the key-finding XPath expression.
+	// * @return a (possibly empty) records set.
+	// * @throws DataExtractorException if anything goes wrong finding the field definitions.
+	// */
+	// public ExtractedRecordList evaluate(XdmNode rootNode, ContainerExtractionContext ctx, boolean trimWhitespace) throws DataExtractorException {
+	// XPathSelector keysIterator = this.baseNameXPath.evaluate(rootNode);
+	// ExtractedRecordList rs = new ExtractedRecordList();
+	// int keyCount = 0;
+	// for (XdmItem item : keysIterator) {
+	// keyCount++;
+	// String baseName = item.getStringValue();
+	// if (baseName != null) {
+	// baseName = baseName.trim();
+	// }
+	//
+	// // TODO Think about whether pivot mappings should permit min and max values
+	// // TODO THink about whether PivotMappings are mappings or mapping containers.
+	// // Mapping mapping = new Mapping(getParent(), baseName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath(), 0
+	// // ,0);
+	// // ExtractedRecordList pivotEntryResults = mapping.evaluate((XdmNode) item, ctx, true);
+	// // rs.addAll(pivotEntryResults);
+	// }
+	// if (LOG.isDebugEnabled()) {
+	// LOG.debug("{} found {} field definition(s) after executing XPath {}", this, keyCount, this.baseNameXPath.getSource(),
+	// this.baseNameXPath.getSource());
+	// }
+	// return rs;
+	// }
 
 	@Override
 	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount) {

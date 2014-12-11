@@ -51,8 +51,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private String containerName;
 
-	private MultiValueBehaviour defaultMultiValueBehaviour;
-
 	/**
 	 * Retrieves the mapping root expression that, when evaluated, will return all the XML node that should be used to extract data from. If null then
 	 * this mapping will run from the parent mapping root (the top level mapping list will use the document node).
@@ -68,6 +66,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	private Map<String, String> namespaceMappings;
 
 	private IMappingContainer parent;
+
+	private int groupNumber;
 
 	/**
 	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
@@ -130,8 +130,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public int getGroupNumber() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.groupNumber;
+	}
+	
+	public void setGroupNumber(int groupNumber) {
+		this.groupNumber = groupNumber;
 	}
 
 	@Override
@@ -141,11 +144,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private int getMaxResultCount() {
 		return Math.max(this.minimumResultCount, this.maximumResultCount);
-	}
-
-	@Override
-	public MultiValueBehaviour getMultiValueBehaviour() {
-		return this.defaultMultiValueBehaviour;
 	}
 
 	@Override
@@ -223,7 +221,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public String toString() {
-
 		StringBuilder sb = new StringBuilder("MappingList(");
 		sb.append(this.containerName);
 		sb.append(", ");
@@ -238,6 +235,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 		sb.append("]");
 		return sb.toString();
+	}
+
+	@Override
+	public MultiValueBehaviour getMultiValueBehaviour() {
+		return this.multiValueBehaviour;
 	}
 
 }

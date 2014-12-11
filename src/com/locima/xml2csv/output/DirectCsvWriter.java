@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.extractor.ExtractedField;
-import com.locima.xml2csv.extractor.ExtractedRecordList;
 import com.locima.xml2csv.util.FileUtility;
 import com.locima.xml2csv.util.StringUtil;
 
@@ -32,7 +30,7 @@ public class DirectCsvWriter implements ICsvWriter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DirectCsvWriter.class);
 
-	public static String toCsvRecord(Collection<ExtractedField> inputCollection) {
+	public static String toCsvRecord(List<ExtractedField> inputCollection) {
 		return StringUtil.toString(inputCollection, ",", new StringUtil.IConverter<ExtractedField>() {
 
 			@Override
@@ -40,7 +38,7 @@ public class DirectCsvWriter implements ICsvWriter {
 				if (input == null) {
 					return null;
 				} else {
-					return StringUtil.escapeForCsv(input.getValue());
+					return StringUtil.escapeForCsv(input.getFieldValue());
 				}
 			}
 
@@ -137,15 +135,18 @@ public class DirectCsvWriter implements ICsvWriter {
 	 * @throws OutputManagerException if an error occurred writing the files.
 	 */
 	@Override
-	public void writeRecords(ExtractedRecordList data) throws OutputManagerException {
-		for (List<ExtractedField> record : data) {
+	public void writeRecords(Iterable<List<ExtractedField>> records) throws OutputManagerException {
+		for (List<ExtractedField> record : records) {
 			String outputLine = DirectCsvWriter.toCsvRecord(record);
 			try {
-				LOG.trace("Writing output {}: {}", this.outputFile.getAbsolutePath(), outputLine);
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("Writing output {}: {}", this.outputFile.getAbsolutePath(), outputLine);
+				}
 				this.writer.write(outputLine);
 				this.writer.write(StringUtil.getLineSeparator());
 			} catch (IOException ioe) {
-				throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", this.outputFile.getAbsolutePath(), outputLine);
+				throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", this.outputName, this.outputFile.getAbsolutePath(),
+								outputLine);
 			}
 		}
 	}

@@ -139,17 +139,17 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	public String toString() {
 		StringBuilder sb = new StringBuilder("Mapping(");
 		sb.append(this.baseName);
-		sb.append(',');
+		sb.append(", ");
 		sb.append(getNameFormat());
-		sb.append(',');
+		sb.append(", ");
 		sb.append(getGroupNumber());
-		sb.append(',');
+		sb.append(", ");
 		sb.append(getMultiValueBehaviour());
-		sb.append(',');
+		sb.append(", \"");
 		sb.append(getValueXPath().getSource());
-		sb.append(',');
+		sb.append("\", ");
 		sb.append(this.minValueCount);
-		sb.append(',');
+		sb.append(", ");
 		sb.append(this.maxValueCount);
 		sb.append(')');
 		return sb.toString();

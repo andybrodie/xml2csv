@@ -72,5 +72,10 @@ public class XPathValue {
 	public int hashCode() {
 		return this.xPathExpr.hashCode();
 	}
+	
+	@Override
+	public String toString() {
+		return "XPathValue(\"" + this.xPathExpr + "\")";
+	}
 
 }

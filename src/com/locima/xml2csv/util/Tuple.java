@@ -22,6 +22,15 @@ public class Tuple<T, U> {
 		this.second = secondValue;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if ((obj == null) || (!(obj instanceof Tuple<?, ?>))) {
+			return false;
+		}
+		Tuple<?, ?> that = (Tuple<?, ?>) obj;
+		return EqualsUtil.areEqual(this.first, that.first) && EqualsUtil.areEqual(this.second, that.second);
+	}
+
 	/**
 	 * Get the first value of the tuple.
 	 *
@@ -39,4 +48,16 @@ public class Tuple<T, U> {
 	public U getSecond() {
 		return this.second;
 	}
+
+	@Override
+	public int hashCode() {
+		if ((this.first == null) && (this.second == null)) {
+			return "".hashCode();
+		}
+		if (this.first == null) {
+			return this.second.hashCode();
+		}
+		return this.first.hashCode() ^ this.second.hashCode();
+	}
+
 }

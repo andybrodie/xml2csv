@@ -124,7 +124,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		return false;
 	}
 
-/**
+	/**
 	 * Retrieve a top level mapping container ({@link MappingList by name, or null if it doesn't exist.
 	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getContainerName()}).
 	 * @return a mapping container instance with the matching name, or null if one doesn't exist.
@@ -210,5 +210,32 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public int size() {
 		return this.mappings.size();
+	}
+
+	public void log() {
+		for (IMappingContainer mappingList : this.mappings) {
+			LOG.debug(mappingList.toString());
+			for (IMapping child : mappingList) {
+				log(child, 1);
+			}
+		}
+	}
+
+	private void log(IMapping mapping, int index) {
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i<index; i++) {
+			sb.append('\t');
+		}
+		sb.append(mapping.toString());
+		LOG.debug(sb.toString());
+		if (mapping instanceof IMappingContainer) {
+		for (IMapping child : (IMappingContainer)mapping) {
+			if (child instanceof IMappingContainer) {
+				log((IMappingContainer)child, 1);
+			} else {
+				log((IValueMapping)child, 1);
+			}
+		}
+		}
 	}
 }

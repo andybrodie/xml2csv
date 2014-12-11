@@ -1,12 +1,12 @@
 package com.locima.xml2csv.output;
 
-import com.locima.xml2csv.extractor.ExtractedRecord;
+import com.locima.xml2csv.extractor.ExtractionContext;
 
 public class InlineGroupState extends GroupState {
 
 	private boolean exhausted;
 
-	public InlineGroupState(ExtractedRecord record) {
+	public InlineGroupState(ExtractionContext record) {
 		super(-1, record);
 	}
 

@@ -1,22 +1,19 @@
 package com.locima.xml2csv.extractor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.output.GroupState;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
- * Iterates over a {@link ExtractedRecordList} to output a set of CSV output lines.
+ * Iterates over a tree of {@link ContainerExtractionContext} to output a set of CSV output lines.
  * <p>
  * When initialised, this creates a linked list of {@link GroupState} objects that maintain the state of each group for multi-record mappings, and a
  * special group for all the inline mappings (group number isn't used for inline mappings).
@@ -27,28 +24,24 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 
 	/**
 	 * The group state with the lowest group number. Set up by {@link GroupState#createGroupStateList(java.util.Collection)} in {{@link #iterator()}.
+	 * <p>
+	 * {@link GroupState} is a linked list, so we only need to keep a reference to the head.
 	 */
-	private GroupState groupState;
+	private GroupState baseGroupState;
 
 	/**
-	 * The list of results that this iterator is initialised with.
+	 * The tree of rootContainer that this iterator is walking.
 	 */
-	private List<ExtractedRecord> results;
-
-	/**
-	 * The total number of records that this iterator will return. Used for unit testing and debugging mostly.
-	 */
-	private int totalResults;
+	private ContainerExtractionContext rootContainer;
 
 	/**
 	 * Initalises a new iterator. Usually called by {@link ExtractedRecordList#iterator()}.
 	 *
-	 * @param results the set of results that we're going to iterate;
+	 * @param rootContainer the set of rootContainer that we're going to iterate;
 	 */
-	public RecordSetCsvIterator(List<ExtractedRecord> results) {
-		this.results = results;
-		this.groupState = GroupState.createGroupStateList(results);
-		this.totalResults = getTotalNumberOfRecords();
+	public RecordSetCsvIterator(ContainerExtractionContext rootContainer) {
+		this.rootContainer = rootContainer;
+		this.baseGroupState = GroupState.createGroupStateList(rootContainer);
 	}
 
 	/**
@@ -59,79 +52,95 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 	private List<ExtractedField> createCsvValues() {
 		List<ExtractedField> csvFields = new ArrayList<ExtractedField>();
 
-		for (ExtractedRecord record : this.results) {
-			switch (record.getMultiValueBehaviour()) {
-				case GREEDY:
-					/* Greedy mappings output as much as they can */
-					for (ExtractedField value : record) {
-						csvFields.add(value);
-					}
-					break;
-				case LAZY:
-					/*
-					 * The most typical option: just process the next value and move on
-					 */
-					int valueIndex = getIndexForGroup(record.getMapping().getGroupNumber());
-					csvFields.add(record.getValueAt(valueIndex));
-					break;
-				case DEFAULT:
-					throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
-									+ "Mapping.getMultiValueBehaviour().");
-				default:
-					throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().", record.getMultiValueBehaviour());
+		createCsvValues(csvFields, this.rootContainer);
 
-			}
-		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Created record as follows ({})", StringUtil.collectionToString(csvFields, ",", null));
 		}
 		return csvFields;
 	}
 
+	private void createCsvValues(List<ExtractedField> csvFields, ContainerExtractionContext context) {
+		int valueIndex;
+		switch (context.getMapping().getMultiValueBehaviour()) {
+			case GREEDY:
+				/* Most usual case: evaluate all the children of this container */
+				valueIndex = 0;
+				for (ExtractionContext child : context.getChildren()) {
+					LOG.debug("Greedy eval of child {} ({}) from {}", valueIndex++, child, context);
+					createCsvValues(csvFields, child);
+				}
+				break;
+			case LAZY:
+				/*
+				 * Unusual case: only output the next child of this group
+				 */
+				valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
+				ExtractionContext child = context.getChildAt(valueIndex);
+				if (child != null) {
+					LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, child, context);
+					createCsvValues(csvFields, child);
+				} else {
+					LOG.debug("No further children of {} to create CSV values for", context);
+				}
+				break;
+			case DEFAULT:
+				throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
+								+ "Mapping.getMultiValueBehaviour().");
+			default:
+				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().",
+								context.getMapping().getMultiValueBehaviour());
+		}
+	}
+
+	private void createCsvValues(List<ExtractedField> csvFields, ExtractionContext context) {
+		if (context instanceof ContainerExtractionContext) {
+			createCsvValues(csvFields, (ContainerExtractionContext) context);
+		} else {
+			createCsvValues(csvFields, (MappingExtractionContext) context);
+		}
+	}
+
+	private void createCsvValues(List<ExtractedField> csvFields, MappingExtractionContext context) {
+		switch (context.getMapping().getMultiValueBehaviour()) {
+			case GREEDY:
+				/* Greedy mappings output as much as they can */
+				List<ExtractedField> fields = context.getAllValues();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Greedily adding all fields {} to as output of {}", StringUtil.collectionToString(fields, ", ", null), context);
+				}
+				csvFields.addAll(fields);
+				break;
+			case LAZY:
+				/*
+				 * The most typical option: just process the next value and move on
+				 */
+				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
+				ExtractedField field = context.getValueAt(valueIndex);
+				LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, field, context);
+				csvFields.add(field);
+				break;
+			case DEFAULT:
+				throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
+								+ "Mapping.getMultiValueBehaviour().");
+			default:
+				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().",
+								context.getMapping().getMultiValueBehaviour());
+		}
+	}
+
 	/**
-	 * Determines the current index of the passed <code>group<code> in the results set iteation.
+	 * Determines the current index of the passed <code>group<code> in the rootContainer set iteration.
 	 *
 	 * @param group the group to get the current index of. Must be a valid group.
 	 * @return the index of the result to return (min 0, unbounded max)
 	 */
 	private int getIndexForGroup(int group) {
-		GroupState existingGroup = this.groupState.findByGroup(group);
+		GroupState existingGroup = this.baseGroupState.findByGroup(group);
 		if (existingGroup == null) {
 			throw new BugException("Tried to get index for non-existant group %d", group);
 		}
 		return existingGroup.getCurrentIndex();
-	}
-
-	/**
-	 * Get the total number of records expected to be returned.
-	 *
-	 * @return calculates the total number of records that will be returned when iterated.
-	 */
-	public int getTotalNumberOfRecords() {
-		if (this.results.isEmpty()) {
-			return 0;
-		}
-
-		Map<Integer, Integer> groupSizes = new HashMap<Integer, Integer>();
-		for (ExtractedRecord record : this.results) {
-			int group = record.getMapping().getGroupNumber();
-			int size = record.size();
-			if ((size > 0) && (record.getMultiValueBehaviour() == MultiValueBehaviour.LAZY)) {
-				if (groupSizes.containsKey(group)) {
-					if (record.size() > groupSizes.get(group)) {
-						groupSizes.put(group, record.size());
-					}
-				} else {
-					groupSizes.put(group, record.size());
-				}
-			}
-		}
-		int total = 1;
-		for (Integer size : groupSizes.values()) {
-			total *= size;
-		}
-
-		return total;
 	}
 
 	/**
@@ -142,7 +151,7 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 	 */
 	@Override
 	public boolean hasNext() {
-		return (this.groupState == null) ? false : this.groupState.hasNext();
+		return (this.baseGroupState == null) ? false : this.baseGroupState.hasNext();
 	}
 
 	/**
@@ -154,7 +163,7 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 			throw new NoSuchElementException();
 		}
 		List<ExtractedField> values = createCsvValues();
-		this.groupState.increment();
+		this.baseGroupState.increment();
 		return values;
 	}
 

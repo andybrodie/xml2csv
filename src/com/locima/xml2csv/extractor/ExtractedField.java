@@ -2,14 +2,17 @@ package com.locima.xml2csv.extractor;
 
 import com.locima.xml2csv.util.EqualsUtil;
 
+/**
+ * A simple name/value pair of field name mapped to field value within a single output record.
+ */
 public class ExtractedField {
 
-	private String fieldName;
-	private String value;
+	private final String fieldName;
+	private final String value;
 
-	public ExtractedField(String fieldInfo, String value) {
-		this.fieldName = fieldInfo;
-		this.value = value;
+	public ExtractedField(String fieldName, String fieldValue) {
+		this.fieldName = fieldName;
+		this.value = fieldValue;
 	}
 
 	@Override
@@ -21,11 +24,11 @@ public class ExtractedField {
 		return EqualsUtil.areEqual(this.fieldName, that.fieldName) && EqualsUtil.areEqual(this.value, that.value);
 	}
 
-	public String getFieldInfo() {
+	public String getFieldName() {
 		return this.fieldName;
 	}
 
-	public String getValue() {
+	public String getFieldValue() {
 		return this.value;
 	}
 

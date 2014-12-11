@@ -1,9 +1,10 @@
 package com.locima.xml2csv.output;
 
 import java.io.File;
+import java.util.List;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.ExtractedRecordList;
+import com.locima.xml2csv.extractor.ExtractedField;
 
 /**
  * Manages writing a set of CSV files for a specific {@link MappingConfiguration}.
@@ -38,9 +39,9 @@ public interface IOutputManager {
 	/**
 	 * Writes the records created by the XML data extractor to the output file managed by this instance
 	 *
-	 * @param records the records to write out.
+	 * @param iter the extracted data from the XML document that relate to a single output.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
-	void writeRecords(String outputName, ExtractedRecordList records) throws OutputManagerException;
+	void writeRecords(String outputName, Iterable<List<ExtractedField>> iter) throws OutputManagerException;
 
 }

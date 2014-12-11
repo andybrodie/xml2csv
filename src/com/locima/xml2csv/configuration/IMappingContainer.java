@@ -26,4 +26,11 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 
 	XPathValue getMappingRoot();
 
+	/**
+	 * Returns the number of child mappings contained within this container.
+	 * 
+	 * @return the number of child mappings contained within this container.
+	 */
+	int size();
+
 }

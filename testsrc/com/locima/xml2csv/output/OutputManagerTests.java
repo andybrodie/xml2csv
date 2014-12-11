@@ -27,7 +27,6 @@ import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.configuration.NameFormat;
 import com.locima.xml2csv.extractor.ExtractedField;
-import com.locima.xml2csv.extractor.ExtractedRecordList;
 import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.XmlUtil;
 
@@ -70,12 +69,12 @@ public class OutputManagerTests {
 		return container;
 	}
 
-	private ExtractedRecordList createRs(MappingList mapping, String... values) {
-		ExtractedRecordList rs = new ExtractedRecordList();
-		for (int i = 0; i < values.length; i++) {
+	private Iterable<List<ExtractedField>> createRs(MappingList mapping, String... values) {
+		List<List<ExtractedField>> rs = new ArrayList<List<ExtractedField>>();
+		for (String value : values) {
 			List<ExtractedField> valueList = new ArrayList<ExtractedField>(1);
-			valueList.add(new ExtractedField("1", values[i]));
-			rs.addResults(mapping.get(i), valueList);
+			valueList.add(new ExtractedField("1", value));
+			rs.add(valueList);
 		}
 		return rs;
 	}
@@ -88,7 +87,7 @@ public class OutputManagerTests {
 	}
 
 	private IOutputManager createTempOutputManager(MappingConfiguration mappingConfiguration, boolean appendToFiles) throws IOException,
-	OutputManagerException {
+					OutputManagerException {
 		File newTempFolder = this.testOutputDir.newFolder();
 		return createTempOutputManager(newTempFolder, mappingConfiguration, appendToFiles);
 	}

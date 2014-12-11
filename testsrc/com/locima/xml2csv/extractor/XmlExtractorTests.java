@@ -1,4 +1,4 @@
-package com.locima.xml2csv;
+package com.locima.xml2csv.extractor;
 
 import static org.junit.Assert.fail;
 
@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
@@ -54,9 +55,17 @@ public class XmlExtractorTests {
 
 	private Processor saxonProcessor;
 
-	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, String valueXPathExpression) throws XMLException {
+	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, int groupNumber, String valueXPathExpression)
+					throws XMLException {
 		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
-		Mapping m = new Mapping(mappings, baseName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, valueXPath, 0, 0);
+		Mapping m = new Mapping(mappings, baseName, NameFormat.NO_COUNTS, groupNumber, MultiValueBehaviour.LAZY, valueXPath, 0, 0);
+		mappings.add(m);
+	}
+
+	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, int groupNumber, MultiValueBehaviour mvb,
+					String valueXPathExpression) throws XMLException {
+		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
+		Mapping m = new Mapping(mappings, baseName, NameFormat.NO_COUNTS, groupNumber, mvb, valueXPath, 0, 0);
 		mappings.add(m);
 	}
 
@@ -88,13 +97,39 @@ public class XmlExtractorTests {
 		MappingList parents = new MappingList();
 		parents.setOutputName("Parents");
 		parents.setMappingRoot("/root/parent");
-		addMapping(parents, null, "data", "data");
+		parents.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+		addMapping(parents, null, "data", 1, "data");
+		config.addMappings(parents);
+
+		XmlDataExtractor extractor = new XmlDataExtractor();
+		extractor.setMappingConfiguration(config);
+
+		MockOutputManager om = new MockOutputManager();
+		om.addExpectedResult("Parents", "ParentData1");
+		om.addExpectedResult("Parents", "ParentData2");
+
+		XdmNode testDoc = createFromString("<root><parent><data>ParentData1</data></parent><parent><data>ParentData2</data></parent></root>");
+
+		extractor.extractTo(testDoc, om);
+		om.close();
+	}
+
+	@Test
+	public void testMultipleBasicMappingsWithRoot() throws Exception {
+		MappingConfiguration config = new MappingConfiguration();
+
+		MappingList parents = new MappingList();
+		parents.setOutputName("Parents");
+		parents.setMappingRoot("/root/parent");
+		parents.setMultiValueBehaviour(MultiValueBehaviour.GREEDY);
+		addMapping(parents, null, "data", 1, "data");
 		config.addMappings(parents);
 
 		MappingList children = new MappingList();
 		children.setOutputName("Children");
 		children.setMappingRoot("/root/parent/child");
-		addMapping(children, null, "data", "data");
+		children.setMultiValueBehaviour(MultiValueBehaviour.GREEDY);
+		addMapping(children, null, "data", 1, "data");
 		config.addMappings(children);
 
 		XmlDataExtractor extractor = new XmlDataExtractor();
@@ -127,6 +162,7 @@ public class XmlExtractorTests {
 	@Test
 	public void testMaxValueMapping() throws Exception {
 		MappingList mappings = new MappingList();
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		mappings.setOutputName("Test");
 
 		Mapping m =
@@ -160,6 +196,7 @@ public class XmlExtractorTests {
 	public void testMinValueMapping() throws Exception {
 		MappingList mappings = new MappingList();
 		mappings.setOutputName("Test");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 
 		Mapping m =
 						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
@@ -189,14 +226,16 @@ public class XmlExtractorTests {
 	@Test
 	public void testMultipleMappingsWithRoot() throws Exception {
 		MappingList families = new MappingList();
+		families.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		families.setOutputName("Families");
 		families.setMappingRoot("/families/family");
-		addMapping(families, null, "Name", "name");
+		addMapping(families, null, "Name", 1, "name");
 
 		MappingList familyMembers = new MappingList();
-		addMapping(familyMembers, null, "Name", "name");
-		addMapping(familyMembers, null, "Age", "age");
-		addMapping(familyMembers, null, "Address", "address");
+		familyMembers.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+		addMapping(familyMembers, null, "Name", 2, "name");
+		addMapping(familyMembers, null, "Age", 2, "age");
+		addMapping(familyMembers, null, "Address", 2, "address");
 		familyMembers.setOutputName("FamilyMembers");
 		familyMembers.setMappingRoot("/families/family/member");
 
@@ -229,9 +268,10 @@ public class XmlExtractorTests {
 	@Test
 	public void testSimpleMappings() throws Exception {
 		MappingList mappings = new MappingList();
-		addMapping(mappings, null, "Name", "/person/name");
-		addMapping(mappings, null, "Age", "/person/age");
-		addMapping(mappings, null, "Address", "/person/address");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+		addMapping(mappings, null, "Name", 1, "/person/name");
+		addMapping(mappings, null, "Age", 1, "/person/age");
+		addMapping(mappings, null, "Address", 1, "/person/address");
 		mappings.setOutputName("Test");
 
 		MappingConfiguration s = new MappingConfiguration();
@@ -256,9 +296,10 @@ public class XmlExtractorTests {
 		prefixUriMap.put("b", "http://example.com/b");
 
 		MappingList mappings = new MappingList(prefixUriMap);
-		addMapping(mappings, prefixUriMap, "Name", "/a:person/b:name");
-		addMapping(mappings, prefixUriMap, "Age", "/a:person/b:age");
-		addMapping(mappings, prefixUriMap, "Address", "/a:person/b:address");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+		addMapping(mappings, prefixUriMap, "Name", 1, "/a:person/b:name");
+		addMapping(mappings, prefixUriMap, "Age", 1, "/a:person/b:age");
+		addMapping(mappings, prefixUriMap, "Address", 1, "/a:person/b:address");
 		mappings.setOutputName("Test");
 
 		MappingConfiguration s = new MappingConfiguration();
@@ -280,11 +321,12 @@ public class XmlExtractorTests {
 	@Test
 	public void testSimpleMappingsWithRoot() throws Exception {
 		MappingList mappings = new MappingList();
-		addMapping(mappings, null, "Name", "name");
-		addMapping(mappings, null, "Age", "age");
-		addMapping(mappings, null, "Address", "address");
 		mappings.setOutputName("Test");
 		mappings.setMappingRoot("/personcollection/person");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+		addMapping(mappings, null, "Name", 1, MultiValueBehaviour.GREEDY, "name");
+		addMapping(mappings, null, "Age", 1, MultiValueBehaviour.GREEDY, "age");
+		addMapping(mappings, null, "Address", 1, MultiValueBehaviour.GREEDY, "address");
 
 		MappingConfiguration s = new MappingConfiguration();
 		s.addMappings(mappings);

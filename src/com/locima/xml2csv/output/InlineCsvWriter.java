@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.extractor.ExtractedField;
-import com.locima.xml2csv.extractor.ExtractedRecordList;
 import com.locima.xml2csv.util.FileUtility;
+import com.locima.xml2csv.util.StringUtil;
 
 /**
  * Manages the output for a single CSV file where the results of conversion from XML when the mapping configuration contains a variable number of
@@ -33,10 +33,48 @@ public class InlineCsvWriter implements ICsvWriter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(InlineCsvWriter.class);
 
+	/**
+	 * Converts an ordered collection of {@link ExtractedField} instances to the intermediate record format, ready for writing to the
+	 * {@link #csiOutputFile} file.
+	 * 
+	 * @param inputCollection a collection of name/value pairs.
+	 * @return a (possibly empty) string.
+	 */
+	public static String toCsvRecord(List<ExtractedField> inputCollection) {
+		return StringUtil.toString(inputCollection, ",", new StringUtil.IConverter<ExtractedField>() {
+
+			@Override
+			public String convert(ExtractedField input) {
+				if (input == null) {
+					return null;
+				} else {
+					return StringUtil.escapeForCsv(input.getFieldName()) + "," + StringUtil.escapeForCsv(input.getFieldValue());
+				}
+			}
+
+		});
+	}
+
+	private IMappingContainer container;
+
+	/**
+	 * The intermediate CSV output file that contains the name of each field before each record.
+	 */
 	private File csiOutputFile;
+
+	/**
+	 * The writer object that can be used to write to {@link #csiOutputFile}.
+	 */
 	private Writer csiWriter;
+
+	/**
+	 * The final CSV output file that will contain our desired output.
+	 */
 	private File csvOutputFile;
 
+	/**
+	 * The name of the output managed by this writer.
+	 */
 	private String outputName;
 
 	@Override
@@ -48,7 +86,6 @@ public class InlineCsvWriter implements ICsvWriter {
 	@Override
 	public void close() throws OutputManagerException {
 		closeFile(this.outputName, this.csiOutputFile.getAbsolutePath(), this.csiWriter);
-
 		convertCsiToCsv();
 	}
 
@@ -69,13 +106,17 @@ public class InlineCsvWriter implements ICsvWriter {
 	}
 
 	private void convertCsiToCsv() {
-		// Base the CSV file name off of the CSI filename by just changing the last letter of the extension.
 		LOG.info("Converting output CSI file {} to output CSV file {}", this.csiOutputFile.getAbsolutePath(), this.csvOutputFile.getAbsolutePath());
+		/*
+		 * 1. Create the CSV file 2. Add all the headers 3. Open the CSI file 4. Read in a CSI record 5. Write out the appropriate CSV record. 6.
+		 * Close
+		 */
 		throw new UnsupportedOperationException();
 	}
 
 	private Writer createWriter(IMappingContainer container, File file, boolean appendOutput) throws OutputManagerException {
 		LOG.info("Creating csiWriter for {}", file.getAbsolutePath());
+		this.container = container;
 		final String encoding = "UTF8";
 		try {
 			boolean createdNew = !file.exists();
@@ -108,12 +149,33 @@ public class InlineCsvWriter implements ICsvWriter {
 	}
 
 	@Override
-	public void writeRecords(ExtractedRecordList records) throws OutputManagerException {
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("InlineCsvWriter(");
+		sb.append(this.outputName);
+		sb.append(", ");
+		sb.append(this.csiOutputFile);
+		sb.append(", ");
+		sb.append(this.csvOutputFile);
+		sb.append(")");
+		return sb.toString();
+	}
 
-		for (List<ExtractedField> fields : records) {
-			throw new UnsupportedOperationException();
+	@Override
+	public void writeRecords(Iterable<List<ExtractedField>> records) throws OutputManagerException {
+		for (List<ExtractedField> record : records) {
+			String outputLine = InlineCsvWriter.toCsvRecord(record);
+			try {
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("Writing output {}: {}", this.csiOutputFile.getAbsolutePath(), outputLine);
+				}
+				this.csiWriter.write(outputLine);
+				this.csiWriter.write(StringUtil.getLineSeparator());
+			} catch (IOException ioe) {
+				throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", this.outputName, this.csiOutputFile.getAbsolutePath(),
+								outputLine);
+			}
 		}
-
 	}
 
 }
