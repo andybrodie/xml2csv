@@ -121,14 +121,14 @@ public class XmlExtractorTests {
 		MappingList parents = new MappingList();
 		parents.setOutputName("Parents");
 		parents.setMappingRoot("/root/parent");
-		parents.setMultiValueBehaviour(MultiValueBehaviour.GREEDY);
+		parents.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		addMapping(parents, null, "data", 1, "data");
 		config.addMappings(parents);
 
 		MappingList children = new MappingList();
 		children.setOutputName("Children");
 		children.setMappingRoot("/root/parent/child");
-		children.setMultiValueBehaviour(MultiValueBehaviour.GREEDY);
+		children.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		addMapping(children, null, "data", 1, "data");
 		config.addMappings(children);
 
@@ -202,10 +202,10 @@ public class XmlExtractorTests {
 						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
 										"person/name"), 3, 0);
 		mappings.add(m);
-		m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
+		m = new Mapping(mappings, "Age", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
 		mappings.add(m);
 		m =
-						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
+						new Mapping(mappings, "Address", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
 										"person/address"), 0, 0);
 		mappings.add(m);
 

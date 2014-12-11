@@ -63,7 +63,10 @@ public class GroupState {
 			}
 			// Now push all the children to our "to do" stack.
 			if (current instanceof ContainerExtractionContext) {
-				remainingContexts.addAll(((ContainerExtractionContext) current).getChildren());
+				ContainerExtractionContext cec = (ContainerExtractionContext)current;
+				for (List<ExtractionContext> child : cec.getChildren()) {
+					remainingContexts.addAll(child);
+				}
 			}
 		}
 

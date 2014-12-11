@@ -61,27 +61,26 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 	}
 
 	private void createCsvValues(List<ExtractedField> csvFields, ContainerExtractionContext context) {
-		int valueIndex;
 		switch (context.getMapping().getMultiValueBehaviour()) {
 			case GREEDY:
-				/* Most usual case: evaluate all the children of this container */
-				valueIndex = 0;
-				for (ExtractionContext child : context.getChildren()) {
-					LOG.debug("Greedy eval of child {} ({}) from {}", valueIndex++, child, context);
-					createCsvValues(csvFields, child);
+				int resultSetIndex = 0;
+				int resultIndex = 0;
+				List<List<ExtractionContext>> allResults = context.getChildren();
+				for (List<ExtractionContext> results : allResults) {
+					for (ExtractionContext child : results) {
+						LOG.debug("Greedy eval of child {}.{} ({}) from {}", resultSetIndex, resultIndex++, child, context);
+						createCsvValues(csvFields, child);
+					}
+					resultSetIndex++;
+					resultIndex = 0;
 				}
 				break;
 			case LAZY:
-				/*
-				 * Unusual case: only output the next child of this group
-				 */
-				valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
-				ExtractionContext child = context.getChildAt(valueIndex);
-				if (child != null) {
-					LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, child, context);
+				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
+				List<ExtractionContext> results = context.getResultsSetAt(valueIndex);
+				for (ExtractionContext child : results) {
+					LOG.debug("Greedy eval of child {} ({}) from {}", valueIndex++, child, context);
 					createCsvValues(csvFields, child);
-				} else {
-					LOG.debug("No further children of {} to create CSV values for", context);
 				}
 				break;
 			case DEFAULT:

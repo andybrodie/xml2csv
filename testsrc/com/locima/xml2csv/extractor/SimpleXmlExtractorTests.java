@@ -93,10 +93,45 @@ public class SimpleXmlExtractorTests {
 	@Test
 	public void testSimpleGreedyMappingsWithRoot() throws Exception {
 		MappingConfiguration config = new MappingConfiguration();
-		MappingList mappings = createMappingList("group/subgroup", 0, MultiValueBehaviour.GREEDY);
+		MappingList mappings = createMappingList("group/subgroup", 0, MultiValueBehaviour.LAZY);
 		createLazyMapping(mappings, "@sgName",1);
 		createLazyMapping(mappings, "a1",1);
 		createLazyMapping(mappings, "a2",1);
+		config.addMappings(mappings);
+
+		IOutputManager lom = new LoggingOutputManager();
+		lom.initialise(null,config, false);
+	
+		XmlDataExtractor extractor = new XmlDataExtractor();
+		extractor.setMappingConfiguration(config);
+		extractor.extractTo(testDoc, lom);
+		lom.close();
+	}
+
+	@Test
+	public void testGreedyContainerWithMultipleChildHits() throws Exception {
+		MappingConfiguration config = new MappingConfiguration();
+		MappingList mappings = createMappingList("group", 0, MultiValueBehaviour.GREEDY);
+		createLazyMapping(mappings, "subgroup/@sgName",1);
+		createLazyMapping(mappings, "subgroup/a1",1);
+		createLazyMapping(mappings, "subgroup/a2",1);
+		config.addMappings(mappings);
+
+		IOutputManager lom = new LoggingOutputManager();
+		lom.initialise(null,config, false);
+	
+		XmlDataExtractor extractor = new XmlDataExtractor();
+		extractor.setMappingConfiguration(config);
+		extractor.extractTo(testDoc, lom);
+		lom.close();
+	}
+
+	@Test
+	public void testGreedyContainerWithGreedyChilren() throws Exception {
+		MappingConfiguration config = new MappingConfiguration();
+		MappingList mappings = createMappingList("group", 0, MultiValueBehaviour.GREEDY);
+		createLazyMapping(mappings, "subgroup/a1",1);
+		createLazyMapping(mappings, "subgroup/a2",2);
 		config.addMappings(mappings);
 
 		IOutputManager lom = new LoggingOutputManager();

@@ -21,7 +21,7 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 
 	private static final Logger LOG = LoggerFactory.getLogger(ContainerExtractionContext.class);
 
-	private List<ExtractionContext> children;
+	private List<List<ExtractionContext>> children;
 
 	private int index;
 
@@ -30,7 +30,7 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int index) {
 		super(parent);
 		this.mapping = mapping;
-		this.children = new ArrayList<ExtractionContext>();
+		this.children = new ArrayList<List<ExtractionContext>>();
 		this.index = index;
 	}
 
@@ -91,13 +91,18 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 		String indent = indentSb.toString();
 		if (ctx instanceof ContainerExtractionContext) {
 			LOG.trace("{}{}:{}", indent, offset, this);
+			int childResultsSetCount = 0;
 			int childCount = 0;
-			for (ExtractionContext child : ((ContainerExtractionContext) ctx).getChildren()) {
-				logResults(child, childCount++, indentCount+1);
+			for (List<ExtractionContext> children : ((ContainerExtractionContext) ctx).getChildren()) {
+				LOG.trace("{}  {}", indent, childResultsSetCount++);
+				for (ExtractionContext child : children) {
+					logResults(child, childCount++, indentCount + 2);
+				}
+				childCount = 0;
 			}
 		} else {
 			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
-			LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getAllValues(),",",null));
+			LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getAllValues(), ",", null));
 		}
 	}
 
@@ -114,16 +119,18 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 			LOG.debug("Executing {} child mappings of {}", this.mapping.size(), this.mapping);
 		}
 		int i = 0;
+		List<ExtractionContext> iterationECs = new ArrayList<ExtractionContext>(this.size());
 		for (IMapping mapping : this.mapping) {
 			ExtractionContext childCtx = ExtractionContext.create(this, mapping, i);
 			childCtx.evaluate(node);
-			this.children.add(childCtx);
+			iterationECs.add(childCtx);
 			i++;
 		}
+		this.children.add(iterationECs);
 		incrementContext();
 	}
 
-	public ExtractionContext getChildAt(int valueIndex) {
+	public List<ExtractionContext> getResultsSetAt(int valueIndex) {
 		if (this.children.size() > valueIndex) {
 			return this.children.get(valueIndex);
 		} else {
@@ -131,7 +138,7 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 		}
 	}
 
-	public List<ExtractionContext> getChildren() {
+	public List<List<ExtractionContext>> getChildren() {
 		return this.children;
 	}
 
@@ -155,8 +162,10 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 	@Override
 	public void resetContext() {
 		setIndex(0);
-		for (ExtractionContext child : this.children) {
-			child.resetContext();
+		for (List<ExtractionContext> childList : this.children) {
+			for (ExtractionContext child : childList) {
+				child.resetContext();
+			}
 		}
 	}
 

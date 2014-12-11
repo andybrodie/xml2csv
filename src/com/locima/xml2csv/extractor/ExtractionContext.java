@@ -31,7 +31,23 @@ public abstract class ExtractionContext {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ExtractionContext.class);
 
+	public static ExtractionContext create(ContainerExtractionContext parent, IMapping mapping, int index) {
+		ExtractionContext ctx;
+		if (mapping == null) {
+			throw new ArgumentNullException("mapping");
+		}
+		if (mapping instanceof IValueMapping) {
+			ctx = new MappingExtractionContext(parent, ((IValueMapping) mapping));
+		} else if (mapping instanceof IMappingContainer) {
+			ctx = new ContainerExtractionContext(parent, (IMappingContainer) mapping, index);
+		} else {
+			throw new BugException("Passed mapping that is not a value mapping or mapping container: %s", mapping);
+		}
+		return ctx;
+	}
+
 	private int currentIndex;
+
 	private ContainerExtractionContext parent;
 
 	protected ExtractionContext(ContainerExtractionContext parent) {
@@ -41,18 +57,6 @@ public abstract class ExtractionContext {
 	public abstract void clearResults();
 
 	public abstract void evaluate(XdmNode rootNode) throws DataExtractorException;
-
-	public String getContextIndexString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(this.currentIndex);
-		ExtractionContext current = getParent();
-		while (current != null) {
-			sb.insert(0, "_");
-			sb.insert(0, current.currentIndex);
-			current = current.getParent();
-		}
-		return sb.toString();
-	}
 
 	public abstract IMapping getMapping();
 
@@ -77,18 +81,5 @@ public abstract class ExtractionContext {
 	}
 
 	public abstract int size();
-
-	public static ExtractionContext create(ContainerExtractionContext parent, IMapping mapping, int index) {
-		ExtractionContext ctx;
-		if (mapping==null) throw new ArgumentNullException("mapping");
-		if (mapping instanceof IValueMapping) {
-			ctx = new MappingExtractionContext(parent, ((IValueMapping) mapping));
-		} else if (mapping instanceof IMappingContainer) {
-			ctx = new ContainerExtractionContext(parent, (IMappingContainer) mapping, index);
-		} else {
-			throw new BugException("Passed mapping that is not a value mapping or mapping container: %s", mapping);
-		}
-		return ctx;
-	}
 
 }
