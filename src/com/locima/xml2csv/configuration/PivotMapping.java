@@ -101,4 +101,16 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 		return sb.toString();
 	}
 
+	@Override
+	public int getMaxValueCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getMinValueCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

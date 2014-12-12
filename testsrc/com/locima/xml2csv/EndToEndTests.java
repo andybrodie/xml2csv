@@ -11,8 +11,8 @@ public class EndToEndTests {
 	@Test
 	public void testEndToEnd() throws Exception {
 		TemporaryFolder outputFolder = processFiles("SimpleFamilyConfig.xml", "SimpleFamily1.xml", "SimpleFamily2.xml");
-		assertCsvEquals("SimpleFamilyOutput1.csv", outputFolder.getRoot(), "family.csv");
-		assertCsvEquals("SimpleFamilyOutput2.csv", outputFolder.getRoot(), "people.csv");
+		assertCsvEquals("SimpleFamilyOutput1.csv", outputFolder.getRoot(), "Family.csv");
+		assertCsvEquals("SimpleFamilyOutput2.csv", outputFolder.getRoot(), "People.csv");
 
 	}
 

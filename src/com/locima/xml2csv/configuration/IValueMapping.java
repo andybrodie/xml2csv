@@ -4,10 +4,6 @@ public interface IValueMapping extends IMapping {
 
 	String getBaseName();
 
-	int getMaxValueCount();
-
-	int getMinValueCount();
-
 	XPathValue getValueXPath();
 
 	boolean requiresTrimWhitespace();

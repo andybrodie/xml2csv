@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.ExtractionContext;
 
@@ -63,7 +62,7 @@ public class GroupState {
 			}
 			// Now push all the children to our "to do" stack.
 			if (current instanceof ContainerExtractionContext) {
-				ContainerExtractionContext cec = (ContainerExtractionContext)current;
+				ContainerExtractionContext cec = (ContainerExtractionContext) current;
 				for (List<ExtractionContext> child : cec.getChildren()) {
 					remainingContexts.addAll(child);
 				}
@@ -94,7 +93,7 @@ public class GroupState {
 
 	/**
 	 * Internal debugging method that logs the current state of this group state and all it's successors.
-	 * 
+	 *
 	 * @param firstState
 	 */
 	private static void logStates(GroupState firstState) {
@@ -154,6 +153,7 @@ public class GroupState {
 	private void addContext(ExtractionContext record) {
 		this.records.add(record);
 		setSizeIfBigger(record.size());
+		setSizeIfBigger(record.getMapping().getMinValueCount());
 	}
 
 	public GroupState findByGroup(int searchGroup) {

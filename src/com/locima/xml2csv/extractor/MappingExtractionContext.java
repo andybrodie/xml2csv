@@ -86,7 +86,8 @@ public class MappingExtractionContext extends ExtractionContext {
 
 		XPathSelector selector = this.mapping.getValueXPath().evaluate(mappingRoot);
 		Iterator<XdmItem> resultIter = selector.iterator();
-		for (int valueCount = 1; resultIter.hasNext(); valueCount++) { 
+		int valueCount;
+		for (valueCount = 0; resultIter.hasNext(); valueCount++) {
 			// Value count is just a counter, so start at one as it makes more sense for
 			// the user, and makes the comparison with maxValueCount simpler.
 			String value = resultIter.next().getStringValue();
@@ -96,14 +97,11 @@ public class MappingExtractionContext extends ExtractionContext {
 			values.add(value);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Field \"{}\" found value({}) \"{}\" found after executing XPath \"{}\"", fieldName, values.size(), value,
-								this.mapping.getValueXPath().getSource());
+				LOG.debug("Field \"{}\" found value({}) \"{}\" found after executing XPath \"{}\" (max: {})", fieldName, values.size(), value,
+								this.mapping.getValueXPath().getSource(), maxValueCount);
 			}
 
-			/* If we've found values up to this.maxValueCount then discard all other values.
-			 * Don't worry about minValueCount, that's dealt with by the CSV writers
-			 */
-			if ((this.mapping.getMaxValueCount() > 0) && (valueCount == this.mapping.getMaxValueCount())) {
+			if ((maxValueCount> 0) && (valueCount+1 == maxValueCount)) {
 				if (resultIter.hasNext()) {
 					if (LOG.isWarnEnabled()) {
 						LOG.warn("Discarded at least 1 value from mapping {} as maxValueCount reached limit of {}", this, maxValueCount);
@@ -111,8 +109,16 @@ public class MappingExtractionContext extends ExtractionContext {
 				}
 				break;
 			}
+
 			incrementContext();
 		}
+
+//		int minValues = this.mapping.getMinValueCount();
+//		if (minValues > 0) {
+//			for (int i = valueCount; i <= minValues; i++) {
+//				values.add("");
+//			}
+//		}
 
 		this.maxResultsFound = Math.max(this.maxResultsFound, values.size());
 
@@ -124,9 +130,11 @@ public class MappingExtractionContext extends ExtractionContext {
 
 	public List<ExtractedField> getAllValues() {
 		List<ExtractedField> fields = new ArrayList<ExtractedField>();
-		for (int i = 0; i < this.results.size(); i++) {
+		int countRequires = Math.max(this.results.size(), this.mapping.getMinValueCount());
+		
+		for (int i = 0; i < countRequires; i++) {
 			String name = createName(this.mapping.getNameFormat(), i);
-			ExtractedField field = new ExtractedField(name, this.results.get(i));
+			ExtractedField field = new ExtractedField(name, i >= this.results.size() ? null : this.results.get(i));
 			fields.add(field);
 		}
 		return fields;
@@ -158,6 +166,7 @@ public class MappingExtractionContext extends ExtractionContext {
 	public int size() {
 		return this.results.size();
 	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("MEC(");

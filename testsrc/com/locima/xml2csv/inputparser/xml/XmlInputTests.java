@@ -59,7 +59,7 @@ public class XmlInputTests {
 	}
 
 	@Test
-	public void testMappingParser() throws Exception {
+	public void testMappingConfigurationXMLParser() throws Exception {
 		XmlFileParser parser = new XmlFileParser();
 		List<File> files = new ArrayList<File>();
 		files.add(TestHelpers.createFile("SimpleFamilyInlineConfig.xml"));
@@ -76,9 +76,9 @@ public class XmlInputTests {
 		MappingList membersMappingList = (MappingList) topLevelMappingList.get(1);
 		assertEquals(2, membersMappingList.size());
 		Mapping firstNameMapping = (Mapping) membersMappingList.get(0);
-		assertEquals(MultiValueBehaviour.GREEDY, firstNameMapping.getMultiValueBehaviour());
+		assertEquals(MultiValueBehaviour.LAZY, firstNameMapping.getMultiValueBehaviour());
 		Mapping ageMapping = (Mapping) membersMappingList.get(1);
-		assertEquals(MultiValueBehaviour.GREEDY, ageMapping.getMultiValueBehaviour());
+		assertEquals(MultiValueBehaviour.LAZY, ageMapping.getMultiValueBehaviour());
 
 		Mapping addressMapping = (Mapping) topLevelMappingList.get(2);
 	}

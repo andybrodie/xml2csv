@@ -197,7 +197,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
-		this.multiValueBehaviour = (multiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.GREEDY : multiValueBehaviour;
+		this.multiValueBehaviour = (multiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.LAZY : multiValueBehaviour;
 	}
 
 	/**
@@ -240,6 +240,18 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	@Override
 	public MultiValueBehaviour getMultiValueBehaviour() {
 		return this.multiValueBehaviour;
+	}
+
+	@Override
+	public int getMaxValueCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getMinValueCount() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

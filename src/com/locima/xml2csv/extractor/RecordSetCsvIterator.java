@@ -60,7 +60,7 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 		return csvFields;
 	}
 
-	private void createCsvValues(List<ExtractedField> csvFields, ContainerExtractionContext context) {
+	private void createCsvValuesFromContainer(List<ExtractedField> csvFields, ContainerExtractionContext context) {
 		switch (context.getMapping().getMultiValueBehaviour()) {
 			case GREEDY:
 				int resultSetIndex = 0;
@@ -94,13 +94,13 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 
 	private void createCsvValues(List<ExtractedField> csvFields, ExtractionContext context) {
 		if (context instanceof ContainerExtractionContext) {
-			createCsvValues(csvFields, (ContainerExtractionContext) context);
+			createCsvValuesFromContainer(csvFields, (ContainerExtractionContext) context);
 		} else {
-			createCsvValues(csvFields, (MappingExtractionContext) context);
+			createCsvValuesFromMapping(csvFields, (MappingExtractionContext) context);
 		}
 	}
 
-	private void createCsvValues(List<ExtractedField> csvFields, MappingExtractionContext context) {
+	private void createCsvValuesFromMapping(List<ExtractedField> csvFields, MappingExtractionContext context) {
 		switch (context.getMapping().getMultiValueBehaviour()) {
 			case GREEDY:
 				/* Greedy mappings output as much as they can */

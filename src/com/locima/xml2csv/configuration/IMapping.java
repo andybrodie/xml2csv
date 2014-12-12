@@ -57,4 +57,17 @@ public interface IMapping {
 	 */
 	boolean hasFixedOutputCardinality();
 
+	/** Get the most number of results that this mapping can return.  Any found after this number are discarded.  Values of 0 means no maximum limit.
+	 * 
+	 * @return the most number of results that this mapping can return.  Any found after this number are discarded.  Values of 0 means no maximum limit.
+	 */
+	int getMaxValueCount();
+
+	/** Get the minimum number of results that this mapping can return.  If there are not enough values found to make up this number, then nulls are added.
+	 * 
+	 * @return the most number of results that this mapping can return.  If there are not enough values found to make up this number, then nulls are added.
+	 */
+	int getMinValueCount();
+
+
 }

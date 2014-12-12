@@ -216,7 +216,7 @@ public class XmlExtractorTests {
 		x.setMappingConfiguration(s);
 
 		MockOutputManager om = new MockOutputManager();
-		om.addExpectedResult("Test", new String[] { "Andy", "", "", "21", "22", "Home" });
+		om.addExpectedResult("Test", new String[] { "Andy", null, null, "21", "22", "Home" });
 
 		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><age>22</age><address>Home</address></person>");
 
