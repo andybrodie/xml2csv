@@ -204,20 +204,31 @@ public class GroupState {
 	 */
 	private void insert(GroupState newState) {
 		int newGroupNum = newState.groupNumber;
+		
+		LOG.debug("Attempting  to insert {} at state {}", newState, this);
 
 		if (newGroupNum == this.groupNumber) {
-			throw new BugException("Created two group states for the same group number");
+			throw new BugException("Created two group states for the same group number.  New: %s and Existing: %S", this, newState);
 		}
 
 		if (newGroupNum > this.groupNumber) {
 			if (this.next == null) {
+				if (LOG.isDebugEnabled()) LOG.debug("Adding {} to the end, after {}", newState, this);
 				this.next = newState;
 				newState.prev = this;
 			} else {
+				if (this.next.groupNumber > groupNumber) {
+					if (LOG.isDebugEnabled()){
+					LOG.debug("Inserting {} between {} and {}", newState, this, this.next);
+					}
+					this.next.prev = newState;
+					this.next = newState;
+				}
 				this.next.insert(newState);
 			}
 		} else {
 			if (this.prev == null) {
+				if (LOG.isDebugEnabled()) LOG.debug("Adding {} to the beginning, before {}", newState, this);
 				this.prev = newState;
 				newState.next = this;
 			} else {

@@ -61,6 +61,8 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private Stack<MappingList> mappingListStack;
 
+	private int currentGroupNumber;
+
 	/**
 	 * Adds a filter to either the mapping configuration (if a top level filter) or the current parent filter (from {@link #inputFilterStack}.
 	 *
@@ -77,7 +79,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		this.inputFilterStack.push(filter);
 	}
-
+	
 	/**
 	 * Adds a column mapping to the current MappingList instance being defined.
 	 *
@@ -107,8 +109,9 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(e, "Unable to add field %s as there was a problem with the XPath value \"%s\"", name, xPath);
 		}
 
+		int finalGroupNumber = groupNumber < 0 ? this.currentGroupNumber : groupNumber;
 		Mapping mapping =
-						new Mapping(current, fieldName, nameFormat, groupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath,
+						new Mapping(current, fieldName, nameFormat, finalGroupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath,
 										minValues, maxValues);
 		current.add(mapping);
 	}
@@ -145,6 +148,11 @@ public class ConfigContentHandler extends DefaultHandler {
 		newMapping.setOutputName(outputName);
 		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour));
 		this.mappingListStack.push(newMapping);
+		
+		/* Increment the current group number so that all the children of this container have a default group that doesn't match any
+		 * other child of another conatiner.
+		 */
+		this.currentGroupNumber++;
 	}
 
 	/**
@@ -349,7 +357,7 @@ public class ConfigContentHandler extends DefaultHandler {
 			switch (elementName) {
 				case Mapping:
 					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
-									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR),
+									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, -2), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR),
 									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0), getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case PivotMapping:

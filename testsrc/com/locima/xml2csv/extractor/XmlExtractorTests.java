@@ -375,5 +375,33 @@ public class XmlExtractorTests {
 			LOG.info(item.toString());
 		}
 	}
+	
+	@Test
+	public void testMultiRecordLazyOutput() throws Exception {
+		MappingList mappings = new MappingList();
+		mappings.setOutputName("Test");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+		mappings.setMappingRoot("/root/c");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.DEFAULT);
+		addMapping(mappings, null, "parent", 1, MultiValueBehaviour.LAZY, "../name");
+		addMapping(mappings, null, "a1", 1, MultiValueBehaviour.LAZY, "a1");
+		addMapping(mappings, null, "a2", 1, MultiValueBehaviour.LAZY, "a2");
+
+		MappingConfiguration s = new MappingConfiguration();
+		s.addMappings(mappings);
+
+		XmlDataExtractor x = new XmlDataExtractor();
+		x.setMappingConfiguration(s);
+
+		MockOutputManager om = new MockOutputManager();
+		om.addExpectedResult("Test", new String[] { "parent","c1a1","c1a2" });
+		om.addExpectedResult("Test", new String[] { "parent","c2a1","c2a2" });
+
+		XdmNode testDoc =
+						createFromString("<root><name>parent</name><c><a1>c1a1</a1><a2>c1a2</a2></c><c><a1>c2a1</a1><a2>c2a2</a2></c></root>");
+
+		x.extractTo(testDoc, om);
+		om.close();
+	}
 
 }

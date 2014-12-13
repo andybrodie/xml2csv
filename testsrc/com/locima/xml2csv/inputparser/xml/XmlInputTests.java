@@ -36,7 +36,7 @@ public class XmlInputTests {
 		assertNotNull("MappingSet was null, should be non-null", config);
 		assertEquals(2, config.size());
 
-		IMappingContainer mapping1 = config.getContainerByName("family");
+		IMappingContainer mapping1 = config.getContainerByName("Family");
 		assertNotNull("Couldn't find family mapping", mapping1);
 
 		Iterator<IMapping> iter = mapping1.iterator();
