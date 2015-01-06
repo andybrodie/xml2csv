@@ -2,9 +2,6 @@ package com.locima.xml2csv.extractor;
 
 import net.sf.saxon.s9api.XdmNode;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
@@ -29,15 +26,13 @@ import com.locima.xml2csv.configuration.IValueMapping;
  */
 public abstract class ExtractionContext {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ExtractionContext.class);
-
 	/**
 	 * Factory method to create the right type of {@link ExtractionContext} (either {@link MappingExtractionContext} or
 	 * {@link ContainerExtractionContext}) based on the sub-type of the <code>mapping</code> parameter.
 	 * <p>
 	 * I've done it this way so an {@link ExtractionContext} instance can be easily created using an {@link IMapping} instance (i.e. the type checking
 	 * is done here).
-	 * 
+	 *
 	 * @param parent the parent context (in the same way that an {@link IMapping} has a parent).
 	 * @param mapping the mapping that the new context will be managing.
 	 * @param index the index of the new context, with respect to its siblings (first child of the parent has index 0, second has index 1, etc.).
@@ -58,8 +53,6 @@ public abstract class ExtractionContext {
 		return ctx;
 	}
 
-	private int currentIndex;
-
 	/**
 	 * The parent of this extraction context instance. If this is managing the evaluation of a top level {@link IMappingContainer} then this will be
 	 * <code>null</code>.
@@ -70,8 +63,6 @@ public abstract class ExtractionContext {
 		this.parent = parent;
 	}
 
-	public abstract void clearResults();
-
 	public abstract void evaluate(XdmNode rootNode) throws DataExtractorException;
 
 	public abstract IMapping getMapping();
@@ -80,22 +71,6 @@ public abstract class ExtractionContext {
 
 	public ContainerExtractionContext getParent() {
 		return this.parent;
-	}
-
-	public void incrementContext() {
-		this.currentIndex++;
-		LOG.debug("Incrementing context of {} to {}", this, this.currentIndex);
-	}
-
-	public abstract void resetContext();
-
-	public void resetForNewDoc() {
-		resetContext();
-		clearResults();
-	}
-
-	protected void setIndex(int newIndex) {
-		this.currentIndex = newIndex;
 	}
 
 	public abstract int size();

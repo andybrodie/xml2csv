@@ -1,6 +1,6 @@
 package com.locima.xml2csv.configuration;
 
-import com.locima.xml2csv.output.GroupState;
+import com.locima.xml2csv.extractor.GroupState;
 import com.locima.xml2csv.util.EqualsUtil;
 
 public abstract class AbstractMapping implements IMapping {

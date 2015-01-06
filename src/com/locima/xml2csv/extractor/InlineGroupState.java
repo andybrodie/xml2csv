@@ -1,6 +1,5 @@
-package com.locima.xml2csv.output;
+package com.locima.xml2csv.extractor;
 
-import com.locima.xml2csv.extractor.ExtractionContext;
 
 public class InlineGroupState extends GroupState {
 

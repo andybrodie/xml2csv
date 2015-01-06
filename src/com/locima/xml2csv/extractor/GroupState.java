@@ -1,4 +1,4 @@
-package com.locima.xml2csv.output;
+package com.locima.xml2csv.extractor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,13 +8,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.extractor.ContainerExtractionContext;
-import com.locima.xml2csv.extractor.ExtractionContext;
+import com.locima.xml2csv.configuration.IMapping;
+import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
 
+/**
+ * Used by {@link OutputRecordIterator} to keep track of where a specific evaluation group (see {@link IMapping#getGroupNumber()} for a mapping has
+ * got to in outputting its results across multiple records. This is only required when dealing with {@link MultiValueBehaviour#LAZY} mappings, as
+ * {@link MultiValueBehaviour#GREEDY} mappings always output all their values for every record.
+ * <p>
+ * TODO Refactor this as a Map, I can't actually see any need for this to be a linked list. It's just more code for virtually no gain.
+ */
 public class GroupState {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GroupState.class);
 
+	/**
+	 * Factory method to create a linked list of {@link GroupState} instances based on a root mapping.
+	 * <p>
+	 * As a root {@link IMappingContainer} must output to a distinct CSV file there is no need to deal with multiple root contexts.
+	 *
+	 * @param rootContext the object responsible for evaluating a root {@link IMappingContainer}
+	 * @return the head ofa linked list of {@link GroupState} objects.
+	 */
 	public static GroupState createGroupStateList(ContainerExtractionContext rootContext) {
 
 		LOG.info("Creating group state list from {}", rootContext);
@@ -35,7 +51,9 @@ public class GroupState {
 			switch (current.getMapping().getMultiValueBehaviour()) {
 				case GREEDY:
 					if (inlineGroup == null) {
-						LOG.debug("Creating new inline group state for {}", current);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Creating new inline group state for {}", current);
+						}
 						inlineGroup = new InlineGroupState(current);
 					}
 					inlineGroup.addContext(current);
@@ -45,17 +63,23 @@ public class GroupState {
 
 					// Either add to an existing group managing that group number, or create a new one
 					if (initialState == null) {
-						LOG.info("Creating initial state for group {} for {}", groupNum, current);
+						if (LOG.isInfoEnabled()) {
+							LOG.info("Creating initial state for group {} for {}", groupNum, current);
+						}
 						initialState = new GroupState(groupNum, current);
 					} else {
 						GroupState existingGroup = GroupState.searchByGroup(initialState, groupNum);
 
 						if (existingGroup == null) {
-							LOG.info("Creating new group state for {} ({})", current, groupNum);
+							if (LOG.isInfoEnabled()) {
+								LOG.info("Creating new group state for {} ({})", current, groupNum);
+							}
 							GroupState newState = new GroupState(groupNum, current);
 							initialState.insert(newState);
 						} else {
-							LOG.debug("Adding {} to existing group state {}", current, existingGroup);
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Adding {} to existing group state {}", current, existingGroup);
+							}
 							existingGroup.addContext(current);
 						}
 					}
@@ -249,10 +273,10 @@ public class GroupState {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Inserting {} between {} and {}", newState, this, this.prev);
 					}
-					this.prev.next= newState;
-					newState.prev= this.prev;
-					newState.next= this;
-					this.prev= newState;
+					this.prev.next = newState;
+					newState.prev = this.prev;
+					newState.next = this;
+					this.prev = newState;
 				} else {
 					this.prev.insert(newState);
 				}

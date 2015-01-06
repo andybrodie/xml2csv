@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
-import com.locima.xml2csv.output.GroupState;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
@@ -202,6 +201,7 @@ public class OutputRecordIterator implements Iterator<List<ExtractedField>> {
 	}
 
 	private String getNamePrefix(ContainerExtractionContext context, int containerIterationCount) {
+		// TODO IMPLEMENT THIS PROPERLY.
 		return "TEMPORARY HACK";
 	}
 

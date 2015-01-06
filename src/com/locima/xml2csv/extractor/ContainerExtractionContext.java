@@ -11,7 +11,6 @@ import net.sf.saxon.s9api.XdmNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.XPathValue;
@@ -50,11 +49,6 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 
 	public ContainerExtractionContext(IMappingContainer mapping, int index) {
 		this(null, mapping, index);
-	}
-
-	@Override
-	public void clearResults() {
-		throw new BugException("Not implemented");
 	}
 
 	/**
@@ -123,7 +117,6 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 			i++;
 		}
 		this.children.add(iterationECs);
-		incrementContext();
 	}
 
 	public List<List<ExtractionContext>> getChildren() {
@@ -183,19 +176,6 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getAllValues(offset + "_"), ",", null));
-			}
-		}
-	}
-
-	/**
-	 * Resets our current context and the contexts of all the child contexts of this one.
-	 */
-	@Override
-	public void resetContext() {
-		setIndex(0);
-		for (List<ExtractionContext> childList : this.children) {
-			for (ExtractionContext child : childList) {
-				child.resetContext();
 			}
 		}
 	}

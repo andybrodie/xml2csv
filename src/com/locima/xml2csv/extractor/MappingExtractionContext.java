@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.util.StringUtil;
@@ -44,11 +43,6 @@ public class MappingExtractionContext extends ExtractionContext {
 		this(null, mapping);
 	}
 
-	@Override
-	public void clearResults() {
-		throw new BugException("Not implemented");
-	}
-
 	/**
 	 * Evaluates this mapping, using the passed XML node as a root for all XPath statements.
 	 *
@@ -63,7 +57,6 @@ public class MappingExtractionContext extends ExtractionContext {
 		if (mappingRoot == null) {
 			throw new ArgumentNullException("mappingRoot");
 		}
-		resetContext();
 		String fieldName = this.mapping.getBaseName();
 
 		if (LOG.isTraceEnabled()) {
@@ -96,7 +89,6 @@ public class MappingExtractionContext extends ExtractionContext {
 				break;
 			}
 
-			incrementContext();
 		}
 
 		// Keep track of the most number of results we've found for a single invocation
@@ -154,14 +146,6 @@ public class MappingExtractionContext extends ExtractionContext {
 		String name = namePrefix + valueIndex;
 		ExtractedField field = new ExtractedField(name, value);
 		return field;
-	}
-
-	/**
-	 * Resets our current context.
-	 */
-	@Override
-	public void resetContext() {
-		setIndex(0);
 	}
 
 	@Override
