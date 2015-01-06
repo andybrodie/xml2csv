@@ -1,7 +1,5 @@
 package com.locima.xml2csv.configuration;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +16,6 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	 * The baseName of the field that will be created by this mapping.
 	 */
 	private String baseName;
-
-	private int maxResultsFound;
 
 	/**
 	 * Specifies the largest number of values that this mapping should return for a single mapping. If an execution of this mapping yields a number of
@@ -70,33 +66,6 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	}
 
 	@Override
-	public int getFieldNames(List<String> fieldNames, String parentName, int parentIterationNumber) {
-		/*
-		 * The number of fields output is the maximum number of values found in a single execution of this mapping, constrained by this.minValueCount
-		 * and this.maxValueCount.
-		 */
-		int numNames = Math.max(this.maxResultsFound, this.minValueCount);
-		if (this.maxValueCount > 0) {
-			numNames = Math.min(this.maxValueCount, numNames);
-		}
-		int fieldCount = 0;
-		switch (getMultiValueBehaviour()) {
-			case LAZY:
-				fieldNames.add(getNameFormat().format(this.baseName, 0, parentName, parentIterationNumber));
-				fieldCount++;
-				break;
-			case GREEDY:
-				for (; fieldCount < numNames; fieldCount++) {
-					fieldNames.add(getNameFormat().format(this.baseName, fieldCount, parentName, parentIterationNumber));
-				}
-				break;
-			default:
-				throw new IllegalStateException("Unexpected MultiValueBehaviour: " + getMultiValueBehaviour());
-		}
-		return fieldCount;
-	}
-
-	@Override
 	public int getMaxValueCount() {
 		return this.maxValueCount;
 	}
@@ -114,7 +83,7 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-										|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
+						|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
 		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
 	}
@@ -154,5 +123,16 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		sb.append(')');
 		return sb.toString();
 	}
+
+	@Override
+	public int getFieldCountForSingleRecord() {
+		if (this.getMultiValueBehaviour()==MultiValueBehaviour.LAZY) {
+			return Math.max(this.getMinValueCount(), 1);
+		} else {
+			return Math.max(this.getMinValueCount(), this.getHighestFoundValueCount());
+		}
+	}
+	
+	
 
 }

@@ -17,6 +17,8 @@ public class GroupState {
 
 	public static GroupState createGroupStateList(ContainerExtractionContext rootContext) {
 
+		LOG.info("Creating group state list from {}", rootContext);
+
 		GroupState inlineGroup = null;
 		GroupState initialState = null;
 
@@ -33,6 +35,7 @@ public class GroupState {
 			switch (current.getMapping().getMultiValueBehaviour()) {
 				case GREEDY:
 					if (inlineGroup == null) {
+						LOG.debug("Creating new inline group state for {}", current);
 						inlineGroup = new InlineGroupState(current);
 					}
 					inlineGroup.addContext(current);
@@ -42,14 +45,17 @@ public class GroupState {
 
 					// Either add to an existing group managing that group number, or create a new one
 					if (initialState == null) {
+						LOG.info("Creating initial state for group {} for {}", groupNum, current);
 						initialState = new GroupState(groupNum, current);
 					} else {
 						GroupState existingGroup = GroupState.searchByGroup(initialState, groupNum);
 
 						if (existingGroup == null) {
+							LOG.info("Creating new group state for {} ({})", current, groupNum);
 							GroupState newState = new GroupState(groupNum, current);
 							initialState.insert(newState);
 						} else {
+							LOG.debug("Adding {} to existing group state {}", current, existingGroup);
 							existingGroup.addContext(current);
 						}
 					}
@@ -204,7 +210,7 @@ public class GroupState {
 	 */
 	private void insert(GroupState newState) {
 		int newGroupNum = newState.groupNumber;
-		
+
 		LOG.debug("Attempting  to insert {} at state {}", newState, this);
 
 		if (newGroupNum == this.groupNumber) {
@@ -213,26 +219,43 @@ public class GroupState {
 
 		if (newGroupNum > this.groupNumber) {
 			if (this.next == null) {
-				if (LOG.isDebugEnabled()) LOG.debug("Adding {} to the end, after {}", newState, this);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Adding {} to the end, after {}", newState, this);
+				}
 				this.next = newState;
 				newState.prev = this;
 			} else {
-				if (this.next.groupNumber > groupNumber) {
-					if (LOG.isDebugEnabled()){
-					LOG.debug("Inserting {} between {} and {}", newState, this, this.next);
+				if (this.next.groupNumber > this.groupNumber) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Inserting {} between {} and {}", newState, this, this.next);
 					}
 					this.next.prev = newState;
+					newState.next = this.next;
+					newState.prev = this;
 					this.next = newState;
+				} else {
+					this.next.insert(newState);
 				}
-				this.next.insert(newState);
 			}
 		} else {
 			if (this.prev == null) {
-				if (LOG.isDebugEnabled()) LOG.debug("Adding {} to the beginning, before {}", newState, this);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Adding {} to the beginning, before {}", newState, this);
+				}
 				this.prev = newState;
 				newState.next = this;
 			} else {
-				this.prev.insert(newState);
+				if (this.prev.groupNumber < this.groupNumber) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Inserting {} between {} and {}", newState, this, this.prev);
+					}
+					this.prev.next= newState;
+					newState.prev= this.prev;
+					newState.next= this;
+					this.prev= newState;
+				} else {
+					this.prev.insert(newState);
+				}
 			}
 		}
 	}

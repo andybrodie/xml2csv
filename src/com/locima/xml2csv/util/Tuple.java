@@ -60,4 +60,13 @@ public class Tuple<T, U> {
 		return this.first.hashCode() ^ this.second.hashCode();
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("Tuple(");
+		sb.append(this.getFirst());
+		sb.append(", ");
+		sb.append(this.getSecond());
+		sb.append(")");
+		return sb.toString();
+	}
 }

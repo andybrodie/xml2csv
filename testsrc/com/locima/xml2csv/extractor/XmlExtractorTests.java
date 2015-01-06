@@ -169,10 +169,10 @@ public class XmlExtractorTests {
 						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
 										"person/name"), 0, 0);
 		mappings.add(m);
-		m = new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 0, 1);
+		m = new Mapping(mappings, "Age", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 0, 1);
 		mappings.add(m);
 		m =
-						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
+						new Mapping(mappings, "Address", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
 										"person/address"), 0, 2);
 		mappings.add(m);
 

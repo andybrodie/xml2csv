@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.ExtractedField;
 
 /**

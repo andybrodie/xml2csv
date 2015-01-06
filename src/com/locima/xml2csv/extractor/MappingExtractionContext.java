@@ -15,7 +15,6 @@ import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IValueMapping;
-import com.locima.xml2csv.configuration.NameFormat;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
@@ -29,11 +28,6 @@ public class MappingExtractionContext extends ExtractionContext {
 	 * The mapping that should be used to evaluate input documents against.
 	 */
 	private IValueMapping mapping;
-
-	/**
-	 * The most number of values this has found across all documents.
-	 */
-	private int maxResultsFound;
 
 	/**
 	 * The set of values extracted as a result of executing this mapping within the context of a single root of the parent. E.g. if the parent found 3
@@ -53,11 +47,6 @@ public class MappingExtractionContext extends ExtractionContext {
 	@Override
 	public void clearResults() {
 		throw new BugException("Not implemented");
-	}
-
-	private String createName(NameFormat nameFormat, int i) {
-		StringBuilder sb = new StringBuilder();
-		return nameFormat.format(this.mapping.getBaseName(), i, getParent().getMapping().getContainerName(), getParent().getIndex());
 	}
 
 	/**
@@ -86,10 +75,7 @@ public class MappingExtractionContext extends ExtractionContext {
 
 		XPathSelector selector = this.mapping.getValueXPath().evaluate(mappingRoot);
 		Iterator<XdmItem> resultIter = selector.iterator();
-		int valueCount;
-		for (valueCount = 0; resultIter.hasNext(); valueCount++) {
-			// Value count is just a counter, so start at one as it makes more sense for
-			// the user, and makes the comparison with maxValueCount simpler.
+		while (resultIter.hasNext()) {
 			String value = resultIter.next().getStringValue();
 			if ((value != null) && this.mapping.requiresTrimWhitespace()) {
 				value = value.trim();
@@ -101,9 +87,9 @@ public class MappingExtractionContext extends ExtractionContext {
 								this.mapping.getValueXPath().getSource(), maxValueCount);
 			}
 
-			if ((maxValueCount> 0) && (valueCount+1 == maxValueCount)) {
-				if (resultIter.hasNext()) {
-					if (LOG.isWarnEnabled()) {
+			if ((maxValueCount > 0) && ((values.size()) == maxValueCount)) {
+				if (LOG.isWarnEnabled()) {
+					if (resultIter.hasNext()) {
 						LOG.warn("Discarded at least 1 value from mapping {} as maxValueCount reached limit of {}", this, maxValueCount);
 					}
 				}
@@ -113,14 +99,8 @@ public class MappingExtractionContext extends ExtractionContext {
 			incrementContext();
 		}
 
-//		int minValues = this.mapping.getMinValueCount();
-//		if (minValues > 0) {
-//			for (int i = valueCount; i <= minValues; i++) {
-//				values.add("");
-//			}
-//		}
-
-		this.maxResultsFound = Math.max(this.maxResultsFound, values.size());
+		// Keep track of the most number of results we've found for a single invocation
+		this.mapping.setHighestFoundValueCount(values.size());
 
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Adding values to {}: {}", this.mapping, StringUtil.collectionToString(values, ",", "\""));
@@ -128,14 +108,18 @@ public class MappingExtractionContext extends ExtractionContext {
 		this.results = values;
 	}
 
-	public List<ExtractedField> getAllValues() {
-		List<ExtractedField> fields = new ArrayList<ExtractedField>();
-		int countRequires = Math.max(this.results.size(), this.mapping.getMinValueCount());
-		
-		for (int i = 0; i < countRequires; i++) {
-			String name = createName(this.mapping.getNameFormat(), i);
-			ExtractedField field = new ExtractedField(name, i >= this.results.size() ? null : this.results.get(i));
-			fields.add(field);
+	/**
+	 * Gets all the values found by this evaluation of the mapping (i.e. against a single root node). This takes in to account the number of fields
+	 * required to be output as opposed to just the number found (see {@link IMapping#getFieldCountForSingleRecord()}).
+	 *
+	 * @param namePrefix the prefix to be applied to each field name.
+	 * @return an ordered list of values extracted from this mapping.
+	 */
+	public List<ExtractedField> getAllValues(String namePrefix) {
+		int valueCountRequired = this.mapping.getFieldCountForSingleRecord();
+		List<ExtractedField> fields = new ArrayList<ExtractedField>(valueCountRequired);
+		for (int i = 0; i < valueCountRequired; i++) {
+			fields.add(getValueAt(namePrefix, i));
 		}
 		return fields;
 	}
@@ -145,13 +129,31 @@ public class MappingExtractionContext extends ExtractionContext {
 		return this.mapping;
 	}
 
-	public ExtractedField getValueAt(int valueIndex) {
+	@Override
+	public String getName() {
+		return this.mapping.getBaseName();
+	}
+
+	/**
+	 * Retrieve an extracted field instance for the value at the index given.
+	 *
+	 * @param valueIndex the index of the value to retrieve within this mapping.
+	 * @return an extracted field for the index given. If there is no value for the field with this <c>valueIndex</c> then an {@link ExtractedField}
+	 *         with the {@link ExtractedField#getFieldValue()} return value of <code>null</code> is returned. The
+	 *         {@link ExtractedField#getFieldName()} will still be set correctly. This is required when padding is needed to keep the index of fields
+	 *         wtihin a record consistent.
+	 */
+	public ExtractedField getValueAt(String namePrefix, int valueIndex) {
+
+		String value;
 		if (this.results.size() > valueIndex) {
-			String name = createName(this.mapping.getNameFormat(), valueIndex);
-			ExtractedField field = new ExtractedField(name, this.results.get(valueIndex));
-			return field;
+			value = this.results.get(valueIndex);
+		} else {
+			value = null;
 		}
-		return null;
+		String name = namePrefix + valueIndex;
+		ExtractedField field = new ExtractedField(name, value);
+		return field;
 	}
 
 	/**

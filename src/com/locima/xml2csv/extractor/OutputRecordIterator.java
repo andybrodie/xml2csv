@@ -9,18 +9,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
+import com.locima.xml2csv.configuration.IMapping;
+import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.output.GroupState;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
- * Iterates over a tree of {@link ContainerExtractionContext} to output a set of CSV output lines.
+ * Iterates over a tree of {@link ContainerExtractionContext} to output a set of CSV output lines. This is where the hierarchical results of all the
+ * extraction of data for a single document (modelled using {@link ExtractionContext} instances are finally flattened in to a set of records.
  * <p>
  * When initialised, this creates a linked list of {@link GroupState} objects that maintain the state of each group for multi-record mappings, and a
  * special group for all the inline mappings (group number isn't used for inline mappings).
  */
-public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
+public class OutputRecordIterator implements Iterator<List<ExtractedField>> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RecordSetCsvIterator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(OutputRecordIterator.class);
 
 	/**
 	 * The group state with the lowest group number. Set up by {@link GroupState#createGroupStateList(java.util.Collection)} in {{@link #iterator()}.
@@ -39,9 +42,43 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 	 *
 	 * @param rootContainer the set of rootContainer that we're going to iterate;
 	 */
-	public RecordSetCsvIterator(ContainerExtractionContext rootContainer) {
+	public OutputRecordIterator(ContainerExtractionContext rootContainer) {
 		this.rootContainer = rootContainer;
 		this.baseGroupState = GroupState.createGroupStateList(rootContainer);
+	}
+
+	private void addEmptyCsvFields(List<ExtractedField> csvFields, ContainerExtractionContext context, int containerIterationCount) {
+		String namePrefix = getNamePrefix(context, containerIterationCount);
+		IMapping container = context.getMapping();
+		addEmptyCsvFields(namePrefix, csvFields, container);
+	}
+
+	private void addEmptyCsvFields(String namePrefix, List<ExtractedField> csvFields, IMapping mapping) {
+		String prefixTemplate = namePrefix + "_";
+
+		if (mapping instanceof IMappingContainer) {
+			int iterationsRequired = mapping.getFieldCountForSingleRecord() - mapping.getHighestFoundValueCount();
+			for (int i = 0; i < iterationsRequired; i++) {
+				IMappingContainer container = (IMappingContainer) mapping;
+				int prefix = 0;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Adding {} iterations of {} blank fields for container {}", iterationsRequired, container.size(), mapping);
+				}
+				for (IMapping childMapping : container) {
+					addEmptyCsvFields(prefixTemplate + prefix, csvFields, childMapping);
+					prefix++;
+				}
+			}
+		} else {
+			int fieldRequired = mapping.getFieldCountForSingleRecord();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Adding {} blank fields for value mapping {}", fieldRequired, mapping);
+			}
+			for (int fieldCount = 0; fieldCount < fieldRequired; fieldCount++) {
+				ExtractedField ef = new ExtractedField(prefixTemplate + fieldCount, StringUtil.EMPTY_STRING);
+				csvFields.add(ef);
+			}
+		}
 	}
 
 	/**
@@ -60,26 +97,50 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 		return csvFields;
 	}
 
+	private void createCsvValues(List<ExtractedField> csvFields, ExtractionContext context) {
+		if (context instanceof ContainerExtractionContext) {
+			createCsvValuesFromContainer(csvFields, (ContainerExtractionContext) context);
+		} else {
+			createCsvValuesFromMapping(csvFields, (MappingExtractionContext) context);
+		}
+	}
+
+	/**
+	 * Adds to the passed <code>csvFields</code> list the relevant {@link ExtractedField} values found by this container.
+	 *
+	 * @param csvFields a list of fields being built up for a single output record.
+	 * @param context the {@link ExtractionContext} the relevant (contained) values of which should be added to <code>csvFields</code>.
+	 */
 	private void createCsvValuesFromContainer(List<ExtractedField> csvFields, ContainerExtractionContext context) {
-		switch (context.getMapping().getMultiValueBehaviour()) {
+		IMappingContainer mapping = context.getMapping();
+		switch (mapping.getMultiValueBehaviour()) {
 			case GREEDY:
-				int resultSetIndex = 0;
-				int resultIndex = 0;
+				int containerIterationCount = 0;
+				int resultIndexForTrace = 0;
 				List<List<ExtractionContext>> allResults = context.getChildren();
 				for (List<ExtractionContext> results : allResults) {
 					for (ExtractionContext child : results) {
-						LOG.debug("Greedy eval of child {}.{} ({}) from {}", resultSetIndex, resultIndex++, child, context);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Greedy eval of child {}.{} ({}) from {}", containerIterationCount, resultIndexForTrace++, child, context);
+						}
 						createCsvValues(csvFields, child);
 					}
-					resultSetIndex++;
-					resultIndex = 0;
+					containerIterationCount++;
+					resultIndexForTrace = 0;
 				}
+
+				/*
+				 * If required, add extra empty fields where a minimum number of iterations of a container are required but not enough results were
+				 * found to satisfy this requirement (i.e. add lots of empty fields).
+				 */
+				addEmptyCsvFields(csvFields, context, containerIterationCount);
+
 				break;
 			case LAZY:
 				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
 				List<ExtractionContext> results = context.getResultsSetAt(valueIndex);
 				for (ExtractionContext child : results) {
-					LOG.debug("Greedy eval of child {} ({}) from {}", valueIndex++, child, context);
+					LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex++, child, context);
 					createCsvValues(csvFields, child);
 				}
 				break;
@@ -92,30 +153,28 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 		}
 	}
 
-	private void createCsvValues(List<ExtractedField> csvFields, ExtractionContext context) {
-		if (context instanceof ContainerExtractionContext) {
-			createCsvValuesFromContainer(csvFields, (ContainerExtractionContext) context);
-		} else {
-			createCsvValuesFromMapping(csvFields, (MappingExtractionContext) context);
-		}
-	}
-
+	
+	/**
+	 * Adds the fields generated by a single {@link MappingExtractionContext}, taking in to account multi-value behaviour and
+	 * minimum numbers of fields.
+	 * @param csvFields the ordered list of CSV fields to add to.
+	 * @param context the context to extract the values from.
+	 */
 	private void createCsvValuesFromMapping(List<ExtractedField> csvFields, MappingExtractionContext context) {
+		String namePrefix = getPrefix(context);
 		switch (context.getMapping().getMultiValueBehaviour()) {
 			case GREEDY:
 				/* Greedy mappings output as much as they can */
-				List<ExtractedField> fields = context.getAllValues();
+				List<ExtractedField> fields = context.getAllValues(namePrefix);
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Greedily adding all fields {} to as output of {}", StringUtil.collectionToString(fields, ", ", null), context);
 				}
 				csvFields.addAll(fields);
 				break;
 			case LAZY:
-				/*
-				 * The most typical option: just process the next value and move on
-				 */
+				/* The most typical option: just process the next value and move on */
 				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
-				ExtractedField field = context.getValueAt(valueIndex);
+				ExtractedField field = context.getValueAt(namePrefix, valueIndex);
 				LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, field, context);
 				csvFields.add(field);
 				break;
@@ -140,6 +199,21 @@ public class RecordSetCsvIterator implements Iterator<List<ExtractedField>> {
 			throw new BugException("Tried to get index for non-existant group %d", group);
 		}
 		return existingGroup.getCurrentIndex();
+	}
+
+	private String getNamePrefix(ContainerExtractionContext context, int containerIterationCount) {
+		return "TEMPORARY HACK";
+	}
+
+	private String getPrefix(MappingExtractionContext context) {
+		StringBuilder sb = new StringBuilder();
+		ContainerExtractionContext current = context.getParent();
+		while (current != null) {
+			sb.insert(0, '_');
+			sb.insert(0, current.getIndex());
+			current = current.getParent();
+		}
+		return sb.toString();
 	}
 
 	/**

@@ -70,6 +70,7 @@
 		</attribute>
 		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
 		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
+		<attributeGroup ref="tns:cardinalityAttributes"/>
 	</complexType>
 
 	<complexType name="Mapping">
@@ -79,6 +80,7 @@
 			</documentation>
 		</annotation>
 		<attribute name="xPath" type="string" use="required" />
+		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
 		<attribute name="name" type="string" use="optional">
 			<annotation>
 				<documentation>The name of the field, specified in the first row of the output file. If ommitted
@@ -87,25 +89,9 @@
 				</documentation>
 			</annotation>
 		</attribute>
-		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
-		<attribute name="minValues" type="tns:NaturalNumber" use="optional">
-			<annotation>
-				<documentation>Set a minimum number of values that will be returned
-					by this mapping. If a mapping returns fewer values than this limit then extra null or empty values will be added to make
-					up to this number.  If ommitted, no limit will apply.
-				</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="maxValues" type="tns:NaturalNumber" use="optional">
-			<annotation>
-				<documentation>Set a maxmimum number of values that will be returned
-					by this mapping. If a mapping returns more values than this limit then subsequent values will be discarded. Typcially
-					used with inline mappings, but will apply to all.  If ommitted, no limit will apply.
-				</documentation>
-			</annotation>
-		</attribute>
 		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
 		<attribute name="group" type="tns:MappingGroup" use="optional" />
+		<attributeGroup ref="tns:cardinalityAttributes"/>
 	</complexType>
 
 	<complexType name="PivotMapping">
@@ -211,5 +197,26 @@
 			<minInclusive value="1" />
 		</restriction>
 	</simpleType>
+	
+	<attributeGroup name="cardinalityAttributes">
+			<attribute name="minOccurs" type="tns:NaturalNumber" use="optional">
+			<annotation>
+				<documentation>Set a minimum number of values that will be returned
+					by this mapping. If a mapping returns fewer values than this limit then extra
+					null or empty values will be added to make
+					up to this number. If ommitted, no limit will apply.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="maxOccurs" type="tns:NaturalNumber" use="optional">
+			<annotation>
+				<documentation>Set a maxmimum number of values that will be returned
+					by this mapping. If a mapping returns more values than this limit then
+					subsequent values will be discarded. Typcially
+					used with inline mappings, but will apply to all. If ommitted, no limit will apply.
+				</documentation>
+			</annotation>
+		</attribute>
+	</attributeGroup>
 
 </schema>

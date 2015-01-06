@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.ExtractedField;
 
 /**

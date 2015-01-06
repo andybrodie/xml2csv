@@ -105,8 +105,8 @@ public class NameFormat {
 	 * @param parentIterationNumber a number, starting at 0, that indicates the index of the value of the parent.
 	 * @return a formatted string, used as a column name.
 	 */
-	public String format(String baseColumnName, int iterationNumber, String parentName, int parentIterationNumber) {
-		return String.format(this.format, baseColumnName, iterationNumber + 1, parentName, parentIterationNumber + 1);
+	public String format(String baseColumnName, int iterationNumber, ParentContext parentContext) {
+		return String.format(this.format, parentContext.getFormatArgs(baseColumnName, iterationNumber));
 	}
 
 	@Override

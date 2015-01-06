@@ -19,6 +19,7 @@ public class FixedCardinalityTests {
 
 	private MappingList createMappingList(String name, Mapping... mappings) {
 		MappingList list = new MappingList();
+		list.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		if (mappings != null) {
 			for (Mapping mapping : mappings) {
 				list.add(mapping);

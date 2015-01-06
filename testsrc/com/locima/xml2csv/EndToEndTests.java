@@ -23,6 +23,12 @@ public class EndToEndTests {
 	}
 
 	@Test
+	public void testEndToEndWithInlineDirect() throws Exception {
+		TemporaryFolder outputFolder = processFiles("SimpleFamilyInlineDirectConfig.xml", "SimpleFamily1.xml", "SimpleFamily2.xml");
+		assertCsvEquals("SimpleFamilyInlineOutput.csv", outputFolder.getRoot(), "family.csv");
+	}
+
+	@Test
 	public void testFilters() throws Exception {
 		TemporaryFolder outputFolder = processFiles("PeopleFilterConfig.xml", "Person1.xml", "Person2.xml", "Person3.xml");
 		assertCsvEquals("PeopleFiltered.csv", outputFolder.getRoot(), "PeopleFiltered.csv");

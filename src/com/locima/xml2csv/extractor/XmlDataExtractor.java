@@ -1,18 +1,10 @@
 package com.locima.xml2csv.extractor;
 
-import java.util.AbstractList;
-import java.util.Collections;
-import java.util.List;
-import java.util.RandomAccess;
-
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
-import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
@@ -31,61 +23,7 @@ import com.locima.xml2csv.output.OutputManagerException;
  */
 public class XmlDataExtractor {
 
-	public XmlDataExtractor() {
-//		this.contextManager = new ExtractionContextManager();
-	}
-	
-	/**
-	 * Provides a convenience wrapper that allows us to iterate over {@link NodeList} instances.
-	 */
-	static final class NodeListWrapper extends AbstractList<Node> implements RandomAccess {
-		private final NodeList list;
-
-		/**
-		 * Initialises an instance to be wrapped around the passed node list.
-		 *
-		 * @param nodeList the node list to wrap around. Must not be null.
-		 */
-		NodeListWrapper(NodeList nodeList) {
-			if (nodeList == null) {
-				throw new ArgumentNullException("nodeList");
-			}
-			this.list = nodeList;
-		}
-
-		/**
-		 * Retrieves the item at the given index.
-		 *
-		 * @param index the index of the item to return. Index starts at 0.
-		 * @return The item at the given index, or throws {@link IndexOutOfBoundsException}
-		 */
-		@Override
-		public Node get(int index) {
-			return this.list.item(index);
-		}
-
-		/**
-		 * Returns the number of items in the node list.
-		 *
-		 * @return the number of items in the node list this object is wrapping.
-		 */
-		@Override
-		public int size() {
-			return this.list.getLength();
-		}
-	}
-
 	private static final Logger LOG = LoggerFactory.getLogger(XmlDataExtractor.class);
-
-	/**
-	 * Returns a {@link NodeList} an iterable list.
-	 *
-	 * @param n the node list to wrap.
-	 * @return a wrapped node list that can be iterated over more easily.
-	 */
-	public static List<Node> asList(NodeList n) {
-		return n.getLength() == 0 ? Collections.<Node>emptyList() : new NodeListWrapper(n);
-	}
 
 	/**
 	 * Stores the mapping configuration to be used by this extractor.

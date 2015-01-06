@@ -36,7 +36,7 @@ public class InlineCsvWriter implements ICsvWriter {
 	/**
 	 * Converts an ordered collection of {@link ExtractedField} instances to the intermediate record format, ready for writing to the
 	 * {@link #csiOutputFile} file.
-	 * 
+	 *
 	 * @param inputCollection a collection of name/value pairs.
 	 * @return a (possibly empty) string.
 	 */
@@ -121,11 +121,6 @@ public class InlineCsvWriter implements ICsvWriter {
 		try {
 			boolean createdNew = !file.exists();
 			Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, appendOutput), encoding));
-			if (createdNew) {
-				CsvWriterUtil.writeFieldNames(this.outputName, container, writer);
-			} else {
-				LOG.info("File {} already exists, therefore not writing field names", file.getAbsolutePath());
-			}
 			LOG.info("Successfully opened output file for csiWriter {}", file.getAbsolutePath());
 			return writer;
 		} catch (FileNotFoundException fileNotFoundException) {

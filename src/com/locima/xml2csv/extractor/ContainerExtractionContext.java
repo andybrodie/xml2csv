@@ -17,14 +17,28 @@ import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.util.StringUtil;
 
+/**
+ * Used to manage the evaluation and storage of results of an {@link IMappingContainer} instance.
+ */
 public class ContainerExtractionContext extends ExtractionContext implements Iterable<List<ExtractedField>> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ContainerExtractionContext.class);
 
+	/**
+	 * A list of all the child contexts (also a list) found as a result of evaluating the {@link ContainerExtractionContext#mapping}'s
+	 * {@link IMappingContainer#getMappingRoot()} query.
+	 */
 	private List<List<ExtractionContext>> children;
 
-	private int index;
+	/**
+	 * The index that this extraction context appears in relative to its siblings. Set on constructor and never changed. Used for generating field
+	 * name prefixes.
+	 */
+	private final int index;
 
+	/**
+	 * The mapping that this extraction context is representing the evaluation of.
+	 */
 	private IMappingContainer mapping;
 
 	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int index) {
@@ -56,6 +70,7 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 	public void evaluate(XdmNode rootNode) throws DataExtractorException {
 		XPathValue mappingRoot = this.mapping.getMappingRoot();
 		// If there's no mapping root expression, use the passed node as a single root
+		int valueCount = 0;
 		if (mappingRoot != null) {
 			LOG.debug("Executing mappingRoot {} for {}", mappingRoot, this.mapping);
 			XPathSelector rootIterator = mappingRoot.evaluate(rootNode);
@@ -66,43 +81,24 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 				} else {
 					LOG.warn("Expected to find only elements after executing XPath on mapping list, got {}", item.getClass().getName());
 				}
+				valueCount++;
 			}
 		} else {
 			// If there is no root specified by the contextual context, then use "." , or current node passed as rootNode parameter.
-			LOG.debug("No mapping root specified for {}, so executing against passed context node", mappingRoot, this.mapping);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No mapping root specified for {}, so executing against passed context node", mappingRoot, this.mapping);
+			}
 			evaluateChildren(rootNode);
+			valueCount = 1;
 		}
+
+		// Keep track of the most number of results we've found for a single invocation of the mapping root.
+		this.mapping.setHighestFoundValueCount(valueCount);
 
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", this);
 			logResults(this, 0, 0);
 			LOG.trace("END RESULTS OUTPUT");
-		}
-	}
-
-	/**
-	 * Debugging method to log all the results when an {@link #evaluate(XdmNode)} call has completed.
-	 */
-	private void logResults(ExtractionContext ctx, int offset, int indentCount) {
-		StringBuilder indentSb = new StringBuilder();
-		for (int i = 0; i < indentCount; i++) {
-			indentSb.append("  ");
-		}
-		String indent = indentSb.toString();
-		if (ctx instanceof ContainerExtractionContext) {
-			LOG.trace("{}{}:{}", indent, offset, this);
-			int childResultsSetCount = 0;
-			int childCount = 0;
-			for (List<ExtractionContext> children : ((ContainerExtractionContext) ctx).getChildren()) {
-				LOG.trace("{}  {}", indent, childResultsSetCount++);
-				for (ExtractionContext child : children) {
-					logResults(child, childCount++, indentCount + 2);
-				}
-				childCount = 0;
-			}
-		} else {
-			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
-			LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getAllValues(), ",", null));
 		}
 	}
 
@@ -119,7 +115,7 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 			LOG.debug("Executing {} child mappings of {}", this.mapping.size(), this.mapping);
 		}
 		int i = 0;
-		List<ExtractionContext> iterationECs = new ArrayList<ExtractionContext>(this.size());
+		List<ExtractionContext> iterationECs = new ArrayList<ExtractionContext>(size());
 		for (IMapping mapping : this.mapping) {
 			ExtractionContext childCtx = ExtractionContext.create(this, mapping, i);
 			childCtx.evaluate(node);
@@ -128,14 +124,6 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 		}
 		this.children.add(iterationECs);
 		incrementContext();
-	}
-
-	public List<ExtractionContext> getResultsSetAt(int valueIndex) {
-		if (this.children.size() > valueIndex) {
-			return this.children.get(valueIndex);
-		} else {
-			return null;
-		}
 	}
 
 	public List<List<ExtractionContext>> getChildren() {
@@ -152,8 +140,51 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 	}
 
 	@Override
+	public String getName() {
+		return this.mapping.getContainerName();
+	}
+
+	public List<ExtractionContext> getResultsSetAt(int valueIndex) {
+		if (this.children.size() > valueIndex) {
+			return this.children.get(valueIndex);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
 	public Iterator<List<ExtractedField>> iterator() {
-		return new RecordSetCsvIterator(this);
+		return new OutputRecordIterator(this);
+	}
+
+	/**
+	 * Debugging method to log all the results when an {@link #evaluate(XdmNode)} call has completed.
+	 */
+	private void logResults(ExtractionContext ctx, int offset, int indentCount) {
+		StringBuilder indentSb = new StringBuilder();
+		for (int i = 0; i < indentCount; i++) {
+			indentSb.append("  ");
+		}
+		String indent = indentSb.toString();
+		if (ctx instanceof ContainerExtractionContext) {
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("{}{}:{}", indent, offset, this);
+			}
+			int childResultsSetCount = 0;
+			int childCount = 0;
+			for (List<ExtractionContext> children : ((ContainerExtractionContext) ctx).getChildren()) {
+				LOG.trace("{}  {}", indent, childResultsSetCount++);
+				for (ExtractionContext child : children) {
+					logResults(child, childCount++, indentCount + 2);
+				}
+				childCount = 0;
+			}
+		} else {
+			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getAllValues(offset + "_"), ",", null));
+			}
+		}
 	}
 
 	/**
@@ -169,6 +200,9 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 		}
 	}
 
+	/**
+	 * Returns the number of mapping roots found for this object to evaluate against.
+	 */
 	@Override
 	public int size() {
 		return this.children.size();
@@ -183,4 +217,5 @@ public class ContainerExtractionContext extends ExtractionContext implements Ite
 		sb.append(")");
 		return sb.toString();
 	}
+
 }

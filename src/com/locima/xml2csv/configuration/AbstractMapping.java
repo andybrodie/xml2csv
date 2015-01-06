@@ -10,6 +10,8 @@ public abstract class AbstractMapping implements IMapping {
 	 */
 	private int groupNumber;
 
+	private int highestFoundValueCount;
+
 	/**
 	 * Tracks the number of instances found at once by this mapping. This is needed when doing inline mappings.
 	 */
@@ -74,6 +76,11 @@ public abstract class AbstractMapping implements IMapping {
 	}
 
 	@Override
+	public int getHighestFoundValueCount() {
+		return this.highestFoundValueCount;
+	}
+
+	@Override
 	public MultiValueBehaviour getMultiValueBehaviour() {
 		if (this.multiValueBehaviour == MultiValueBehaviour.DEFAULT) {
 			// TODO Implement inheritence from parent (currently a mapping has no concept of parent container!)
@@ -101,6 +108,11 @@ public abstract class AbstractMapping implements IMapping {
 	public abstract int hashCode();
 
 	@Override
-	public abstract String toString();
+	public void setHighestFoundValueCount(int valueFound) {
+		this.highestFoundValueCount = Math.max(valueFound, this.highestFoundValueCount);
+	}
 
+	@Override
+	public abstract String toString();
+	
 }

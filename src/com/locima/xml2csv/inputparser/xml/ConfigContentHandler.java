@@ -46,8 +46,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 	private static final String MAPPING_ROOT_ATTR = "mappingRoot";
-	private static final String MAX_VALUES_ATTR = "maxValues";
-	private static final String MIN_VALUES_ATTR = "minValues";
+	private static final String MAX_VALUES_ATTR = "minOccurs";
+	private static final String MIN_VALUES_ATTR = "maxOccurs";
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "behaviour";
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
@@ -79,7 +79,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		this.inputFilterStack.push(filter);
 	}
-	
+
 	/**
 	 * Adds a column mapping to the current MappingList instance being defined.
 	 *
@@ -88,11 +88,13 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param groupNumber the group number that applies to this mapping.
 	 * @param bespokeNameFormatFormat a bespoke style to use for this mapping.
-	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation on an element.
+	 * @param minValueCount the minimum number of values that this mapping should output for a single evaluation on an element.
+	 * @param minValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
-					String multiValueBehaviour, int minValues, int maxValues) throws SAXException {
+					String multiValueBehaviour, int minValueCount, int maxValueCount) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
 		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
 		String fieldName;
@@ -112,7 +114,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		int finalGroupNumber = groupNumber < 0 ? this.currentGroupNumber : groupNumber;
 		Mapping mapping =
 						new Mapping(current, fieldName, nameFormat, finalGroupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath,
-										minValues, maxValues);
+										minValueCount, maxValueCount);
 		current.add(mapping);
 	}
 
@@ -135,9 +137,12 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * @param minValueCount the minimum number of values that this mapping should output for a single evaluation on an element.
+	 * @param minValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour) throws SAXException {
+	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int minValueCount,
+					int maxValueCount) throws SAXException {
 		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
 		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
 		try {
@@ -147,10 +152,13 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		newMapping.setOutputName(outputName);
 		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour));
+		newMapping.setMinValueCount(minValueCount);
+		newMapping.setMaxValueCount(maxValueCount);
 		this.mappingListStack.push(newMapping);
-		
-		/* Increment the current group number so that all the children of this container have a default group that doesn't match any
-		 * other child of another conatiner.
+
+		/*
+		 * Increment the current group number so that all the children of this container have a default group that doesn't match any other child of
+		 * another conatiner.
 		 */
 		this.currentGroupNumber++;
 	}
@@ -366,7 +374,8 @@ public class ConfigContentHandler extends DefaultHandler {
 					break;
 				case MappingList:
 					addMappingList(atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(NAME_ATTR), atts.getValue(NAME_FORMAT_ATTR),
-									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
+									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case MappingConfiguration:
 					addMappingConfiguration(atts.getValue(NAME_FORMAT_ATTR), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));

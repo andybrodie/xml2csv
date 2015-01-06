@@ -1,7 +1,5 @@
 package com.locima.xml2csv.configuration;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +64,13 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	// }
 
 	@Override
-	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount) {
+	public int getMaxValueCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getMinValueCount() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -102,13 +106,7 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	}
 
 	@Override
-	public int getMaxValueCount() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int getMinValueCount() {
+	public int getFieldCountForSingleRecord() {
 		// TODO Auto-generated method stub
 		return 0;
 	}

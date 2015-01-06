@@ -8,15 +8,22 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.IValueMapping;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.ParentContext;
+import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.ExtractedField;
 import com.locima.xml2csv.util.FileUtility;
 import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.Tuple;
 
 /**
  * Manages the output of a single CSV file where the results of conversion from XML when the mapping configuration prohibits a variable number of
@@ -85,7 +92,7 @@ public class DirectCsvWriter implements ICsvWriter {
 			boolean createdNew = !file.exists();
 			Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, appendOutput), encoding));
 			if (createdNew) {
-				CsvWriterUtil.writeFieldNames(this.outputName, container, writer);
+				this.writeFieldNames(this.outputName, container, writer);
 			} else {
 				LOG.info("File {} already exists, therefore not writing field names", file.getAbsolutePath());
 			}
@@ -149,6 +156,92 @@ public class DirectCsvWriter implements ICsvWriter {
 								outputLine);
 			}
 		}
+	}
+
+	/**
+	 * Writes the field names that exist within <code>container</code> to the <code>writer</code> passed.
+	 *
+	 * @param outputName the name of the output that we are writing to (included purely for logging).
+	 * @param container the mapping container that we are wanting to write the field names for.
+	 * @param writer the writer to write the field names to.
+	 */
+	private void writeFieldNames(String outputName, IMappingContainer ctx, Writer writer) throws OutputManagerException {
+		try {
+			List<String> fieldNames = getFieldNames(ctx);
+			String escapedFieldNames = StringUtil.toCsvRecord(fieldNames);
+			LOG.info("Writing field names to {}: {}", outputName, escapedFieldNames);
+			writer.write(escapedFieldNames);
+			writer.write(StringUtil.getLineSeparator());
+		} catch (IOException ioe) {
+			throw new OutputManagerException(ioe, "Unable to write field names to %s", outputName);
+		}
+	}
+
+	/**
+	 * Retrieve the field names for the mapping.
+	 *
+	 * @param fieldNames the list of field names that this method should add to.
+	 * @return the number of field names that this method added.
+	 */
+	private List<String> getFieldNames(IMappingContainer container) {
+		List<String> fieldNames = new ArrayList<String>();
+		ParentContext parentContext = new ParentContext();
+		this.getFieldNames(fieldNames, parentContext, container);
+		return fieldNames;
+	}
+
+	/**
+	 * Recursive implementation of {@link #getFieldNames}. This ensures that the parent iteration count is available.
+	 *
+	 * @param fieldNames the list of column names that is being built up.
+	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
+	 * @return the number of columns added by this invocation.
+	 */
+	public int getFieldNames(List<String> fieldNames, ParentContext parentContext, IMappingContainer container) {
+		int columnCount = 0;
+		/*
+		 * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
+		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
+		 */
+		int repeats = (parentContext.isEmpty() || container.getMultiValueBehaviour() == MultiValueBehaviour.LAZY) ? 1 : container.getMaxValueCount();
+		
+		String name = container.getContainerName();
+		for (int containerIteration = 0; containerIteration < repeats; containerIteration++) {
+			parentContext.push(name, containerIteration);
+			for (IMapping mapping : container) {
+				if (mapping instanceof IMappingContainer) {
+					columnCount += getFieldNames(fieldNames, parentContext,(IMappingContainer)mapping);
+				} else {
+					columnCount += getFieldNames(fieldNames, parentContext,(IValueMapping)mapping);
+				}
+			}
+			parentContext.pop();
+		}
+		return columnCount;
+	}
+
+	public int getFieldNames(List<String> fieldNames, ParentContext parentContext, IValueMapping mapping) {
+		/*
+		 * The number of fields output is the maximum number of values found in a single execution of this mapping, constrained by this.minValueCount
+		 * and this.maxValueCount. Don't need to consider maxValueCount here though as evaluation is halted once we have enough values to meet
+		 * maxValueCount.
+		 */
+		int repeats = Math.max(mapping.getMaxValueCount(), 1);
+		int fieldCount;
+		switch (mapping.getMultiValueBehaviour()) {
+			case LAZY:
+				fieldNames.add(mapping.getNameFormat().format(mapping.getBaseName(), 0, parentContext));
+				fieldCount = 1;
+				break;
+			case GREEDY:
+				for (fieldCount = 0; fieldCount < repeats; fieldCount++) {
+					fieldNames.add(mapping.getNameFormat().format(mapping.getBaseName(), fieldCount, parentContext));
+				}
+				break;
+			default:
+				throw new IllegalStateException("Unexpected MultiValueBehaviour: " + mapping.getMultiValueBehaviour());
+		}
+		return fieldCount;
 	}
 
 }

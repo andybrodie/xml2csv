@@ -2,7 +2,6 @@ package com.locima.xml2csv.configuration;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -21,35 +20,16 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
 
-	private static final long serialVersionUID = -3781997484476001198L;
-
-	// /**
-	// * Retrieve the number of columns that will be rendered within this mapping container.
-	// * <p>
-	// * Recursively called for child mapping lists.
-	// * <p>
-	// * Used to work out how many empty columns are required in a record when no values are present.
-	// *
-	// * @param mappings The list of mappings (typically a {@link MappingList} instance) the count the columns within.
-	// * @return the number of columns found.
-	// */
-	// private static int getChildColumnCount(List<IMapping> mappings) {
-	// int count = 0;
-	// for (IMapping child : mappings) {
-	// int childMaxInstanceCount = child.getMaxInstanceCount();
-	// if (child instanceof ISingleMapping) {
-	// count += childMaxInstanceCount;
-	// } else if (child instanceof MappingList) {
-	// MappingList childList = (MappingList) child;
-	// count += childMaxInstanceCount * getChildColumnCount(childList);
-	// } else {
-	// throw new IllegalStateException("Unexpected type of IMappingContainer found: " + child.getClass().getName());
-	// }
-	// }
-	// return count;
-	// }
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = -5914600946119131908L;
 
 	private String containerName;
+
+	private int groupNumber;
+
+	private int highestFoundValueCount;
 
 	/**
 	 * Retrieves the mapping root expression that, when evaluated, will return all the XML node that should be used to extract data from. If null then
@@ -57,17 +37,15 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 */
 	private XPathValue mappingRoot;
 
-	private int maximumResultCount;
+	private int maxValueCount;
 
-	private int minimumResultCount = 1;
+	private int minValueCount;
 
 	private MultiValueBehaviour multiValueBehaviour;
 
 	private Map<String, String> namespaceMappings;
 
 	private IMappingContainer parent;
-
-	private int groupNumber;
 
 	/**
 	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
@@ -95,46 +73,19 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return this.containerName;
 	}
 
-	/**
-	 * Recursive implementation of {@link #getColumnNames(List)}. This ensures that the parent iteration count is available.
-	 *
-	 * @param fieldNames the list of column names that is being built up.
-	 * @param parentName the name of the parent mapping list (or <code>null</code> if this {@link MappingList} is a direct child of the
-	 *            {@link MappingConfiguration}.
-	 * @param parentCount the iteration of the parent mapping list that we're currently within.
-	 * @return the number of columns added by this invocation.
-	 */
 	@Override
-	public int getFieldNames(List<String> fieldNames, String parentName, int parentCount) {
-		int columnCount = 0;
-		/*
-		 * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
-		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
-		 */
-		int repeats = parentName != null ? getMaxResultCount() : 1;
-		String mappingListName = getContainerName();
-		for (int mappingListIteration = 0; mappingListIteration < repeats; mappingListIteration++) {
-			for (IMapping mapping : this) {
-				columnCount += mapping.getFieldNames(fieldNames, mappingListName, mappingListIteration);
-			}
-		}
-		return columnCount;
-	}
-
-	@Override
-	public List<String> getFieldNames(String parentName, int parentIterationNumber) {
-		List<String> fieldNames = new ArrayList<String>();
-		getFieldNames(fieldNames, parentName, parentIterationNumber);
-		return fieldNames;
+	public int getFieldCountForSingleRecord() {
+		return this.getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
 	}
 
 	@Override
 	public int getGroupNumber() {
 		return this.groupNumber;
 	}
-	
-	public void setGroupNumber(int groupNumber) {
-		this.groupNumber = groupNumber;
+
+	@Override
+	public int getHighestFoundValueCount() {
+		return this.highestFoundValueCount;
 	}
 
 	@Override
@@ -142,8 +93,19 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return this.mappingRoot;
 	}
 
-	private int getMaxResultCount() {
-		return Math.max(this.minimumResultCount, this.maximumResultCount);
+	@Override
+	public int getMaxValueCount() {
+		return this.maxValueCount;
+	}
+
+	@Override
+	public int getMinValueCount() {
+		return this.minValueCount;
+	}
+
+	@Override
+	public MultiValueBehaviour getMultiValueBehaviour() {
+		return this.multiValueBehaviour;
 	}
 
 	@Override
@@ -162,25 +124,38 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public IMappingContainer getParent() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.parent;
 	}
 
 	/**
-	 * Look at all our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we can't guarantee how
-	 * many fields are output, so return <code>false</code>.
+	 * Look at all ourself and all of our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we
+	 * can't guarantee how many fields are output, so return <code>false</code>.
 	 */
 	@Override
 	public boolean hasFixedOutputCardinality() {
-		boolean isFixed = true;
-		for (IMapping mapping : this) {
-			if (!mapping.hasFixedOutputCardinality()) {
-				isFixed = false;
-				break;
+		boolean isFixed =
+						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
+						|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
+
+		if (isFixed) {
+			for (IMapping mapping : this) {
+				if (!mapping.hasFixedOutputCardinality()) {
+					isFixed = false;
+					break;
+				}
 			}
 		}
 		LOG.info("MappingList {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
+	}
+
+	public void setGroupNumber(int groupNumber) {
+		this.groupNumber = groupNumber;
+	}
+
+	@Override
+	public void setHighestFoundValueCount(int valueCount) {
+		this.highestFoundValueCount = valueCount;
 	}
 
 	/**
@@ -194,6 +169,14 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		if (!StringUtil.isNullOrEmpty(mappingRootXPathExpression)) {
 			this.mappingRoot = XmlUtil.createXPathValue(this.namespaceMappings, mappingRootXPathExpression);
 		}
+	}
+
+	public void setMaxValueCount(int maxValueCount) {
+		this.maxValueCount = maxValueCount;
+	}
+
+	public void setMinValueCount(int minValueCount) {
+		this.minValueCount = minValueCount;
 	}
 
 	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
@@ -225,6 +208,10 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		sb.append(this.containerName);
 		sb.append(", ");
 		sb.append(this.multiValueBehaviour);
+		sb.append(", ");
+		sb.append(this.minValueCount);
+		sb.append(", ");
+		sb.append(this.maxValueCount);
 		sb.append(")[");
 		Iterator<IMapping> mappings = iterator();
 		while (mappings.hasNext()) {
@@ -235,23 +222,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 		sb.append("]");
 		return sb.toString();
-	}
-
-	@Override
-	public MultiValueBehaviour getMultiValueBehaviour() {
-		return this.multiValueBehaviour;
-	}
-
-	@Override
-	public int getMaxValueCount() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int getMinValueCount() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 }
