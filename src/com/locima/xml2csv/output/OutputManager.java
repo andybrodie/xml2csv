@@ -2,7 +2,6 @@ package com.locima.xml2csv.output;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -12,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.ContainerExtractionContext;
-import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.output.direct.DirectCsvWriter;
+import com.locima.xml2csv.output.inline.InlineCsvWriter;
 
 /**
  * Used to create {@link IOutputManager} instances, using a concrete implementation that is suitable for the mapping configuration passed.
@@ -110,10 +109,10 @@ public class OutputManager implements IOutputManager {
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
 	@Override
-	public void writeRecords(String outputName, Iterable<List<ExtractedField>> records) throws OutputManagerException {
+	public void writeRecords(String outputName, IExtractionResultsContainer resultsContainer) throws OutputManagerException {
 		ICsvWriter writer = this.outputToWriter.get(outputName);
 		if (writer != null) {
-			writer.writeRecords(records);
+			writer.writeRecords(resultsContainer);
 		} else {
 			throw new BugException("writeRecords was asked to write records for a non-existant writer: %s", outputName);
 		}

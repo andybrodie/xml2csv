@@ -7,6 +7,9 @@ import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.output.IExtractionResults;
+import com.locima.xml2csv.output.direct.DirectOutputRecordIterator;
 
 /**
  * An extraction context provides an object that understands how to evaluate individual mappings or containers of multiple mappings recursively, and
@@ -21,10 +24,10 @@ import com.locima.xml2csv.configuration.IValueMapping;
  * <li>An ordered list of references to child contexts are created for {@link IMappingContainer} (see {@link ContainerExtractionContext}), each
  * reference containing an index.</li>
  * </ol>
- * How these tree-structured sets of values are then flattened in to a CSV file is performed in {@link OutputRecordIterator} and dependent on the
- * configuration of the {@link IMapping} instance, specifically the {@link IMapping#getMultiValueBehaviour()} value.
+ * How these tree-structured sets of values are then flattened in to a CSV file is performed in {@link DirectOutputRecordIterator} and dependent on
+ * the configuration of the {@link IMapping} instance, specifically the {@link IMapping#getMultiValueBehaviour()} value.
  */
-public abstract class ExtractionContext {
+public abstract class ExtractionContext implements IExtractionResults {
 
 	/**
 	 * Factory method to create the right type of {@link ExtractionContext} (either {@link MappingExtractionContext} or
@@ -65,13 +68,42 @@ public abstract class ExtractionContext {
 
 	public abstract void evaluate(XdmNode rootNode) throws DataExtractorException;
 
+	// @Override
+	// public int getFieldsRequiredInRecord() {
+	// IMapping mapping = getMapping();
+	// return mapping.getFieldCountForSingleRecord() - mapping.getHighestFoundValueCount();
+	// }
+
+	@Override
+	public int getGroupNumber() {
+		return getMapping().getGroupNumber();
+	}
+
 	public abstract IMapping getMapping();
+
+	@Override
+	public int getMinCount() {
+		return getMapping().getMinValueCount();
+	}
+
+	@Override
+	public MultiValueBehaviour getMultiValueBehaviour() {
+		return getMapping().getMultiValueBehaviour();
+	}
 
 	public abstract String getName();
 
+	@Override
 	public ContainerExtractionContext getParent() {
 		return this.parent;
 	}
 
+	/**
+	 * Returns the number of results found by this context.
+	 *
+	 * @return a natural number.
+	 */
+	@Override
 	public abstract int size();
+
 }

@@ -8,8 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
+import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.StringUtil;
 
 public class LoggingOutputManager implements IOutputManager {
@@ -40,17 +42,10 @@ public class LoggingOutputManager implements IOutputManager {
 		this.lines = new ArrayList<String>();
 	}
 
+
 	@Override
-	public void writeRecords(String outputName, Iterable<List<ExtractedField>> iter) throws OutputManagerException {
-		for (List<ExtractedField> record : iter) {
-			StringBuilder sb = new StringBuilder("Output ");
-			sb.append(outputName);
-			sb.append(": ");
-			sb.append(StringUtil.collectionToString(record, ",", null));
-			String outputLine = sb.toString();
-			this.lines.add(outputLine);
-			LOG.debug(outputLine);
-		}
+	public void writeRecords(String outputName, IExtractionResultsContainer extractionResults) throws OutputManagerException {
+		((ContainerExtractionContext)extractionResults).logResults(extractionResults, 0, 0);
 	}
 
 }

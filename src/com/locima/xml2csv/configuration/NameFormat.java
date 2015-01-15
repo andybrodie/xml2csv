@@ -45,7 +45,7 @@ public class NameFormat {
 
 	public static final NameFormat WITH_PARENT_COUNT = new NameFormat("%1$s_%4$d");
 
-/**
+	/**
 	 * Parse the predefined format name or bespoke format specification in to an {@link NameFormat} instance.
 	 *
 	 * @param predefinedFormatName the name of a specific style.
@@ -105,7 +105,7 @@ public class NameFormat {
 	 * @param parentIterationNumber a number, starting at 0, that indicates the index of the value of the parent.
 	 * @return a formatted string, used as a column name.
 	 */
-	public String format(String baseColumnName, int iterationNumber, ParentContext parentContext) {
+	public String format(String baseColumnName, int iterationNumber, MappingIndexAncestors parentContext) {
 		return String.format(this.format, parentContext.getFormatArgs(baseColumnName, iterationNumber));
 	}
 

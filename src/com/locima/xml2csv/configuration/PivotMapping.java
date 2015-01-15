@@ -64,6 +64,12 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	// }
 
 	@Override
+	public int getFieldCountForSingleRecord() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
 	public int getMaxValueCount() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -103,12 +109,6 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 		sb.append(getValueXPath().getSource());
 		sb.append(')');
 		return sb.toString();
-	}
-
-	@Override
-	public int getFieldCountForSingleRecord() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 }

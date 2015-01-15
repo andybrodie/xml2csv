@@ -22,7 +22,6 @@
 			<include name="Saxon-HE-9.5.1-6.jar" />
 			<include name="xercesImpl-2.11.0.jar" />
 			<include name="commons-cli-1.2.jar" />
-			<include name="slf4j-api-1.7.6.jar" />
 		</fileset>
 		<path refid="JUnit 4.libraryclasspath" />
 	</path>

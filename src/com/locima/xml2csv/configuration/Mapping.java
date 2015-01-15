@@ -66,6 +66,15 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	}
 
 	@Override
+	public int getFieldCountForSingleRecord() {
+		if (getMultiValueBehaviour() == MultiValueBehaviour.LAZY) {
+			return Math.max(getMinValueCount(), 1);
+		} else {
+			return Math.max(getMinValueCount(), getHighestFoundValueCount());
+		}
+	}
+
+	@Override
 	public int getMaxValueCount() {
 		return this.maxValueCount;
 	}
@@ -83,7 +92,7 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-						|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
+										|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
 		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
 	}
@@ -123,16 +132,5 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		sb.append(')');
 		return sb.toString();
 	}
-
-	@Override
-	public int getFieldCountForSingleRecord() {
-		if (this.getMultiValueBehaviour()==MultiValueBehaviour.LAZY) {
-			return Math.max(this.getMinValueCount(), 1);
-		} else {
-			return Math.max(this.getMinValueCount(), this.getHighestFoundValueCount());
-		}
-	}
-	
-	
 
 }

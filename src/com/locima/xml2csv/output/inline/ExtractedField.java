@@ -1,11 +1,16 @@
-package com.locima.xml2csv.extractor;
+package com.locima.xml2csv.output.inline;
 
 import com.locima.xml2csv.util.EqualsUtil;
 
 /**
  * A simple name/value pair of field name mapped to field value within a single output record.
  */
-public class ExtractedField {
+public class ExtractedField implements java.io.Serializable {
+
+	/**
+	 * Ensure that this class is serialisable.
+	 */
+	private static final long serialVersionUID = 0L;
 
 	private final String fieldName;
 	private final String value;

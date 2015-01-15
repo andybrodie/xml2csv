@@ -124,18 +124,18 @@ public class StringUtil {
 	}
 
 	public static <T> String toCsvRecord(Collection<T> inputCollection) {
-		return toString(inputCollection, ",", new StringUtil.IConverter<T>() {
+		StringUtil.IConverter<T> genericConverter = new StringUtil.IConverter<T>() {
 
 			@Override
 			public String convert(T input) {
 				if (input == null) {
-					return null;
+					return EMPTY_STRING;
 				} else {
 					return StringUtil.escapeForCsv(input.toString());
 				}
 			}
-
-		});
+		};
+		return toString(inputCollection, ",", genericConverter);
 	}
 
 	/**
@@ -161,19 +161,20 @@ public class StringUtil {
 	}
 
 	/**
-	 * Converts an array of Strings to a comma separated list within a single String.
+	 * Converts an array of objects to a comma separated list within a single String, with each member of the array effectively being passed to
+	 * {@link String#valueOf(Object)}.
 	 *
-	 * @param strings the array to convert, may be null or empty, in which case an empty string is returned.
+	 * @param objects the array to convert, may be null or empty, in which case an empty string is returned.
 	 * @return a string, possibly empty, of all the members of the passed array, separated by commas.
 	 */
-	public static String toString(String[] strings) {
-		if ((strings == null) || (strings.length == 0)) {
+	public static String toString(Object[] objects) {
+		if ((objects == null) || (objects.length == 0)) {
 			return EMPTY_STRING;
 		}
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < strings.length; i++) {
-			sb.append(strings[i]);
-			if (i < (strings.length - 1)) {
+		for (int i = 0; i < objects.length; i++) {
+			sb.append(objects[i]);
+			if (i < (objects.length - 1)) {
 				sb.append(",");
 			}
 		}

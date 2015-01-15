@@ -53,6 +53,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
 	private static final String XPATH_ATTR = "xPath";
 
+	private int currentGroupNumber;
+
 	private Locator documentLocator;
 
 	private Stack<IInputFilter> inputFilterStack;
@@ -60,8 +62,6 @@ public class ConfigContentHandler extends DefaultHandler {
 	private MappingConfiguration mappingConfiguration;
 
 	private Stack<MappingList> mappingListStack;
-
-	private int currentGroupNumber;
 
 	/**
 	 * Adds a filter to either the mapping configuration (if a top level filter) or the current parent filter (from {@link #inputFilterStack}.

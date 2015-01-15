@@ -12,7 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ContainerExtractionContext;
+import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.StringUtil.IConverter;
 import com.locima.xml2csv.util.Tuple;
@@ -44,30 +45,27 @@ public class MockOutputManager implements IOutputManager {
 		// No-op
 	}
 
-	private String[] toValuesOnlyArray(List<ExtractedField> values) {
-		if (values == null) {
-			return new String[0];
-		}
-		String[] array = new String[values.size()];
-		for (int i = 0; i < array.length; i++) {
-			array[i] = values.get(i) == null ? "<NULL ENTRY>" : values.get(i).getFieldValue();
-		}
-		return array;
+	private String[] toValuesOnlyArray(List<IExtractionResults> values) {
+		throw new UnsupportedOperationException("Need to make this a DIRECT mock as opposed to INLINE mock");
+//		if (values == null) {
+//			return new String[0];
+//		}
+//		String[] array = new String[values.size()];
+//		for (int i = 0; i < array.length; i++) {
+////			array[i] = values.get(i) == null ? "<NULL ENTRY>" : values.get(i).getFieldValue();
+//		}
+//		return array;
 	}
 
 	@Override
-	public void writeRecords(String writerName, Iterable<List<ExtractedField>> records) throws OutputManagerException {
-		for (List<ExtractedField> values : records) {
+	public void writeRecords(String writerName, IExtractionResultsContainer records) throws OutputManagerException {
+		for (List<IExtractionResults> values : records.getChildren()) {
 			Tuple<String, String[]> s = this._expectedResults.poll();
 			Assert.assertEquals(s.getFirst(), writerName);
 			LOG.debug("Expected: {}", StringUtil.toString(s.getSecond()));
-			LOG.debug("Actual: {}", StringUtil.toString(values, ", ", new IConverter<ExtractedField>() {
-				@Override
-				public String convert(ExtractedField input) {
-					return (input == null) ? "<NULL>" : input.toString();
-				}
-			}));
-			 Assert.assertArrayEquals(s.getSecond(), toValuesOnlyArray(values));
+			String[] actual = toValuesOnlyArray(values);
+			LOG.debug("Actual: {}", StringUtil.toString(actual));
+			Assert.assertArrayEquals(s.getSecond(), actual);
 		}
 	}
 

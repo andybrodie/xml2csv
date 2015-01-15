@@ -26,7 +26,8 @@ import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.configuration.NameFormat;
-import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.extractor.ContainerExtractionContext;
+import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.XmlUtil;
 
@@ -72,22 +73,27 @@ public class OutputManagerTests {
 		return container;
 	}
 
-	private Iterable<List<ExtractedField>> createRecords(MappingList mapping, String... values) {
-		List<List<ExtractedField>> records = new ArrayList<List<ExtractedField>>();
-		if (mapping.getMultiValueBehaviour()==MultiValueBehaviour.LAZY) {
-		for (String value : values) {
-			List<ExtractedField> record = new ArrayList<ExtractedField>(1);
-			record.add(new ExtractedField("1", value));
-			records.add(record);
-		}} else {
-			List<ExtractedField> record = new ArrayList<ExtractedField>(values.length);
-			for (int i=0; i<values.length; i++) {
-				record.add(new ExtractedField(new Integer(i).toString(), values[i]));
-			}
-			records.add(record);
-		}
-		return records;
+	private IExtractionResultsContainer createRecords(MappingList mapping, String... values) {
+		ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, 0);
+		return ctx;
 	}
+	
+//	private Iterable<List<ExtractedField>> createRecords(MappingList mapping, String... values) {
+//		List<List<ExtractedField>> records = new ArrayList<List<ExtractedField>>();
+//		if (mapping.getMultiValueBehaviour()==MultiValueBehaviour.LAZY) {
+//		for (String value : values) {
+//			List<ExtractedField> record = new ArrayList<ExtractedField>(1);
+//			record.add(new ExtractedField("1", value));
+//			records.add(record);
+//		}} else {
+//			List<ExtractedField> record = new ArrayList<ExtractedField>(values.length);
+//			for (int i=0; i<values.length; i++) {
+//				record.add(new ExtractedField(new Integer(i).toString(), values[i]));
+//			}
+//			records.add(record);
+//		}
+//		return records;
+//	}
 
 	private IOutputManager createTempOutputManager(File outputDir, MappingConfiguration mappingConfiguration, boolean appendToFiles)
 					throws IOException, OutputManagerException {

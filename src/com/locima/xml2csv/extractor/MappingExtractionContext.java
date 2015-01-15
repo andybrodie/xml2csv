@@ -14,12 +14,13 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IValueMapping;
+import com.locima.xml2csv.output.IExtractionResultsValues;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
  * Used to store the context of a set of extracted values for 0..n executions of a {@link IValueMapping} against multiple input documents.
  */
-public class MappingExtractionContext extends ExtractionContext {
+public class MappingExtractionContext extends ExtractionContext implements IExtractionResultsValues {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingExtractionContext.class);
 
@@ -107,17 +108,23 @@ public class MappingExtractionContext extends ExtractionContext {
 	 * @param namePrefix the prefix to be applied to each field name.
 	 * @return an ordered list of values extracted from this mapping.
 	 */
-	public List<ExtractedField> getAllValues(String namePrefix) {
+	@Override
+	public List<String> getAllValues() {
 		int valueCountRequired = this.mapping.getFieldCountForSingleRecord();
-		List<ExtractedField> fields = new ArrayList<ExtractedField>(valueCountRequired);
+		List<String> fields = new ArrayList<String>(valueCountRequired);
 		for (int i = 0; i < valueCountRequired; i++) {
-			fields.add(getValueAt(namePrefix, i));
+			fields.add(getValueAt(i));
 		}
 		return fields;
 	}
 
 	@Override
-	public IMapping getMapping() {
+	public int getIndex() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public IValueMapping getMapping() {
 		return this.mapping;
 	}
 
@@ -130,22 +137,13 @@ public class MappingExtractionContext extends ExtractionContext {
 	 * Retrieve an extracted field instance for the value at the index given.
 	 *
 	 * @param valueIndex the index of the value to retrieve within this mapping.
-	 * @return an extracted field for the index given. If there is no value for the field with this <c>valueIndex</c> then an {@link ExtractedField}
-	 *         with the {@link ExtractedField#getFieldValue()} return value of <code>null</code> is returned. The
-	 *         {@link ExtractedField#getFieldName()} will still be set correctly. This is required when padding is needed to keep the index of fields
-	 *         wtihin a record consistent.
+	 * @return an extracted field for the index given. If there is no value for a field with this index, then null is returned (never throws an
+	 *         exception for this).
 	 */
-	public ExtractedField getValueAt(String namePrefix, int valueIndex) {
-
-		String value;
-		if (this.results.size() > valueIndex) {
-			value = this.results.get(valueIndex);
-		} else {
-			value = null;
-		}
-		String name = namePrefix + valueIndex;
-		ExtractedField field = new ExtractedField(name, value);
-		return field;
+	@Override
+	public String getValueAt(int valueIndex) {
+		String value = (this.results.size() > valueIndex) ? this.results.get(valueIndex) : null;
+		return value;
 	}
 
 	@Override

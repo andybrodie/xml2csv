@@ -1,11 +1,9 @@
 package com.locima.xml2csv.output;
 
 import java.io.File;
-import java.util.List;
 
 import com.locima.xml2csv.configuration.IMappingContainer;
-import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.ExtractedField;
+import com.locima.xml2csv.output.inline.InlineCsvWriter;
 
 public interface ICsvWriter {
 
@@ -41,6 +39,6 @@ public interface ICsvWriter {
 	 * @param records the records to write out.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
-	void writeRecords(Iterable<List<ExtractedField>> records) throws OutputManagerException;
+	void writeRecords(IExtractionResultsContainer container) throws OutputManagerException;
 
 }

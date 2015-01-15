@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.ExtractedField;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
+import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.XmlUtil;
 
 public class TestHelpers {
