@@ -124,7 +124,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		return false;
 	}
 
-/**
+	/**
 	 * Retrieve a top level mapping container ({@link MappingList by name, or null if it doesn't exist.
 	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getContainerName()}).
 	 * @return a mapping container instance with the matching name, or null if one doesn't exist.

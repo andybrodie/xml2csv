@@ -1,6 +1,5 @@
 package com.locima.xml2csv.configuration;
 
-
 /**
  * The basic interface for any kind of mapping (may map single or multiple data items).
  */
@@ -9,7 +8,7 @@ public interface IMapping {
 	/**
 	 * Combines the values in {@link #getMinValueCount()} and {@link #getHighestFoundValueCount()} to determine the total number of fields that this
 	 * mapping should output <em>in a single record</em>.
-	 * 
+	 *
 	 * @return a natural number greater than or equal to one.
 	 */
 	int getFieldCountForSingleRecord();
@@ -80,7 +79,7 @@ public interface IMapping {
 
 	/**
 	 * Sets the most number of results found with this mapping during a single evaluation.
-	 * 
+	 *
 	 * @param valueFound the number of results found in a single evaluation. Will be ignored if a previous call has found a higher value.
 	 * @see IMapping#getHighestFoundValueCount()
 	 */

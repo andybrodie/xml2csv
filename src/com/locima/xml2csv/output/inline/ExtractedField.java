@@ -12,10 +12,10 @@ public class ExtractedField implements java.io.Serializable {
 	 */
 	private static final long serialVersionUID = 0L;
 
-	private final String fieldName;
+	private final int[] fieldName;
 	private final String value;
 
-	public ExtractedField(String fieldName, String fieldValue) {
+	public ExtractedField(int[] fieldName, String fieldValue) {
 		this.fieldName = fieldName;
 		this.value = fieldValue;
 	}
@@ -29,7 +29,7 @@ public class ExtractedField implements java.io.Serializable {
 		return EqualsUtil.areEqual(this.fieldName, that.fieldName) && EqualsUtil.areEqual(this.value, that.value);
 	}
 
-	public String getFieldName() {
+	public int[] getFieldName() {
 		return this.fieldName;
 	}
 

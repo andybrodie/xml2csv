@@ -8,8 +8,6 @@ import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,18 +38,6 @@ public class InlineCsvWriter implements ICsvWriter {
 	private static final ExtractedField[] EMPTY_EXTRACTEDFIELD_ARRAY = new ExtractedField[0];
 
 	private static final Logger LOG = LoggerFactory.getLogger(InlineCsvWriter.class);
-
-	private static final StringUtil.IConverter<String> STRING_ARRAY_CSV_CONVERTER = new StringUtil.IConverter<String>() {
-
-		@Override
-		public String convert(String input) {
-			if (input == null) {
-				return null;
-			} else {
-				return StringUtil.escapeForCsv(input.toString());
-			}
-		}
-	};
 
 	/**
 	 * Records whether, when creating the CSV file, output should be appended to an existing file or create a new file or overwrite an existing file.
@@ -94,11 +80,11 @@ public class InlineCsvWriter implements ICsvWriter {
 	 */
 	@Override
 	public void close() throws OutputManagerException {
-		try {
-			this.csiWriter.write(null);
-		} catch (IOException ioe) {
-			throw new OutputManagerException(ioe, "Unexpected IOException when trying to write final null to CSI file");
-		}
+		// try {
+		// this.csiWriter.write(FILE_TERMINATOR);
+		// } catch (IOException ioe) {
+		// throw new OutputManagerException(ioe, "Unexpected IOException when trying to write final null to CSI file");
+		// }
 		OutputUtil.close(this.outputName, this.csiOutputFile.getAbsolutePath(), this.csiWriter);
 		convertCsiToCsv();
 	}
@@ -140,7 +126,7 @@ public class InlineCsvWriter implements ICsvWriter {
 				record = csiInput.getNextRecord();
 			}
 		} finally {
-			// Close the CSI input stream, log any errors but don't throw as there's no value to this.
+			// Close the CSI input stream, log any errors but don't throw as this doesn't impact the overall behaviour of the program.
 			if (csiInput != null) {
 				try {
 					csiInput.close();
@@ -158,8 +144,6 @@ public class InlineCsvWriter implements ICsvWriter {
 				}
 			}
 		}
-
-		OutputUtil.close(this.outputName, this.csvOutputFile.getAbsolutePath(), csvWriter);
 	}
 
 	private ObjectOutputStream createCsiOutput() throws OutputManagerException {
@@ -207,15 +191,8 @@ public class InlineCsvWriter implements ICsvWriter {
 
 	private CsiInputStream getCsiInput() throws OutputManagerException {
 		try {
-			return new CsiInputStream(new ZipInputStream(new FileInputStream(this.csiOutputFile)));
-		} catch (IOException e) {
-			throw new OutputManagerException(e, "Unable to open CSI file {} for reading.", this.csiOutputFile.getAbsolutePath());
-		}
-	}
-
-	private ObjectOutputStream getCsiOutputStream() throws OutputManagerException {
-		try {
-			return new ObjectOutputStream(new ZipOutputStream(new FileOutputStream(this.csiOutputFile)));
+			LOG.info("Re-opening {} to read intermediate file", this.csiOutputFile.getAbsolutePath());
+			return new CsiInputStream(new FileInputStream(this.csiOutputFile));
 		} catch (IOException e) {
 			throw new OutputManagerException(e, "Unable to open CSI file {} for reading.", this.csiOutputFile.getAbsolutePath());
 		}
@@ -223,7 +200,7 @@ public class InlineCsvWriter implements ICsvWriter {
 
 	/**
 	 * Works out the index, relative to a CSV field, that a specific extracted field should appear in.
-	 * 
+	 *
 	 * @param field the field to obtain the index of.
 	 * @return an index.
 	 */

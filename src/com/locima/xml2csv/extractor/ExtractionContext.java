@@ -38,18 +38,25 @@ public abstract class ExtractionContext implements IExtractionResults {
 	 *
 	 * @param parent the parent context (in the same way that an {@link IMapping} has a parent).
 	 * @param mapping the mapping that the new context will be managing.
-	 * @param index the index of the new context, with respect to its siblings (first child of the parent has index 0, second has index 1, etc.).
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
+	 * @param positionRelativeToIMappingSiblings
 	 * @return either a {@link MappingExtractionContext} or {@link ContainerExtractionContext} instance. Never null.
 	 */
-	public static ExtractionContext create(ContainerExtractionContext parent, IMapping mapping, int index) {
+	public static ExtractionContext create(ContainerExtractionContext parent, IMapping mapping, int positionRelativeToOtherRootNodes,
+					int positionRelativeToIMappingSiblings) {
 		ExtractionContext ctx;
 		if (mapping == null) {
 			throw new ArgumentNullException("mapping");
 		}
 		if (mapping instanceof IValueMapping) {
-			ctx = new MappingExtractionContext(parent, ((IValueMapping) mapping));
+			ctx =
+							new MappingExtractionContext(parent, ((IValueMapping) mapping), positionRelativeToOtherRootNodes,
+											positionRelativeToIMappingSiblings);
 		} else if (mapping instanceof IMappingContainer) {
-			ctx = new ContainerExtractionContext(parent, (IMappingContainer) mapping, index);
+			ctx =
+							new ContainerExtractionContext(parent, (IMappingContainer) mapping, positionRelativeToOtherRootNodes,
+											positionRelativeToIMappingSiblings);
 		} else {
 			throw new BugException("Passed mapping that is not a value mapping or mapping container: %s", mapping);
 		}
@@ -62,17 +69,20 @@ public abstract class ExtractionContext implements IExtractionResults {
 	 */
 	private ContainerExtractionContext parent;
 
-	protected ExtractionContext(ContainerExtractionContext parent) {
+	/**
+	 * The position of this extraction context with respect to its parent.
+	 * <p>
+	 */
+	private final int positionRelativeToIMappingSiblings;
+	private final int positionRelativeToOtherRootNodes;
+
+	protected ExtractionContext(ContainerExtractionContext parent, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
 		this.parent = parent;
+		this.positionRelativeToIMappingSiblings = positionRelativeToIMappingSiblings;
+		this.positionRelativeToOtherRootNodes = positionRelativeToOtherRootNodes;
 	}
 
 	public abstract void evaluate(XdmNode rootNode) throws DataExtractorException;
-
-	// @Override
-	// public int getFieldsRequiredInRecord() {
-	// IMapping mapping = getMapping();
-	// return mapping.getFieldCountForSingleRecord() - mapping.getHighestFoundValueCount();
-	// }
 
 	@Override
 	public int getGroupNumber() {
@@ -80,6 +90,12 @@ public abstract class ExtractionContext implements IExtractionResults {
 	}
 
 	public abstract IMapping getMapping();
+
+	// @Override
+	// public int getFieldsRequiredInRecord() {
+	// IMapping mapping = getMapping();
+	// return mapping.getFieldCountForSingleRecord() - mapping.getHighestFoundValueCount();
+	// }
 
 	@Override
 	public int getMinCount() {
@@ -96,6 +112,14 @@ public abstract class ExtractionContext implements IExtractionResults {
 	@Override
 	public ContainerExtractionContext getParent() {
 		return this.parent;
+	}
+
+	public int getPositionRelativeToIMappingSiblings() {
+		return this.positionRelativeToIMappingSiblings;
+	}
+
+	public int getPositionRelativeToOtherRootNodes() {
+		return this.positionRelativeToOtherRootNodes;
 	}
 
 	/**

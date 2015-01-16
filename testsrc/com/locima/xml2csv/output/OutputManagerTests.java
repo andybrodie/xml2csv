@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.Mapping;
@@ -27,7 +27,6 @@ import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.configuration.NameFormat;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
-import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.XmlUtil;
 
@@ -74,26 +73,26 @@ public class OutputManagerTests {
 	}
 
 	private IExtractionResultsContainer createRecords(MappingList mapping, String... values) {
-		ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, 0);
+		ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, 0, 0);
 		return ctx;
 	}
-	
-//	private Iterable<List<ExtractedField>> createRecords(MappingList mapping, String... values) {
-//		List<List<ExtractedField>> records = new ArrayList<List<ExtractedField>>();
-//		if (mapping.getMultiValueBehaviour()==MultiValueBehaviour.LAZY) {
-//		for (String value : values) {
-//			List<ExtractedField> record = new ArrayList<ExtractedField>(1);
-//			record.add(new ExtractedField("1", value));
-//			records.add(record);
-//		}} else {
-//			List<ExtractedField> record = new ArrayList<ExtractedField>(values.length);
-//			for (int i=0; i<values.length; i++) {
-//				record.add(new ExtractedField(new Integer(i).toString(), values[i]));
-//			}
-//			records.add(record);
-//		}
-//		return records;
-//	}
+
+	// private Iterable<List<ExtractedField>> createRecords(MappingList mapping, String... values) {
+	// List<List<ExtractedField>> records = new ArrayList<List<ExtractedField>>();
+	// if (mapping.getMultiValueBehaviour()==MultiValueBehaviour.LAZY) {
+	// for (String value : values) {
+	// List<ExtractedField> record = new ArrayList<ExtractedField>(1);
+	// record.add(new ExtractedField("1", value));
+	// records.add(record);
+	// }} else {
+	// List<ExtractedField> record = new ArrayList<ExtractedField>(values.length);
+	// for (int i=0; i<values.length; i++) {
+	// record.add(new ExtractedField(new Integer(i).toString(), values[i]));
+	// }
+	// records.add(record);
+	// }
+	// return records;
+	// }
 
 	private IOutputManager createTempOutputManager(File outputDir, MappingConfiguration mappingConfiguration, boolean appendToFiles)
 					throws IOException, OutputManagerException {
@@ -103,7 +102,7 @@ public class OutputManagerTests {
 	}
 
 	private IOutputManager createTempOutputManager(MappingConfiguration mappingConfiguration, boolean appendToFiles) throws IOException,
-					OutputManagerException {
+	OutputManagerException {
 		File newTempFolder = this.testOutputDir.newFolder();
 		return createTempOutputManager(newTempFolder, mappingConfiguration, appendToFiles);
 	}
@@ -114,31 +113,6 @@ public class OutputManagerTests {
 
 	@After
 	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void testAppendOutput() throws Exception {
-		File tempFolder = this.testOutputDir.newFolder();
-		
-		MappingConfiguration mappingConfig = new MappingConfiguration();
-		MappingList test = (MappingList) mappingConfig.addMappings(createMappingList("test", "col1", "col2", "col3"));
-		MappingList test2 = (MappingList) mappingConfig.addMappings(createMappingList("test2", "colA", "colB", "colC"));
-
-		IOutputManager om = new OutputManager();
-		om.initialise(tempFolder, mappingConfig, false);
-
-		om.writeRecords("test", createRecords(test, "1", "2", "3"));
-		om.writeRecords("test2", createRecords(test2, "A", "B", "C"));
-		om.close();
-
-		om = new OutputManager();
-		om.initialise(tempFolder, mappingConfig, true);
-		om.writeRecords("test", createRecords(test, "1", "2", "3"));
-		om.writeRecords("test2", createRecords(test2, "A", "B", "C"));
-		om.close();
-
-		assertCsvEquals("OutputManagerAppendTest1.csv", tempFolder, "test.csv");
-		assertCsvEquals("OutputManagerAppendTest2.csv", tempFolder, "test2.csv");
 	}
 
 	@Test
@@ -165,19 +139,5 @@ public class OutputManagerTests {
 		}
 	}
 
-	@Test
-	public void testWriteRecords() throws Exception {
-		MappingConfiguration mappingConfig = new MappingConfiguration();
-		MappingList test = (MappingList) mappingConfig.addMappings(createMappingList("test", "col1", "col2", "col3"));
-		MappingList test2 = (MappingList) mappingConfig.addMappings(createMappingList("test2", "colA", "colB", "colC"));
-		File tempFolder = this.testOutputDir.newFolder();
-		IOutputManager om = createTempOutputManager(tempFolder, mappingConfig, false);
-		om.writeRecords("test", createRecords(test, "1", "2", "3"));
-		om.writeRecords("test2", createRecords(test2, "A", "B", "C"));
-		om.close();
-
-		assertCsvEquals("OutputManagerTest1.csv", tempFolder, "test.csv");
-		assertCsvEquals("OutputManagerTest2.csv", tempFolder, "test2.csv");
-	}
 
 }

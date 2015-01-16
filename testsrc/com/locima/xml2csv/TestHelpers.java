@@ -105,7 +105,7 @@ public class TestHelpers {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 		File outputDirectory = outputFolder.getRoot();
-		p.execute(configFiles, xmlInputFiles, outputDirectory, false);
+		p.execute(configFiles, xmlInputFiles, outputDirectory, false, true);
 
 		return outputFolder;
 
@@ -119,7 +119,8 @@ public class TestHelpers {
 	public static List<ExtractedField> toExtractedFieldList(String... strings) {
 		List<ExtractedField> list = new ArrayList<ExtractedField>();
 		for (String string : strings) {
-			ExtractedField field = new ExtractedField("0", string);
+			// TODO Well, this isn't going to wok! We'll need proper control over the name of the extracted field
+			ExtractedField field = new ExtractedField(new int[] { 0 }, string);
 			list.add(field);
 		}
 		return list;

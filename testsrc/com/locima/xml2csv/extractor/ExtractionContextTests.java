@@ -126,6 +126,12 @@ public class ExtractionContextTests {
 		return document;
 	}
 
+	private ContainerExtractionContext evaluate(MappingList mappings, XdmNode testDoc) throws DataExtractorException {
+		ContainerExtractionContext ctx = new ContainerExtractionContext(mappings, 0, 0);
+		ctx.evaluate(testDoc);
+		return ctx;
+	}
+
 	@Before
 	public void setUp() throws Exception {
 		this.saxonProcessor = XmlUtil.getProcessor();
@@ -181,39 +187,6 @@ public class ExtractionContextTests {
 		assertMappingValues("Away", new int[] { 0, 2, 1 }, ctx);
 
 		// om.addExpectedResult("Test", new String[] { "Andy", "Andy2", "Andy3", "21", "Home", "Away" });
-	}
-
-	@Test
-	public void testMultiValueMec() throws Exception {
-		MappingList mappings = new MappingList();
-		mappings.setOutputName("Test");
-		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-
-		Mapping m =
-						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
-										"person/name"), 3, 0);
-		mappings.add(m);
-		m = new Mapping(mappings, "Age", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
-		mappings.add(m);
-		m =
-						new Mapping(mappings, "Address", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
-										"person/address"), 0, 0);
-		mappings.add(m);
-
-		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><age>22</age><address>Home</address></person>");
-
-		ContainerExtractionContext ctx = evaluate(mappings, testDoc);
-
-		assertMappingValues("Andy", new int[] { 0, 0, 0 }, ctx);
-		assertMappingValues("21", new int[] { 0, 1, 0 }, ctx);
-		assertMappingValues("22", new int[] { 0, 1, 1 }, ctx);
-		assertMappingValues("Home", new int[] { 0, 2, 0 }, ctx);
-	}
-
-	private ContainerExtractionContext evaluate(MappingList mappings, XdmNode testDoc) throws DataExtractorException {
-		ContainerExtractionContext ctx = new ContainerExtractionContext(mappings, 0);
-		ctx.evaluate(testDoc);
-		return ctx;
 	}
 
 	@Test
@@ -329,6 +302,33 @@ public class ExtractionContextTests {
 		// om.addExpectedResult("Test", new String[] { "parent", "c1a1", "c1a2" });
 		// om.addExpectedResult("Test", new String[] { "parent", "c2a1", "c2a2" });
 
+	}
+
+	@Test
+	public void testMultiValueMec() throws Exception {
+		MappingList mappings = new MappingList();
+		mappings.setOutputName("Test");
+		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+
+		Mapping m =
+						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
+										"person/name"), 3, 0);
+		mappings.add(m);
+		m = new Mapping(mappings, "Age", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
+		mappings.add(m);
+		m =
+						new Mapping(mappings, "Address", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
+										"person/address"), 0, 0);
+		mappings.add(m);
+
+		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><age>22</age><address>Home</address></person>");
+
+		ContainerExtractionContext ctx = evaluate(mappings, testDoc);
+
+		assertMappingValues("Andy", new int[] { 0, 0, 0 }, ctx);
+		assertMappingValues("21", new int[] { 0, 1, 0 }, ctx);
+		assertMappingValues("22", new int[] { 0, 1, 1 }, ctx);
+		assertMappingValues("Home", new int[] { 0, 2, 0 }, ctx);
 	}
 
 	@Test

@@ -46,7 +46,7 @@ public class FileUtilityTests {
 		}
 		String[] adjustedTestCases =
 						new String[] { "-----", "", "ABC!\"£$%^-", "ABC-", "  A", "A", "1234567890ABCDEFGH", "1234567890ABCD",
-						"----1234567890ABCDEFGH", "1234567890ABCD" };
+										"----1234567890ABCDEFGH", "1234567890ABCD" };
 		for (int i = 0; i < (adjustedTestCases.length - 1); i += 2) {
 			assertEquals(adjustedTestCases[i + 1], FileUtility.convertToPOSIXCompliantFileName(adjustedTestCases[i], false));
 		}

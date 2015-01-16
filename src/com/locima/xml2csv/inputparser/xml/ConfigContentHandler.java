@@ -143,7 +143,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 */
 	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int minValueCount,
 					int maxValueCount) throws SAXException {
-		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
+		// IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
 		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
 		try {
 			newMapping.setMappingRoot(mappingRoot);

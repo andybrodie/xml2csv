@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
-import com.locima.xml2csv.configuration.IMapping;
-import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.ExtractionContext;
 import com.locima.xml2csv.extractor.MappingExtractionContext;
@@ -53,39 +51,13 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 		this.baseGroupState = GroupState.createGroupStateList(rootContainer);
 	}
 
-
-	/**
-	 * Creates a list of values, ready to be output in to a CSV file.
-	 *
-	 * @return a possibly empty string containing a mixture of null and non-null values.
-	 */
-	private List<ExtractedField> createCsvValues() {
-		List<ExtractedField> csvFields = new ArrayList<ExtractedField>();
-
-		createCsvValues(csvFields, this.rootContainer);
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Created record as follows ({})", StringUtil.collectionToString(csvFields, ",", null));
-		}
-		return csvFields;
-	}
-
-	private void createCsvValues(List<ExtractedField> csvFields, IExtractionResults context) {
-		// BUG Fix this, it's horrible code, the interfaces should be different or it should be irrelevant.
-		if (context instanceof IExtractionResultsContainer) {
-			createCsvValuesFromContainer(csvFields, (IExtractionResultsContainer) context);
-		} else {
-			createCsvValuesFromMapping(csvFields, (IExtractionResultsValues)context);
-		}
-	}
-
 	/**
 	 * Adds to the passed <code>csvFields</code> list the relevant {@link ExtractedField} values found by this container.
 	 *
 	 * @param csvFields a list of fields being built up for a single output record.
 	 * @param context the {@link ExtractionContext} the relevant (contained) values of which should be added to <code>csvFields</code>.
 	 */
-	private void createCsvValuesFromContainer(List<ExtractedField> csvFields, IExtractionResultsContainer context) {
+	private void createCsiFieldsFromContainer(List<ExtractedField> csvFields, IExtractionResultsContainer context) {
 		switch (context.getMultiValueBehaviour()) {
 			case GREEDY:
 				int containerIterationCount = 0;
@@ -96,36 +68,25 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Greedy eval of child {}.{} ({}) from {}", containerIterationCount, resultIndexForTrace++, child, context);
 						}
-						createCsvValues(csvFields, child);
+						createCsiRecord(csvFields, child);
 					}
 					containerIterationCount++;
 					resultIndexForTrace = 0;
 				}
-
-				/*
-				 * If required, add extra empty fields where a minimum number of iterations of a container are required but not enough results were
-				 * found to satisfy this requirement (i.e. add lots of empty fields).
-				 */
-				for (String fieldName : context.getEmptyFieldNames(containerIterationCount)) {
-					ExtractedField field = new ExtractedField(fieldName, null);
-					csvFields.add(field);
-				}
-
 				break;
 			case LAZY:
 				int valueIndex = getIndexForGroup(context.getGroupNumber());
 				List<IExtractionResults> results = context.getResultsSetAt(valueIndex);
 				for (IExtractionResults child : results) {
 					LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex++, child, context);
-					createCsvValues(csvFields, child);
+					createCsiRecord(csvFields, child);
 				}
 				break;
 			case DEFAULT:
 				throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
 								+ "Mapping.getMultiValueBehaviour().");
 			default:
-				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().",
-								context.getMultiValueBehaviour());
+				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().", context.getMultiValueBehaviour());
 		}
 	}
 
@@ -136,8 +97,8 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 	 * @param csvFields the ordered list of CSV fields to add to.
 	 * @param context the context to extract the values from.
 	 */
-	private void createCsvValuesFromMapping(List<ExtractedField> csvFields, IExtractionResultsValues context) {
-		String namePrefix = getPrefix(context);
+	private void createCsiFieldsFromMapping(List<ExtractedField> csvFields, IExtractionResultsValues context) {
+		int[] fieldPositionPrefix = getPrefix(context);
 		switch (context.getMultiValueBehaviour()) {
 			case GREEDY:
 				/* Greedy mappings output as much as they can */
@@ -152,7 +113,7 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 				/* The most typical option: just process the next value and move on */
 				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
 				String fieldValue = context.getValueAt(valueIndex);
-				ExtractedField field = createExtractedField(valueIndex, fieldValue);
+				ExtractedField field = createExtractedField(fieldPositionPrefix, valueIndex, fieldValue);
 				LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, field, context);
 				csvFields.add(field);
 				break;
@@ -160,13 +121,41 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 				throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
 								+ "Mapping.getMultiValueBehaviour().");
 			default:
-				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().",
-								context.getMultiValueBehaviour());
+				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().", context.getMultiValueBehaviour());
 		}
 	}
 
-	private ExtractedField createExtractedField(int valueIndex, String fieldValue) {
-		throw new UnsupportedOperationException();
+	/**
+	 * Creates a list of values, ready to be output in to a CSV file.
+	 *
+	 * @return a possibly empty string containing a mixture of null and non-null values.
+	 */
+	private List<ExtractedField> createCsiRecord() {
+		List<ExtractedField> csiRecord = new ArrayList<ExtractedField>();
+
+		createCsiRecord(csiRecord, this.rootContainer);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Created CSI record as follows ({})", StringUtil.collectionToString(csiRecord, ",", null));
+		}
+		return csiRecord;
+	}
+
+	private void createCsiRecord(List<ExtractedField> csvFields, IExtractionResults context) {
+		// BUG Fix this, it's horrible code, the interfaces should be different or it should be irrelevant.
+		if (context instanceof IExtractionResultsContainer) {
+			createCsiFieldsFromContainer(csvFields, (IExtractionResultsContainer) context);
+		} else {
+			createCsiFieldsFromMapping(csvFields, (IExtractionResultsValues) context);
+		}
+	}
+
+	private ExtractedField createExtractedField(int[] prefix, int valueIndex, String fieldValue) {
+		int originalLen = prefix.length;
+		int[] fieldPos = new int[originalLen + 1];
+		System.arraycopy(prefix, 0, fieldPos, 0, originalLen);
+		fieldPos[originalLen] = valueIndex;
+		return new ExtractedField(fieldPos, fieldValue);
 	}
 
 	private List<ExtractedField> createExtractedFields(List<String> fieldValues) {
@@ -176,7 +165,7 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 		List<ExtractedField> fields = new ArrayList<ExtractedField>(fieldValues.size());
 		int index = 0;
 		for (String value : fieldValues) {
-			fields.add(createExtractedField(index, value));
+			fields.add(createExtractedField(null, index, value));
 			index++;
 		}
 		return fields;
@@ -196,20 +185,8 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 		return existingGroup.getCurrentIndex();
 	}
 
-	private String getNamePrefix(IExtractionResults context, int containerIterationCount) {
-		// TODO IMPLEMENT THIS PROPERLY.
-		return "TEMPORARY HACK";
-	}
-
-	private String getPrefix(IExtractionResultsValues context) {
-		StringBuilder sb = new StringBuilder();
-		IExtractionResults current = context.getParent();
-		while (current != null) {
-			sb.insert(0, '_');
-			sb.insert(0, current.getIndex());
-			current = current.getParent();
-		}
-		return sb.toString();
+	private int[] getPrefix(IExtractionResultsValues context) {
+		throw new UnsupportedOperationException("Not implemented yet, not sure what the structure will represent");
 	}
 
 	/**
@@ -231,7 +208,7 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 		if (!hasNext()) {
 			throw new NoSuchElementException();
 		}
-		List<ExtractedField> values = createCsvValues();
+		List<ExtractedField> values = createCsiRecord();
 		this.baseGroupState.increment();
 		return values;
 	}

@@ -38,10 +38,10 @@ public class OutputUtil {
 		}
 		try {
 			outputStream.close();
+			LOG.info("Successfully closed {} ({})", outputName, fileName);
 		} catch (IOException ioe) {
 			throw new OutputManagerException(ioe, "Unable to close output stream %s", fileName);
 		}
-		LOG.info("Successfully closed {} ({})", outputName, fileName);
 	}
 
 	public static void close(String outputName, String fileName, Writer writer) throws OutputManagerException {

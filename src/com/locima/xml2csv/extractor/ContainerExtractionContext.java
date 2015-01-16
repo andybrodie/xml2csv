@@ -31,25 +31,19 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	private List<List<IExtractionResults>> children;
 
 	/**
-	 * The index that this extraction context appears in relative to its siblings. Set on constructor and never changed. Used for generating field
-	 * name prefixes.
-	 */
-	private final int index;
-
-	/**
 	 * The mapping that this extraction context is representing the evaluation of.
 	 */
 	private IMappingContainer mapping;
 
-	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int index) {
-		super(parent);
+	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int positionRelativeToOtherRootNodes,
+					int positionRelativeToIMappingSiblings) {
+		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 		this.mapping = mapping;
 		this.children = new ArrayList<List<IExtractionResults>>();
-		this.index = index;
 	}
 
-	public ContainerExtractionContext(IMappingContainer mapping, int index) {
-		this(null, mapping, index);
+	public ContainerExtractionContext(IMappingContainer mapping, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
+		this(null, mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 	}
 
 	/**
@@ -65,30 +59,30 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	public void evaluate(XdmNode rootNode) throws DataExtractorException {
 		XPathValue mappingRoot = this.mapping.getMappingRoot();
 		// If there's no mapping root expression, use the passed node as a single root
-		int valueCount = 0;
+		int rootCount = 0;
 		if (mappingRoot != null) {
 			LOG.debug("Executing mappingRoot {} for {}", mappingRoot, this.mapping);
 			XPathSelector rootIterator = mappingRoot.evaluate(rootNode);
 			for (XdmItem item : rootIterator) {
 				if (item instanceof XdmNode) {
 					// All evaluations have to be done in terms of nodes, so if the XPath returns something like a value then warn and move on.
-					evaluateChildren((XdmNode) item);
+					evaluateChildren((XdmNode) item, rootCount);
 				} else {
 					LOG.warn("Expected to find only elements after executing XPath on mapping list, got {}", item.getClass().getName());
 				}
-				valueCount++;
+				rootCount++;
 			}
 		} else {
 			// If there is no root specified by the contextual context, then use "." , or current node passed as rootNode parameter.
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No mapping root specified for {}, so executing against passed context node", mappingRoot, this.mapping);
 			}
-			evaluateChildren(rootNode);
-			valueCount = 1;
+			evaluateChildren(rootNode, rootCount);
+			rootCount = 1;
 		}
 
 		// Keep track of the most number of results we've found for a single invocation of the mapping root.
-		this.mapping.setHighestFoundValueCount(valueCount);
+		this.mapping.setHighestFoundValueCount(rootCount);
 
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", this);
@@ -101,21 +95,24 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	 * Evaluates a nested mapping, appending the results to the output line passed.
 	 *
 	 * @param node the node from which all mappings will be based on.
+	 * @param positionRelativeToOtherRootNodes the position of this set of children relative to all the other roots found by this container's
+	 *            evaluation of the mapping root.
 	 * @param trimWhitespace if true, then leading and trailing whitespace will be removed from all data values.
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
-	private void evaluateChildren(XdmNode node) throws DataExtractorException {
+	private void evaluateChildren(XdmNode node, int positionRelativeToOtherRootNodes) throws DataExtractorException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Executing {} child mappings of {}", this.mapping.size(), this.mapping);
 		}
-		int i = 0;
+		int positionRelativeToIMappingSiblings = 0;
 		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>(size());
 		for (IMapping mapping : this.mapping) {
-			ExtractionContext childCtx = ExtractionContext.create(this, mapping, i);
+			ExtractionContext childCtx =
+							ExtractionContext.create(this, mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 			childCtx.evaluate(node);
 			iterationECs.add(childCtx);
-			i++;
+			positionRelativeToIMappingSiblings++;
 		}
 		this.children.add(iterationECs);
 	}
@@ -129,11 +126,6 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	public List<String> getEmptyFieldNames(int containerIterationCount) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public int getIndex() {
-		return this.index;
 	}
 
 	@Override
@@ -198,7 +190,9 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		StringBuilder sb = new StringBuilder("CEC(");
 		sb.append(this.mapping);
 		sb.append(", ");
-		sb.append(this.index);
+		sb.append(getPositionRelativeToIMappingSiblings());
+		sb.append(", ");
+		sb.append(getPositionRelativeToOtherRootNodes());
 		sb.append(")");
 		return sb.toString();
 	}

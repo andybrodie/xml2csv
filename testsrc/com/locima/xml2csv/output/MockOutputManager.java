@@ -12,10 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.ContainerExtractionContext;
-import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.StringUtil;
-import com.locima.xml2csv.util.StringUtil.IConverter;
 import com.locima.xml2csv.util.Tuple;
 
 public class MockOutputManager implements IOutputManager {
@@ -47,14 +44,14 @@ public class MockOutputManager implements IOutputManager {
 
 	private String[] toValuesOnlyArray(List<IExtractionResults> values) {
 		throw new UnsupportedOperationException("Need to make this a DIRECT mock as opposed to INLINE mock");
-//		if (values == null) {
-//			return new String[0];
-//		}
-//		String[] array = new String[values.size()];
-//		for (int i = 0; i < array.length; i++) {
-////			array[i] = values.get(i) == null ? "<NULL ENTRY>" : values.get(i).getFieldValue();
-//		}
-//		return array;
+		// if (values == null) {
+		// return new String[0];
+		// }
+		// String[] array = new String[values.size()];
+		// for (int i = 0; i < array.length; i++) {
+		// // array[i] = values.get(i) == null ? "<NULL ENTRY>" : values.get(i).getFieldValue();
+		// }
+		// return array;
 	}
 
 	@Override

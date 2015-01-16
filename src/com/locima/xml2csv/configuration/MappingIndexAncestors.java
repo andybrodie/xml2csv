@@ -19,7 +19,7 @@ public class MappingIndexAncestors extends Stack<Tuple<String, Integer>> {
 	 * Creates the parameters array for a {@link String#format(String, Object...)} call with a {@link NameFormat} instance based on the mapping name
 	 * and iteration index passed. The first and second values in the array will be the parameters passed, the rest are made up of the current
 	 * ancestry stack.
-	 * 
+	 *
 	 * @param thisMappingName the name of the mapping to make the first parameter.
 	 * @param thisMappingIteration the index of the mapping to make the second parameter.
 	 * @return

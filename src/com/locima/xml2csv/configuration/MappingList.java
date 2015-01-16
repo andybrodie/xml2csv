@@ -124,7 +124,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public IMappingContainer getParent() {
-		return this.parent;
+		throw new UnsupportedOperationException();
+//		return this.parent;
 	}
 
 	/**
@@ -135,7 +136,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-										|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
+						|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
 
 		if (isFixed) {
 			for (IMapping mapping : this) {

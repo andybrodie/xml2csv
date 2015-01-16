@@ -92,7 +92,7 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-										|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
+						|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
 		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
 	}

@@ -45,7 +45,7 @@ public class NameFormat {
 
 	public static final NameFormat WITH_PARENT_COUNT = new NameFormat("%1$s_%4$d");
 
-	/**
+/**
 	 * Parse the predefined format name or bespoke format specification in to an {@link NameFormat} instance.
 	 *
 	 * @param predefinedFormatName the name of a specific style.

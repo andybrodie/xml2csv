@@ -74,7 +74,8 @@ public class Program {
 	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean appendOutput) throws ProgramException {
+	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean appendOutput, boolean trimWhitespace)
+					throws ProgramException {
 
 		LOG.info("Parsing all the input configuration files to create mapping definitions.");
 		IConfigParser configParser = new XmlFileParser();
@@ -121,7 +122,7 @@ public class Program {
 	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean appendOutput)
+	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean appendOutput, boolean trimWhitespace)
 					throws ProgramException {
 		File xmlInputDirectory;
 		try {
@@ -143,7 +144,7 @@ public class Program {
 			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
 		}
 		List<File> xmlInputFiles = FileUtility.getFiles(xmlInputDirectory, false);
-		execute(configFiles, xmlInputFiles, outputDirectory, appendOutput);
+		execute(configFiles, xmlInputFiles, outputDirectory, appendOutput, trimWhitespace);
 	}
 
 	/**
@@ -166,11 +167,12 @@ public class Program {
 				formatter.printHelp(new PrintWriter(System.out, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
 			}
 			LOG.trace("Arguments verified.");
-			String trimWhitespaceValue = cmdLine.getOptionValue(OPT_TRIM_WHITESPACE);
-			boolean trimWhitespace = Boolean.parseBoolean(trimWhitespaceValue);
-			String appendOutputValue = cmdLine.getOptionValue(OPT_APPEND_OUTPUT);
-			boolean appendOutput = Boolean.parseBoolean(appendOutputValue);
-			execute(cmdLine.getOptionValue(OPT_CONFIG_FILE), cmdLine.getOptionValue(OPT_XML_DIR), cmdLine.getOptionValue(OPT_OUT_DIR), appendOutput);
+			boolean trimWhitespace = Boolean.parseBoolean(cmdLine.getOptionValue(OPT_TRIM_WHITESPACE));
+			boolean appendOutput = Boolean.parseBoolean(cmdLine.getOptionValue(OPT_APPEND_OUTPUT));
+			String xmlDirName = cmdLine.getOptionValue(OPT_XML_DIR);
+			String outputDirName = cmdLine.getOptionValue(OPT_OUT_DIR);
+			String configFileName = cmdLine.getOptionValue(OPT_CONFIG_FILE);
+			execute(configFileName, xmlDirName, outputDirName, appendOutput, trimWhitespace);
 			System.out.println("Completed succesfully.");
 		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program

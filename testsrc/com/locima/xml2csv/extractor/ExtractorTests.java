@@ -8,8 +8,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
@@ -21,8 +19,6 @@ import com.locima.xml2csv.output.OutputManagerException;
 import com.locima.xml2csv.util.XmlUtil;
 
 public class ExtractorTests {
-
-	private static final Logger LOG = LoggerFactory.getLogger(ExtractorTests.class);
 
 	@Test
 	public void testInstanceCounts() throws Exception {

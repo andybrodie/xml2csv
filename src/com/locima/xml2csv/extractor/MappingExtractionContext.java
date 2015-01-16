@@ -35,13 +35,10 @@ public class MappingExtractionContext extends ExtractionContext implements IExtr
 	 */
 	private List<String> results;
 
-	public MappingExtractionContext(ContainerExtractionContext parent, IValueMapping mapping) {
-		super(parent);
+	public MappingExtractionContext(ContainerExtractionContext parent, IValueMapping mapping, int positionRelativeToOtherRootNodes,
+					int positionRelativeToIMappingSiblings) {
+		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 		this.mapping = mapping;
-	}
-
-	public MappingExtractionContext(IValueMapping mapping) {
-		this(null, mapping);
 	}
 
 	/**
@@ -116,11 +113,6 @@ public class MappingExtractionContext extends ExtractionContext implements IExtr
 			fields.add(getValueAt(i));
 		}
 		return fields;
-	}
-
-	@Override
-	public int getIndex() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

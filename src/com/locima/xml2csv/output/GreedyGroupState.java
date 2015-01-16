@@ -1,6 +1,5 @@
 package com.locima.xml2csv.output;
 
-
 /**
  * Specialisation of {@link GroupState} used specifically for greedy mappings.
  * <p>

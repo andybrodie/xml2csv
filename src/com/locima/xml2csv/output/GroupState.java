@@ -183,7 +183,7 @@ public class GroupState {
 	private void addContext(IExtractionResults record) {
 		this.records.add(record);
 		this.groupSize = Math.max(this.groupSize, record.size());
-			}
+	}
 
 	public GroupState findByGroup(int searchGroup) {
 		return GroupState.searchByGroup(this, searchGroup);
@@ -296,7 +296,6 @@ public class GroupState {
 		return exhausted;
 	}
 
-	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("GroupState(GN=");

@@ -17,7 +17,6 @@ import com.locima.xml2csv.output.OutputUtil;
 import com.locima.xml2csv.output.inline.InlineCsvWriter;
 import com.locima.xml2csv.util.FileUtility;
 import com.locima.xml2csv.util.StringUtil;
-import com.locima.xml2csv.util.StringUtil.IConverter;
 
 /**
  * Manages the output of a single CSV file where the results of conversion from XML when the mapping configuration prohibits a variable number of
@@ -28,7 +27,6 @@ import com.locima.xml2csv.util.StringUtil.IConverter;
  * {@link InlineCsvWriter} instead.
  */
 public class DirectCsvWriter implements ICsvWriter {
-
 
 	private static final Logger LOG = LoggerFactory.getLogger(DirectCsvWriter.class);
 
