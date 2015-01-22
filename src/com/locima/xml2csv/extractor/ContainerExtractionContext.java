@@ -1,5 +1,8 @@
 package com.locima.xml2csv.extractor;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,11 +13,13 @@ import net.sf.saxon.s9api.XdmNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
+import com.locima.xml2csv.output.inline.CsiInputStream;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
@@ -25,6 +30,11 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	private static final Logger LOG = LoggerFactory.getLogger(ContainerExtractionContext.class);
 
 	/**
+	 *
+	 */
+	private static final long serialVersionUID = 5172797192290344019L;
+
+	/**
 	 * A list of all the child contexts (also a list) found as a result of evaluating the {@link ContainerExtractionContext#mapping}'s
 	 * {@link IMappingContainer#getMappingRoot()} query.
 	 */
@@ -33,8 +43,19 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	/**
 	 * The mapping that this extraction context is representing the evaluation of.
 	 */
-	private IMappingContainer mapping;
+	private transient IMappingContainer mapping;
 
+	/**
+	 * Default no-arg constructor required for serialization.
+	 */
+	public ContainerExtractionContext() {
+	}
+
+	/**
+	 * Used to construct a root instance with no parent.
+	 *
+	 * @param mapping the mapping configuration that this context is responsible for evaluating.
+	 */
 	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
@@ -42,6 +63,11 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		this.children = new ArrayList<List<IExtractionResults>>();
 	}
 
+	/**
+	 * Used to construct a root instance with no parent.
+	 *
+	 * @param mapping the mapping configuration that this context is responsible for evaluating.
+	 */
 	public ContainerExtractionContext(IMappingContainer mapping, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
 		this(null, mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 	}
@@ -178,6 +204,38 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	}
 
 	/**
+	 * Overridden to manage not writing {@link #mapping} to the output stream.
+	 *
+	 * @param stream target stream for serialized state.
+	 * @throws IOException if any issues occur during writing.
+	 */
+	@SuppressWarnings("unchecked")
+	private void readObject(ObjectInputStream rawInputStream) throws IOException, ClassNotFoundException {
+		if (!(rawInputStream instanceof CsiInputStream)) {
+			throw new BugException("Bug found when deserializing MEC.  I've been given an ObjectInputStream instead of a CsiInputStream!");
+		}
+		CsiInputStream stream = (CsiInputStream) rawInputStream;
+		Object readObject = stream.readObject();
+		try {
+			this.children = (List<List<IExtractionResults>>) readObject;
+		} catch (ClassCastException cce) {
+			throw new IOException("Unexpected object type found in stream.  Expected List<List<IExtractionResults>> but got "
+							+ readObject.getClass().getName());
+		}
+		readObject = stream.readObject();
+		String mappingName;
+		try {
+			mappingName = (String) readObject;
+		} catch (ClassCastException cce) {
+			throw new IOException("Unexpected object type found in stream.  Expected String but got " + readObject.getClass().getName());
+		}
+		this.mapping = stream.getMappingContainer(mappingName);
+		if (this.mapping==null) {
+			throw new IOException("Unable to restore link to IMappingContainer " + mappingName + " as it was not found");
+		}
+	}
+
+	/**
 	 * Returns the number of mapping roots found for this object to evaluate against.
 	 */
 	@Override
@@ -196,4 +254,21 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		sb.append(")");
 		return sb.toString();
 	}
+
+	/**
+	 * Overridden to manage not writing {@link #mapping} to the output stream.
+	 *
+	 * @param stream target stream for serialized state.
+	 * @throws IOException if any issues occur during writing.
+	 */
+	private void writeObject(ObjectOutputStream stream) throws IOException {
+		String mappingName = getMapping().getContainerName();
+		int size = this.children.size();
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Writing {} results to the CSI file for {}", size, mappingName);
+		}
+		stream.writeObject(this.children);
+		stream.writeObject(mappingName);
+	}
+
 }

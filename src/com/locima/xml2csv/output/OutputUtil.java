@@ -23,19 +23,20 @@ import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.Tuple;
 
+/**
+ * Utility methods required by both the direct and inline CSV writers.
+ */
 public class OutputUtil {
 
+	/**
+	 * The character encoding that will be used for all files.
+	 */
 	private static final String ENCODING = "UTF-8";
 
 	private static final Logger LOG = LoggerFactory.getLogger(OutputUtil.class);
 
 	public static void close(String outputName, String fileName, OutputStream outputStream) throws OutputManagerException {
-		LOG.info("Flushing and closing {} ({})", outputName, fileName);
-		try {
-			outputStream.flush();
-		} catch (IOException ioe) {
-			throw new OutputManagerException(ioe, "Unable to flush output stream %s", fileName);
-		}
+		LOG.info("Closing {} ({})", outputName, fileName);
 		try {
 			outputStream.close();
 			LOG.info("Successfully closed {} ({})", outputName, fileName);
@@ -45,12 +46,7 @@ public class OutputUtil {
 	}
 
 	public static void close(String outputName, String fileName, Writer writer) throws OutputManagerException {
-		LOG.info("Flushing and closing writer for {} ({})", outputName, fileName);
-		try {
-			writer.flush();
-		} catch (IOException ioe) {
-			throw new OutputManagerException(ioe, "Unable to flush output writer %s", fileName);
-		}
+		LOG.info("Closing writer for {} ({})", outputName, fileName);
 		try {
 			writer.close();
 		} catch (IOException ioe) {
@@ -113,28 +109,30 @@ public class OutputUtil {
 	 * @return the number of columns added by this invocation.
 	 */
 	private static int getFieldNames(List<String> fieldNames, MappingIndexAncestors parentContext, IMappingContainer container) {
-		int columnCount = 0;
 		/*
 		 * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
 		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
 		 */
-		int repeats =
-						(parentContext.isEmpty() || (container.getMultiValueBehaviour() == MultiValueBehaviour.LAZY)) ? 1
-										: container.getMaxValueCount();
+		int repeats = (container.getMultiValueBehaviour() == MultiValueBehaviour.LAZY) ? 1 : container.getFieldCountForSingleRecord();
 
+		LOG.info("Need {} repeats for container {}", repeats, container);
 		String name = container.getContainerName();
+		int fieldCount = 0;
 		for (int containerIteration = 0; containerIteration < repeats; containerIteration++) {
 			parentContext.push(name, containerIteration);
 			for (IMapping mapping : container) {
+				int extraFieldCount;
 				if (mapping instanceof IMappingContainer) {
-					columnCount += getFieldNames(fieldNames, parentContext, (IMappingContainer) mapping);
+					extraFieldCount = getFieldNames(fieldNames, parentContext, (IMappingContainer) mapping);
 				} else {
-					columnCount += getFieldNames(fieldNames, parentContext, (IValueMapping) mapping);
+					extraFieldCount = getFieldNames(fieldNames, parentContext, (IValueMapping) mapping);
 				}
+				fieldCount += extraFieldCount;
+				LOG.info("Added {} fields to fieldCount making a total of {} fields", extraFieldCount, fieldCount);
 			}
 			parentContext.pop();
 		}
-		return columnCount;
+		return fieldCount;
 	}
 
 	private static int getFieldNames(List<String> fieldNames, MappingIndexAncestors parentContext, IValueMapping mapping) {
@@ -179,6 +177,9 @@ public class OutputUtil {
 		}
 	}
 
+	/**
+	 * Prevents instaniation.
+	 */
 	private OutputUtil() {
 	}
 

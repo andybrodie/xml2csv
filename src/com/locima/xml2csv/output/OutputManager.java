@@ -52,7 +52,7 @@ public class OutputManager implements IOutputManager {
 	public void close() throws OutputManagerException {
 		LOG.info("Closing {} ICsvWriters", this.outputToWriter.size());
 		for (Entry<String, ICsvWriter> entry : this.outputToWriter.entrySet()) {
-			LOG.info("Closing {} {} ({})", entry.getKey().getClass().getName(), entry.getKey(), entry.getValue());
+			LOG.info("Closing {} ({})", entry.getKey(), entry.getValue());
 			entry.getValue().close();
 		}
 	}

@@ -53,22 +53,22 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 		this.rootContainer = rootContainer;
 		this.baseGroupState = GroupState.createGroupStateList(rootContainer);
 	}
-
+	
 	private void addEmptyCsvFields(List<String> csvFields, IExtractionResultsContainer context, int containerIterationCount) {
-		IMapping container = context.getMapping();
-		addEmptyCsvFields(csvFields, container);
+		IMappingContainer config = context.getMapping();
+		addEmptyCsvFields(csvFields, config, context.size());
 	}
 
-	private void addEmptyCsvFields(List<String> csvFields, IMapping mapping) {
+	private void addEmptyCsvFields(List<String> csvFields, IMapping mapping, int existingResultsCount) {
 		if (mapping instanceof IMappingContainer) {
-			int iterationsRequired = mapping.getFieldCountForSingleRecord() - mapping.getHighestFoundValueCount();
+			int iterationsRequired = mapping.getFieldCountForSingleRecord() - existingResultsCount;
 			for (int i = 0; i < iterationsRequired; i++) {
 				IMappingContainer container = (IMappingContainer) mapping;
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Adding {} iterations of {} blank fields for container {}", iterationsRequired, container.size(), mapping);
 				}
 				for (IMapping childMapping : container) {
-					addEmptyCsvFields(csvFields, childMapping);
+					addEmptyCsvFields(csvFields, childMapping,0);
 				}
 			}
 		} else {

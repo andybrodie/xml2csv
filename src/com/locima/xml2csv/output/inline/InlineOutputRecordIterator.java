@@ -98,7 +98,6 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 	 * @param context the context to extract the values from.
 	 */
 	private void createCsiFieldsFromMapping(List<ExtractedField> csvFields, IExtractionResultsValues context) {
-		int[] fieldPositionPrefix = getPrefix(context);
 		switch (context.getMultiValueBehaviour()) {
 			case GREEDY:
 				/* Greedy mappings output as much as they can */
@@ -113,7 +112,7 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 				/* The most typical option: just process the next value and move on */
 				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
 				String fieldValue = context.getValueAt(valueIndex);
-				ExtractedField field = createExtractedField(fieldPositionPrefix, valueIndex, fieldValue);
+				ExtractedField field = createExtractedField(null, valueIndex, fieldValue);
 				LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, field, context);
 				csvFields.add(field);
 				break;
@@ -183,10 +182,6 @@ public class InlineOutputRecordIterator implements Iterator<List<ExtractedField>
 			throw new BugException("Tried to get index for non-existant group %d", group);
 		}
 		return existingGroup.getCurrentIndex();
-	}
-
-	private int[] getPrefix(IExtractionResultsValues context) {
-		throw new UnsupportedOperationException("Not implemented yet, not sure what the structure will represent");
 	}
 
 	/**

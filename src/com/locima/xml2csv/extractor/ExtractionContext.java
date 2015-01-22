@@ -1,5 +1,7 @@
 package com.locima.xml2csv.extractor;
 
+import java.io.Serializable;
+
 import net.sf.saxon.s9api.XdmNode;
 
 import com.locima.xml2csv.ArgumentNullException;
@@ -27,7 +29,12 @@ import com.locima.xml2csv.output.direct.DirectOutputRecordIterator;
  * How these tree-structured sets of values are then flattened in to a CSV file is performed in {@link DirectOutputRecordIterator} and dependent on
  * the configuration of the {@link IMapping} instance, specifically the {@link IMapping#getMultiValueBehaviour()} value.
  */
-public abstract class ExtractionContext implements IExtractionResults {
+public abstract class ExtractionContext implements IExtractionResults, Serializable {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Factory method to create the right type of {@link ExtractionContext} (either {@link MappingExtractionContext} or
@@ -70,11 +77,22 @@ public abstract class ExtractionContext implements IExtractionResults {
 	private ContainerExtractionContext parent;
 
 	/**
-	 * The position of this extraction context with respect to its parent.
+	 * The position of this extraction context with respect to its sibling {@link IMapping} instances beneath the parent.
 	 * <p>
 	 */
-	private final int positionRelativeToIMappingSiblings;
-	private final int positionRelativeToOtherRootNodes;
+	private int positionRelativeToIMappingSiblings;
+
+	/**
+	 * The position of this extraction context with respect to the other root nodes found when evaluating the parent
+	 * {@link IMappingContainer#getMappingRoot()} values.
+	 */
+	private int positionRelativeToOtherRootNodes;
+
+	/**
+	 * Default no-arg constructor required for serialization.
+	 */
+	public ExtractionContext() {
+	}
 
 	protected ExtractionContext(ContainerExtractionContext parent, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
 		this.parent = parent;

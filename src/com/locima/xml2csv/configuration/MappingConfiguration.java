@@ -137,6 +137,20 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		}
 		return null;
 	}
+	
+	public IMapping findMappingByName(String mappingName) {
+		for (IMappingContainer container : this.mappings) {
+			if (container.getContainerName().equals(mappingName)) {
+				return container;
+			}
+			IMapping mapping = container.findMapping(mappingName);
+			if (mapping!=null) {
+				return mapping;
+			}
+		}
+		return null;
+	}
+
 
 	public MultiValueBehaviour getDefaultMultiValueBehaviour() {
 		return this.defaultMultiValueBehaviour;
@@ -238,4 +252,5 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	public int size() {
 		return this.mappings.size();
 	}
+
 }

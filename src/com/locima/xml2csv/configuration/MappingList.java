@@ -20,11 +20,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
 
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = -5914600946119131908L;
-
 	private String containerName;
 
 	private int groupNumber;
@@ -61,6 +56,30 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 */
 	public MappingList(Map<String, String> namespaceMap) {
 		this.namespaceMappings = namespaceMap;
+	}
+
+	@Override
+	public IMapping findMapping(String mappingName) {
+		for (IMapping child : this) {
+			if (child instanceof IValueMapping) {
+				IValueMapping childMapping = (IValueMapping) child;
+				if (child.equals(mappingName)) {
+					return child;
+				}
+			} else {
+				if (child instanceof IMappingContainer) {
+					IMappingContainer childContainer = (IMappingContainer) child;
+					if (childContainer.getContainerName().equals(mappingName)) {
+						return child;
+					}
+					IMapping mapping = childContainer.findMapping(mappingName);
+					if (mapping != null) {
+						return mapping;
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -125,7 +144,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	@Override
 	public IMappingContainer getParent() {
 		throw new UnsupportedOperationException();
-//		return this.parent;
+		// return this.parent;
 	}
 
 	/**
@@ -213,6 +232,8 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		sb.append(this.minValueCount);
 		sb.append(", ");
 		sb.append(this.maxValueCount);
+		sb.append(", ");
+		sb.append(this.highestFoundValueCount);
 		sb.append(")[");
 		Iterator<IMapping> mappings = iterator();
 		while (mappings.hasNext()) {

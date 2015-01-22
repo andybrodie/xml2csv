@@ -46,16 +46,8 @@ public class DirectCsvWriter implements ICsvWriter {
 
 	@Override
 	public void close() {
-		LOG.info("Flushing and closing writer for {} writer in {}", this.outputName, this.outputFile.getAbsolutePath());
+		LOG.info("Closing writer for {} writer in {}", this.outputName, this.outputFile.getAbsolutePath());
 		try {
-			LOG.debug("Flushing data for writer {} ({})", this.outputName, this.outputFile.getAbsolutePath());
-			this.writer.flush();
-		} catch (IOException ioe) {
-			// No point throwing the error up as there's no useful action to be taken at this point
-			LOG.error("Error flushing data to writer", ioe);
-		}
-		try {
-			LOG.info("Closing writer {} ({})", this.outputName, this.outputFile.getAbsolutePath());
 			this.writer.close();
 		} catch (IOException ioe) {
 			// No point throwing the error up as there's no useful action to be taken at this point

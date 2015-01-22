@@ -25,4 +25,6 @@ public interface IMappingContainer extends IMapping, List<IMapping> {
 	@Override
 	int size();
 
+	IMapping findMapping(String mappingName);
+
 }

@@ -12,9 +12,9 @@
 
 			<!-- Include the properties of the family members -->
 			<!-- Name comes from the child element "name" under person -->
-			<m:Mapping name="Name" xPath="name" behaviour="Lazy" />
+			<m:Mapping name="Name" xPath="name" behaviour="Lazy" nameFormat="WithParentCount" />
 			<!-- Age comes from the age attribute of the mappingRoot -->
-			<m:Mapping name="Age" xPath="@age" behaviour="Lazy" />
+			<m:Mapping name="Age" xPath="@age" behaviour="Lazy" nameFormat="WithParentCount" />
 		</m:MappingList>
 
 		<m:Mapping name="Address" xPath="address" />

@@ -129,6 +129,8 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		sb.append(this.minValueCount);
 		sb.append(", ");
 		sb.append(this.maxValueCount);
+		sb.append(", ");
+		sb.append(this.getHighestFoundValueCount());
 		sb.append(')');
 		return sb.toString();
 	}
