@@ -28,7 +28,7 @@ public class MappingIndexAncestors extends Stack<Tuple<String, Integer>> {
 		Object[] args = new Object[(size() * 2) + 2];
 		int size = size();
 		args[0] = thisMappingName;
-		args[1] = thisMappingIteration;
+		args[1] = thisMappingIteration + 1;
 		for (int i = 0; i < size; i++) {
 			args[(i * 2) + 2] = get(size - 1 - i).getFirst();
 			args[(i * 2) + 3] = get(size - 1 - i).getSecond() + 1;
