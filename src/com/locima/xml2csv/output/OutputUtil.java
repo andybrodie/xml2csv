@@ -113,9 +113,8 @@ public class OutputUtil {
 		 * If this is a non-nested MappingList, i.e. a direct child of MappingConfiguration then the instance count refers to the number of records
 		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
 		 */
-		int repeats = (container.getMultiValueBehaviour() == MultiValueBehaviour.LAZY) ? 1 : container.getFieldCountForSingleRecord();
-
-		LOG.info("Need {} repeats for container {}", repeats, container);
+		int repeats = container.getFieldCountForSingleRecord();
+		LOG.info("Generating field names for {} ({} repeats)", container, repeats);
 		String name = container.getContainerName();
 		int fieldCount = 0;
 		for (int containerIteration = 0; containerIteration < repeats; containerIteration++) {
@@ -128,7 +127,7 @@ public class OutputUtil {
 					extraFieldCount = getFieldNames(fieldNames, parentContext, (IValueMapping) mapping);
 				}
 				fieldCount += extraFieldCount;
-				LOG.info("Added {} fields to fieldCount making a total of {} fields", extraFieldCount, fieldCount);
+				LOG.debug("Added {} fields to fieldCount making a total of {} fields", extraFieldCount, fieldCount);
 			}
 			parentContext.pop();
 		}
@@ -141,7 +140,8 @@ public class OutputUtil {
 		 * and this.maxValueCount. Don't need to consider maxValueCount here though as evaluation is halted once we have enough values to meet
 		 * maxValueCount.
 		 */
-		int repeats = Math.max(mapping.getMinValueCount(), 1);
+		int repeats = mapping.getFieldCountForSingleRecord();
+		LOG.info("Generating field names for {} ({} repeats)", mapping, repeats);
 		int fieldCount;
 		switch (mapping.getMultiValueBehaviour()) {
 			case LAZY:
@@ -156,6 +156,7 @@ public class OutputUtil {
 			default:
 				throw new IllegalStateException("Unexpected MultiValueBehaviour: " + mapping.getMultiValueBehaviour());
 		}
+		LOG.debug("Added {} fields to fieldCount", fieldCount);
 		return fieldCount;
 	}
 

@@ -175,7 +175,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	@Override
 	public void setHighestFoundValueCount(int valueCount) {
-		this.highestFoundValueCount = valueCount;
+		this.highestFoundValueCount = Math.max(valueCount, this.highestFoundValueCount);
 	}
 
 	/**

@@ -171,6 +171,15 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 					LOG.debug("Greedily adding all fields {} to as output of {}", StringUtil.collectionToString(fields, ", ", null), context);
 				}
 				csvFields.addAll(fields);
+				
+				// Add extra null fields required for alignment with other records
+				int fieldsRequired = context.getMapping().getHighestFoundValueCount();
+				int extraFieldsRequired = fieldsRequired - fields.size();
+				LOG.debug("Adding {} extra fields to pad out to {}", extraFieldsRequired, fieldsRequired);
+				for (int i=0; i<extraFieldsRequired; i++) {
+					csvFields.add(null);
+				}
+
 				break;
 			case LAZY:
 				/* The most typical option: just process the next value and move on */
@@ -184,7 +193,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 								+ "Mapping.getMultiValueBehaviour().");
 			default:
 				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().",
-								context.getMapping().getMultiValueBehaviour());
+								context.getMultiValueBehaviour());
 		}
 	}
 

@@ -29,10 +29,7 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 
 	private static final Logger LOG = LoggerFactory.getLogger(ContainerExtractionContext.class);
 
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = 5172797192290344019L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * A list of all the child contexts (also a list) found as a result of evaluating the {@link ContainerExtractionContext#mapping}'s
@@ -108,13 +105,7 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		}
 
 		// Keep track of the most number of results we've found for a single invocation of the mapping root.
-		this.mapping.setHighestFoundValueCount(rootCount);
-
-		if (LOG.isTraceEnabled()) {
-			LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", this);
-			logResults(this, 0, 0);
-			LOG.trace("END RESULTS OUTPUT");
-		}
+		this.getMapping().setHighestFoundValueCount(rootCount);
 	}
 
 	/**
@@ -150,8 +141,7 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 
 	@Override
 	public List<String> getEmptyFieldNames(int containerIterationCount) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -176,7 +166,7 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	/**
 	 * Debugging method to log all the results when an {@link #evaluate(XdmNode)} call has completed.
 	 */
-	public void logResults(IExtractionResults ctx, int offset, int indentCount) {
+	public static void logResults(IExtractionResults ctx, int offset, int indentCount) {
 		StringBuilder indentSb = new StringBuilder();
 		for (int i = 0; i < indentCount; i++) {
 			indentSb.append("  ");
@@ -184,7 +174,7 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		String indent = indentSb.toString();
 		if (ctx instanceof ContainerExtractionContext) {
 			if (LOG.isTraceEnabled()) {
-				LOG.trace("{}{}:{}", indent, offset, this);
+				LOG.trace("{}{}:{}", indent, offset, ctx);
 			}
 			int childResultsSetCount = 0;
 			int childCount = 0;

@@ -119,20 +119,20 @@ public class MappingExtractionContext extends ExtractionContext implements IExtr
 	}
 
 	/**
-	 * Gets all the values found by this evaluation of the mapping (i.e. against a single root node). This takes in to account the number of fields
-	 * required to be output as opposed to just the number found (see {@link IMapping#getFieldCountForSingleRecord()}).
+	 * Gets all the values found by this evaluation of the mapping (i.e. against a single root node). 
 	 *
 	 * @param namePrefix the prefix to be applied to each field name.
 	 * @return an ordered list of values extracted from this mapping.
 	 */
 	@Override
 	public List<String> getAllValues() {
-		int valueCountRequired = this.getMapping().getFieldCountForSingleRecord();
-		List<String> fields = new ArrayList<String>(valueCountRequired);
-		for (int i = 0; i < valueCountRequired; i++) {
-			fields.add(getValueAt(i));
-		}
-		return fields;
+//		int valueCountRequired = this.getMapping().getFieldCountForSingleRecord();
+//		List<String> fields = new ArrayList<String>(valueCountRequired);
+//		for (int i = 0; i < valueCountRequired; i++) {
+//			fields.add(getValueAt(i));
+//		}
+//		return fields;
+		return results;
 	}
 
 	@Override

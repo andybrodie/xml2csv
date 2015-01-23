@@ -66,6 +66,13 @@ public class XmlDataExtractor {
 		for (IMappingContainer mapping : this.mappingConfiguration) {
 			ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
 			ctx.evaluate(xmlDoc);
+			
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", this);
+				ContainerExtractionContext.logResults(ctx, 0, 0);
+				LOG.trace("END RESULTS OUTPUT");
+			}
+			
 			outputManager.writeRecords(mapping.getContainerName(), ctx);
 			mappingSiblingIndex++;
 		}
