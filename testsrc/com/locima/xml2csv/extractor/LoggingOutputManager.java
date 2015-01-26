@@ -42,7 +42,7 @@ public class LoggingOutputManager implements IOutputManager {
 
 	@Override
 	public void writeRecords(String outputName, IExtractionResultsContainer extractionResults) throws OutputManagerException {
-		((ContainerExtractionContext) extractionResults).logResults(extractionResults, 0, 0);
+		ContainerExtractionContext.logResults(extractionResults, 0, 0);
 	}
 
 }

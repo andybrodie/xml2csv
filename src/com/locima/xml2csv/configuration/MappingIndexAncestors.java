@@ -2,7 +2,6 @@ package com.locima.xml2csv.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 import com.locima.xml2csv.util.Tuple;
 
@@ -48,6 +47,15 @@ public class MappingIndexAncestors {
 	}
 
 	/**
+	 * Pop (remove) the most recently added ancestor.
+	 * <p>
+	 * Does not return a value as in practice it's never used by the caller.
+	 */
+	public void pop() {
+		this.queue.remove(0);
+	}
+
+	/**
 	 * Convenience method to push a new {@link Tuple} to the top of the stack.
 	 *
 	 * @param mappingName the name of the mapping, which forms the {@link Tuple#getFirst()} value.
@@ -55,9 +63,5 @@ public class MappingIndexAncestors {
 	 */
 	public void push(String mappingName, int iterationNumber) {
 		this.queue.add(0, new Tuple<String, Integer>(mappingName, iterationNumber));
-	}
-
-	public void pop() {
-		this.queue.remove(0);
 	}
 }

@@ -70,15 +70,6 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	}
 
 	@Override
-	public int getFieldCountForSingleRecord() {
-		if (getMultiValueBehaviour() == MultiValueBehaviour.LAZY) {
-			return Math.max(getMinValueCount(), 1);
-		} else {
-			return Math.max(getMinValueCount(), getHighestFoundValueCount());
-		}
-	}
-
-	@Override
 	public int getMaxValueCount() {
 		return this.maxValueCount;
 	}

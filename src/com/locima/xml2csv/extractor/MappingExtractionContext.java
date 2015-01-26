@@ -75,7 +75,9 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
+	//CHECKSTYLE:OFF Cyclomatic complexity limit up to 11, would be less but I need logging here and splitting would make more complex.
 	@Override
+	//CHECKSTYLE:ON 
 	public void evaluate(XdmNode mappingRoot) throws DataExtractorException {
 		if (mappingRoot == null) {
 			throw new ArgumentNullException("mappingRoot");
@@ -95,6 +97,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 		XPathSelector selector = xPath.evaluate(mappingRoot);
 		Iterator<XdmItem> resultIter = selector.iterator();
 		while (resultIter.hasNext()) {
+			// Add the next result to the list of values found, trimming whitespace if configured to do so.
 			String value = resultIter.next().getStringValue();
 			if ((value != null) && thisMapping.requiresTrimWhitespace()) {
 				value = value.trim();
@@ -106,10 +109,11 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 								xPath.getSource(), maxValueCount);
 			}
 
+			// If maxValueCount applies, then break out of the while loop once we've found the most number of values permitted.
 			if ((maxValueCount > 0) && ((values.size()) == maxValueCount)) {
-				if (LOG.isWarnEnabled()) {
+				if (LOG.isInfoEnabled()) {
 					if (resultIter.hasNext()) {
-						LOG.warn("Discarded at least 1 value from mapping {} as maxValueCount reached limit of {}", this, maxValueCount);
+						LOG.info("Discarded at least 1 value from mapping {} as maxValueCount reached limit of {}", this, maxValueCount);
 					}
 				}
 				break;

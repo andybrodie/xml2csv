@@ -214,7 +214,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	@SuppressWarnings("unchecked")
 	private void readObject(ObjectInputStream rawInputStream) throws IOException, ClassNotFoundException {
 		if (!(rawInputStream instanceof CsiInputStream)) {
-			throw new BugException("Bug found when deserializing MEC.  I've been given an ObjectInputStream instead of a CsiInputStream!");
+			throw new BugException("Bug found when deserializing CEC.  I've been given an ObjectInputStream instead of a CsiInputStream!");
 		}
 		CsiInputStream stream = (CsiInputStream) rawInputStream;
 		Object readObject = stream.readObject();

@@ -118,4 +118,10 @@ public abstract class AbstractMapping implements IMapping {
 	@Override
 	public abstract String toString();
 
+	@Override
+	public int getFieldCountForSingleRecord() {
+		return getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
+	}
+
+
 }
