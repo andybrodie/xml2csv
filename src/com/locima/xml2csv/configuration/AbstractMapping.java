@@ -59,7 +59,9 @@ public abstract class AbstractMapping implements IMapping {
 			return true;
 		}
 		if (obj instanceof AbstractMapping) {
+			//CHECKSTYLE:OFF Can't think of another way to provide a base class implementation of equals
 			AbstractMapping that = (AbstractMapping) obj;
+			//CHECKSTYLE:ON 
 			return EqualsUtil.areEqual(this.nameFormat, that.nameFormat) && EqualsUtil.areEqual(this.groupNumber, that.groupNumber)
 							&& EqualsUtil.areEqual(this.multiValueBehaviour, that.multiValueBehaviour)
 							&& EqualsUtil.areEqual(this.valueXPath, that.valueXPath);

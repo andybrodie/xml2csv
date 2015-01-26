@@ -85,7 +85,7 @@ public class ExtractionContextTests {
 	 * @param actual the {@link ContainerExtractionContext} to search.
 	 */
 	private void assertMappingValues(String expectedValue, int[] expectedIndex, ContainerExtractionContext actual) {
-		AbstractExtractionContext current = actual;
+		IExtractionContext current = actual;
 
 		int i = 0;
 		int len = expectedIndex.length;
@@ -108,7 +108,7 @@ public class ExtractionContextTests {
 					Assert.fail(String.format("expectedIndex[%d]=%d but current CEC root result (%d) only has %d extraction contexts: %s.", i + 1,
 									expectedIndex[i + 1], i, list.size(), cec));
 				}
-				current = (AbstractExtractionContext) list.get(expectedIndex[i + 1]);
+				current = (IExtractionContext) list.get(expectedIndex[i + 1]);
 			}
 			i += 2;
 		}

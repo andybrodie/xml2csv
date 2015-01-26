@@ -171,7 +171,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 		int positionRelativeToIMappingSiblings = 0;
 		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>(size());
 		for (IMapping childMapping : this.mapping) {
-			AbstractExtractionContext childCtx =
+			IExtractionContext childCtx =
 							AbstractExtractionContext.create(this, childMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 			childCtx.evaluate(node);
 			iterationECs.add(childCtx);
