@@ -1,33 +1,39 @@
 package com.locima.xml2csv.output;
 
-import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
-import com.locima.xml2csv.output.inline.ExtractedField;
 
+/**
+ * Interface for objects that contain the results of extracting data from XML documents.
+ */
 public interface IExtractionResults {
 
+	/**
+	 * The group number of this mapping. Each mapping in the same group is incremented at the same time.
+	 *
+	 * @return the group number.
+	 */
 	int getGroupNumber();
 
 	/**
-	 * Needed for {@link GroupState#createGroupStateList(IExtractionResults)}.
+	 * Get the minimum number of results that this mapping can return. If there are not enough values found to make up this number, then nulls are
+	 * added.
 	 *
-	 * @return
+	 * @return the most number of results that this mapping can return. If there are not enough values found to make up this number, then nulls are
+	 *         added.
 	 */
 	int getMinCount();
 
-	MultiValueBehaviour getMultiValueBehaviour();
-
 	/**
-	 * Needed for {@link IValueMapping} only, for generating an {@link ExtractedField} field name.
+	 * Retrieves the multi-value behaviour for the mapping these results are based on.
 	 *
-	 * @return
+	 * @return the multi-value behaviour for the mapping these results are based on.
 	 */
-	IExtractionResults getParent();
+	MultiValueBehaviour getMultiValueBehaviour();
 
 	/**
 	 * Needed for {@link GroupState#createGroupStateList(IExtractionResults)}.
 	 *
-	 * @return
+	 * @return the number of results found by this set of extraction results.
 	 */
 	int size();
 

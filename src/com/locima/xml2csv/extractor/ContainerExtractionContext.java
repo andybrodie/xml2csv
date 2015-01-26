@@ -25,11 +25,45 @@ import com.locima.xml2csv.util.StringUtil;
 /**
  * Used to manage the evaluation and storage of results of an {@link IMappingContainer} instance.
  */
-public class ContainerExtractionContext extends ExtractionContext implements IExtractionResultsContainer {
+public class ContainerExtractionContext extends AbstractExtractionContext implements IExtractionResultsContainer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ContainerExtractionContext.class);
 
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Recursive debugging method to log all the results when an {@link #evaluate(XdmNode)} call has completed.
+	 *
+	 * @param ctx the results to output (recursively)
+	 * @param offset the offset that we're starting at for ctx, relative to sibling results. Used on recursion only, set to 0.
+	 * @param indentCount the amount to indent the output. Used on recusion only, set to 0.
+	 */
+	public static void logResults(IExtractionResults ctx, int offset, int indentCount) {
+		StringBuilder indentSb = new StringBuilder();
+		for (int i = 0; i < indentCount; i++) {
+			indentSb.append("  ");
+		}
+		String indent = indentSb.toString();
+		if (ctx instanceof ContainerExtractionContext) {
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("{}{}:{}", indent, offset, ctx);
+			}
+			int childResultsSetCount = 0;
+			int childCount = 0;
+			for (List<IExtractionResults> children : ((IExtractionResultsContainer) ctx).getChildren()) {
+				LOG.trace("{}  {}", indent, childResultsSetCount++);
+				for (IExtractionResults child : children) {
+					logResults(child, childCount++, indentCount + 2);
+				}
+				childCount = 0;
+			}
+		} else {
+			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getResults(), ",", null));
+			}
+		}
+	}
 
 	/**
 	 * A list of all the child contexts (also a list) found as a result of evaluating the {@link ContainerExtractionContext#mapping}'s
@@ -52,6 +86,11 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	 * Used to construct a root instance with no parent.
 	 *
 	 * @param mapping the mapping configuration that this context is responsible for evaluating.
+	 * @param parent the parent for this context (should be null if this is a top-level mapping on the configuration).
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
+	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
+	 *            beneath the parent.
 	 */
 	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
@@ -64,6 +103,10 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	 * Used to construct a root instance with no parent.
 	 *
 	 * @param mapping the mapping configuration that this context is responsible for evaluating.
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
+	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
+	 *            beneath the parent.
 	 */
 	public ContainerExtractionContext(IMappingContainer mapping, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
 		this(null, mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
@@ -77,6 +120,10 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	 * <li>Execute this mapping for each of the root(s).</li>
 	 * <li>Each execution results in a single call to om (one CSV line).</li>
 	 * </ol>
+	 *
+	 * @param rootNode the XML node against which to evaluate the mapping.
+	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
+	 *             the <code>rootNode</code> specified).
 	 */
 	@Override
 	public void evaluate(XdmNode rootNode) throws DataExtractorException {
@@ -105,7 +152,7 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		}
 
 		// Keep track of the most number of results we've found for a single invocation of the mapping root.
-		this.getMapping().setHighestFoundValueCount(rootCount);
+		getMapping().setHighestFoundValueCount(rootCount);
 	}
 
 	/**
@@ -114,7 +161,6 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	 * @param node the node from which all mappings will be based on.
 	 * @param positionRelativeToOtherRootNodes the position of this set of children relative to all the other roots found by this container's
 	 *            evaluation of the mapping root.
-	 * @param trimWhitespace if true, then leading and trailing whitespace will be removed from all data values.
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
@@ -124,9 +170,9 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 		}
 		int positionRelativeToIMappingSiblings = 0;
 		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>(size());
-		for (IMapping mapping : this.mapping) {
-			ExtractionContext childCtx =
-							ExtractionContext.create(this, mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
+		for (IMapping childMapping : this.mapping) {
+			AbstractExtractionContext childCtx =
+							AbstractExtractionContext.create(this, childMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 			childCtx.evaluate(node);
 			iterationECs.add(childCtx);
 			positionRelativeToIMappingSiblings++;
@@ -137,11 +183,6 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	@Override
 	public List<List<IExtractionResults>> getChildren() {
 		return this.children;
-	}
-
-	@Override
-	public List<String> getEmptyFieldNames(int containerIterationCount) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -164,40 +205,11 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 	}
 
 	/**
-	 * Debugging method to log all the results when an {@link #evaluate(XdmNode)} call has completed.
-	 */
-	public static void logResults(IExtractionResults ctx, int offset, int indentCount) {
-		StringBuilder indentSb = new StringBuilder();
-		for (int i = 0; i < indentCount; i++) {
-			indentSb.append("  ");
-		}
-		String indent = indentSb.toString();
-		if (ctx instanceof ContainerExtractionContext) {
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("{}{}:{}", indent, offset, ctx);
-			}
-			int childResultsSetCount = 0;
-			int childCount = 0;
-			for (List<IExtractionResults> children : ((IExtractionResultsContainer) ctx).getChildren()) {
-				LOG.trace("{}  {}", indent, childResultsSetCount++);
-				for (IExtractionResults child : children) {
-					logResults(child, childCount++, indentCount + 2);
-				}
-				childCount = 0;
-			}
-		} else {
-			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getAllValues(), ",", null));
-			}
-		}
-	}
-
-	/**
 	 * Overridden to manage not writing {@link #mapping} to the output stream.
 	 *
-	 * @param stream target stream for serialized state.
+	 * @param rawInputStream target stream for serialized state.
 	 * @throws IOException if any issues occur during writing.
+	 * @throws ClassNotFoundException if an unexpected class instance appears in the CSI file, should never, ever happen.
 	 */
 	@SuppressWarnings("unchecked")
 	private void readObject(ObjectInputStream rawInputStream) throws IOException, ClassNotFoundException {
@@ -220,13 +232,15 @@ public class ContainerExtractionContext extends ExtractionContext implements IEx
 			throw new IOException("Unexpected object type found in stream.  Expected String but got " + readObject.getClass().getName());
 		}
 		this.mapping = stream.getMappingContainer(mappingName);
-		if (this.mapping==null) {
+		if (this.mapping == null) {
 			throw new IOException("Unable to restore link to IMappingContainer " + mappingName + " as it was not found");
 		}
 	}
 
 	/**
 	 * Returns the number of mapping roots found for this object to evaluate against.
+	 *
+	 * @return the number of mapping roots found for this object to evaluate against.
 	 */
 	@Override
 	public int size() {

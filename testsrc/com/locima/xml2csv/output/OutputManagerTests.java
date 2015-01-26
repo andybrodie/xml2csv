@@ -1,6 +1,5 @@
 package com.locima.xml2csv.output;
 
-import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -18,7 +17,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.locima.xml2csv.TestHelpers;
 import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.Mapping;
@@ -70,11 +68,6 @@ public class OutputManagerTests {
 			container.add(mapping);
 		}
 		return container;
-	}
-
-	private IExtractionResultsContainer createRecords(MappingList mapping, String... values) {
-		ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, 0, 0);
-		return ctx;
 	}
 
 	// private Iterable<List<ExtractedField>> createRecords(MappingList mapping, String... values) {
@@ -138,6 +131,5 @@ public class OutputManagerTests {
 			assertEquals(expected[i], StringUtil.escapeForCsv(input[i]));
 		}
 	}
-
 
 }

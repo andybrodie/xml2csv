@@ -14,7 +14,6 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	/**
 	 * Creates a new instance of a Pivot Mapping object.
 	 *
-	 * @param namespaceMappings A mapping of namespace prefix to URI mappings. May be null if there are no namespaces involved.
 	 * @param baseNameXPath the XPath expression that, when executed relative to the mapping root of the parent, will yield the base name of the
 	 *            fields that this pivot mapping will return. Must not be null.
 	 * @param valueXPath the XPath expression that, when executed relative to the node yielding the key, will yield the value for that key. Must not
@@ -22,7 +21,8 @@ public class PivotMapping extends AbstractMapping implements IMapping {
 	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation of a single field wtihin this
 	 *            mapping.
-	 * @return a new Mapping instance configured with the parameters passed.
+	 * @param groupNumber the logical group number of this mapping container.
+	 * @param parent The parent of this mapping container. Must be null if this is a top level mapping container.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
 	public PivotMapping(IMappingContainer parent, XPathValue baseNameXPath, XPathValue valueXPath, NameFormat nameFormat, int groupNumber,

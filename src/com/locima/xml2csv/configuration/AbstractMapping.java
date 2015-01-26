@@ -3,6 +3,9 @@ package com.locima.xml2csv.configuration;
 import com.locima.xml2csv.output.GroupState;
 import com.locima.xml2csv.util.EqualsUtil;
 
+/**
+ * Common attributes and behaviours for mapping implementations.
+ */
 public abstract class AbstractMapping implements IMapping {
 
 	/**
@@ -11,11 +14,6 @@ public abstract class AbstractMapping implements IMapping {
 	private int groupNumber;
 
 	private int highestFoundValueCount;
-
-	/**
-	 * Tracks the number of instances found at once by this mapping. This is needed when doing inline mappings.
-	 */
-	private int maxInstanceCount;
 
 	/**
 	 * The behaviour for this mapping to use when encountering multiple values for a single execution.
@@ -40,7 +38,7 @@ public abstract class AbstractMapping implements IMapping {
 	/**
 	 * Creates a new immutable Field Definition.
 	 *
-	 * @param baseName the outputName of the field, must a string of length > 0.
+	 * @param parent the parent of this mapping. May be null if this is a top level mapping container.
 	 * @param valueXPath a compiled XPath expression that will extract the values required for this field.
 	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
 	 * @param groupNumber the group number for this field definition.
@@ -100,6 +98,11 @@ public abstract class AbstractMapping implements IMapping {
 		return this.parent;
 	}
 
+	/**
+	 * Retrieve the XPath statement that will execute this mapping.
+	 *
+	 * @return the XPath statement that will execute this mapping.
+	 */
 	public XPathValue getValueXPath() {
 		return this.valueXPath;
 	}

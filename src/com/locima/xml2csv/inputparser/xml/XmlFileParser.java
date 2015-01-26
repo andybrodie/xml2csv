@@ -60,7 +60,9 @@ public class XmlFileParser implements IConfigParser {
 	private SAXParser getParser() throws SAXException, ParserConfigurationException {
 
 		// Where the XSD file is within my application resources, just one so far, but others will follow.
+		//CHECKSTYLE:OFF Workaround for Checkstyle (bug?) expecting no whitespace after an open curly brace.
 		final String[] schemaResourceNames = new String[] { "com/locima/xml2csv/inputparser/xml/MappingConfiguration.xsd" };
+		//CHECKSTYLE:ON
 
 		// So far, so good.
 		SAXParserFactory factory = SAXParserFactory.newInstance();

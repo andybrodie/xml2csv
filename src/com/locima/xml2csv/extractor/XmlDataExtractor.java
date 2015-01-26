@@ -55,6 +55,8 @@ public class XmlDataExtractor {
 	 *
 	 * @param xmlDoc The XML document to extract information from.
 	 * @param outputManager The output manager to send the extracted data to. May be null if no output is required.
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
 	 * @throws DataExtractorException If an error occurred extracting data from the XML document.
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
@@ -66,13 +68,13 @@ public class XmlDataExtractor {
 		for (IMappingContainer mapping : this.mappingConfiguration) {
 			ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
 			ctx.evaluate(xmlDoc);
-			
+
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", this);
 				ContainerExtractionContext.logResults(ctx, 0, 0);
 				LOG.trace("END RESULTS OUTPUT");
 			}
-			
+
 			outputManager.writeRecords(mapping.getContainerName(), ctx);
 			mappingSiblingIndex++;
 		}

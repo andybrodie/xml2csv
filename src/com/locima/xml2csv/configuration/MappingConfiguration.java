@@ -65,22 +65,23 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	/**
 	 * Adds a child set of mappings to this mappings set.
 	 *
-	 * @param maps a set of mappings, must not be null and must have a unique {@link MappingList#getOutputName()} value.
+	 * @param container a set of mappings, must not be null and must have a unique {@link MappingList#getOutputName()} value.
+	 * @return the passed <code>container</code>.
 	 */
-	public IMappingContainer addMappings(IMappingContainer maps) {
-		if (maps == null) {
+	public IMappingContainer addMappings(IMappingContainer container) {
+		if (container == null) {
 			throw new ArgumentNullException("maps");
 		}
 		// Ensure that the mapping set name is unique
-		String containerName = maps.getContainerName();
+		String containerName = container.getContainerName();
 		if (containerName == null) {
 			throw new ArgumentException("maps", "contains a null name.");
 		}
 		if (containsContainer(containerName)) {
 			throw new ArgumentException("maps", "must contain a unique name");
 		}
-		this.mappings.add(maps);
-		return maps;
+		this.mappings.add(container);
+		return container;
 	}
 
 	/**
@@ -137,21 +138,12 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		}
 		return null;
 	}
-	
-	public IMapping findMappingByName(String mappingName) {
-		for (IMappingContainer container : this.mappings) {
-			if (container.getContainerName().equals(mappingName)) {
-				return container;
-			}
-			IMapping mapping = container.findMapping(mappingName);
-			if (mapping!=null) {
-				return mapping;
-			}
-		}
-		return null;
-	}
 
-
+	/**
+	 * Retrieve the default multi-value behaviour that should be inherited by all child containers and value mappings.
+	 *
+	 * @return a default behaviour for child container and value mappings.
+	 */
 	public MultiValueBehaviour getDefaultMultiValueBehaviour() {
 		return this.defaultMultiValueBehaviour;
 	}
@@ -193,18 +185,31 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		return this.mappings.iterator();
 	}
 
+	/**
+	 * Recursively log this configuration.
+	 *
+	 * @see MappingConfiguration#log(IMapping, int)
+	 */
 	public void log() {
-		for (IMappingContainer mappingList : this.mappings) {
-			LOG.debug(mappingList.toString());
-			for (IMapping child : mappingList) {
-				log(child, 1);
+		if (LOG.isDebugEnabled()) {
+			for (IMappingContainer mappingList : this.mappings) {
+				LOG.debug(mappingList.toString());
+				for (IMapping child : mappingList) {
+					log(child, 1);
+				}
 			}
 		}
 	}
 
-	private void log(IMapping mapping, int index) {
+	/**
+	 * Recursive worked method for {@link MappingConfiguration#log()}.
+	 *
+	 * @param mapping the mapping to log information for.
+	 * @param indentCount th eamount to indent each line by, to show hierarchy.
+	 */
+	private void log(IMapping mapping, int indentCount) {
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < index; i++) {
+		for (int i = 0; i < indentCount; i++) {
 			sb.append('\t');
 		}
 		sb.append(mapping.toString());
@@ -240,6 +245,11 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 						(defaultMultiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.LAZY : defaultMultiValueBehaviour;
 	}
 
+	/**
+	 * Sets the default name format for all child value mappings of this configuration.
+	 *
+	 * @param format the format to use.
+	 */
 	public void setDefaultNameFormat(NameFormat format) {
 		this.defaultNameFormat = format;
 	}

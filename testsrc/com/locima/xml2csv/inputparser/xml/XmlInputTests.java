@@ -71,7 +71,7 @@ public class XmlInputTests {
 		MappingList topLevelMappingList = (MappingList) config.getContainerByName("Family");
 		assertEquals(3, topLevelMappingList.size());
 		assertEquals("Family", topLevelMappingList.getContainerName());
-		Mapping nameMapping = (Mapping) topLevelMappingList.get(0);
+		topLevelMappingList.get(0);
 
 		MappingList membersMappingList = (MappingList) topLevelMappingList.get(1);
 		assertEquals(2, membersMappingList.size());
@@ -80,7 +80,7 @@ public class XmlInputTests {
 		Mapping ageMapping = (Mapping) membersMappingList.get(1);
 		assertEquals(MultiValueBehaviour.LAZY, ageMapping.getMultiValueBehaviour());
 
-		Mapping addressMapping = (Mapping) topLevelMappingList.get(2);
+		topLevelMappingList.get(2);
 	}
 
 	@Test

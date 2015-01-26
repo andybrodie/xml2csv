@@ -18,6 +18,11 @@ import com.locima.xml2csv.util.XmlUtil;
  */
 public class MappingList extends ArrayList<IMapping> implements IMappingContainer {
 
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = -7735577777081946390L;
+
 	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
 
 	private String containerName;
@@ -40,8 +45,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 
 	private Map<String, String> namespaceMappings;
 
-	private IMappingContainer parent;
-
 	/**
 	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
 	 */
@@ -56,30 +59,6 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 */
 	public MappingList(Map<String, String> namespaceMap) {
 		this.namespaceMappings = namespaceMap;
-	}
-
-	@Override
-	public IMapping findMapping(String mappingName) {
-		for (IMapping child : this) {
-			if (child instanceof IValueMapping) {
-				IValueMapping childMapping = (IValueMapping) child;
-				if (child.equals(mappingName)) {
-					return child;
-				}
-			} else {
-				if (child instanceof IMappingContainer) {
-					IMappingContainer childContainer = (IMappingContainer) child;
-					if (childContainer.getContainerName().equals(mappingName)) {
-						return child;
-					}
-					IMapping mapping = childContainer.findMapping(mappingName);
-					if (mapping != null) {
-						return mapping;
-					}
-				}
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -150,12 +129,15 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	/**
 	 * Look at all ourself and all of our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we
 	 * can't guarantee how many fields are output, so return <code>false</code>.
+	 *
+	 * @return <code>true</code> if execution of this container and all its children will always result in a consistent, known, number of output
+	 *         fields.
 	 */
 	@Override
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-						|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
+										|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
 
 		if (isFixed) {
 			for (IMapping mapping : this) {
@@ -169,6 +151,12 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		return isFixed;
 	}
 
+	/**
+	 * Sets the group number of this mapping container. Containers that use the same group number are incremented together when iterating output
+	 * records.
+	 *
+	 * @param groupNumber the group number to use, must be 0 or greater. (Negative numbers are reserved).
+	 */
 	public void setGroupNumber(int groupNumber) {
 		this.groupNumber = groupNumber;
 	}
@@ -191,16 +179,34 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 	}
 
+	/**
+	 * Sets the maximum number of results that will be processed when executing the {@link #mappingRoot}. Any results over and above this value will
+	 * be discarded.
+	 *
+	 * @param maxValueCount either 0 for no maximum, or a natural number greater than zero to apply a limit.
+	 */
+
 	public void setMaxValueCount(int maxValueCount) {
 		this.maxValueCount = maxValueCount;
 	}
 
+	/**
+	 * Sets the minimum number of results that should be processed when executing the {@link #mappingRoot}. If not enough nodes are found by executing
+	 * the {@link #mappingRoot} then blank fields will be inserted in to the output.
+	 *
+	 * @param minValueCount either 0 for no minimum, or a natural number greater than zero to apply a minimum.
+	 */
 	public void setMinValueCount(int minValueCount) {
 		this.minValueCount = minValueCount;
 	}
 
+	/**
+	 * Sets the multi-value behaviour of this container. See {@link MultiValueBehaviour}.
+	 *
+	 * @param multiValueBehaviour the multi-value behaviour to use.
+	 */
 	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
-		this.multiValueBehaviour = (multiValueBehaviour == MultiValueBehaviour.DEFAULT) ? MultiValueBehaviour.LAZY : multiValueBehaviour;
+		this.multiValueBehaviour = multiValueBehaviour;
 	}
 
 	/**
@@ -218,28 +224,25 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		this.containerName = newName;
 	}
 
-	public void setParent(IMappingContainer parent) {
-		this.parent = parent;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("MappingList(");
 		sb.append(this.containerName);
-		sb.append(", ");
+		final String separator = ", ";
+		sb.append(separator);
 		sb.append(this.multiValueBehaviour);
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(this.minValueCount);
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(this.maxValueCount);
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(this.highestFoundValueCount);
 		sb.append(")[");
 		Iterator<IMapping> mappings = iterator();
 		while (mappings.hasNext()) {
 			sb.append(mappings.next().toString());
 			if (mappings.hasNext()) {
-				sb.append(", ");
+				sb.append(separator);
 			}
 		}
 		sb.append("]");

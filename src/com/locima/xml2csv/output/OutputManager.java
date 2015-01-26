@@ -29,15 +29,12 @@ public class OutputManager implements IOutputManager {
 	/**
 	 * Maps output name to the appropriate writer.
 	 */
-	private Map<String, ICsvWriter> outputToWriter;
-
-	public OutputManager() {
-	}
+	private Map<String, IOutputWriter> outputToWriter;
 
 	@Override
 	public void abort() {
 		LOG.info("Aborting {} ICsvWriters", this.outputToWriter.size());
-		for (Entry<String, ICsvWriter> entry : this.outputToWriter.entrySet()) {
+		for (Entry<String, IOutputWriter> entry : this.outputToWriter.entrySet()) {
 			LOG.info("Aborting {} {} ({})", entry.getKey().getClass().getName(), entry.getKey(), entry.getValue());
 			entry.getValue().abort();
 		}
@@ -51,7 +48,7 @@ public class OutputManager implements IOutputManager {
 	@Override
 	public void close() throws OutputManagerException {
 		LOG.info("Closing {} ICsvWriters", this.outputToWriter.size());
-		for (Entry<String, ICsvWriter> entry : this.outputToWriter.entrySet()) {
+		for (Entry<String, IOutputWriter> entry : this.outputToWriter.entrySet()) {
 			LOG.info("Closing {} ({})", entry.getKey(), entry.getValue());
 			entry.getValue().close();
 		}
@@ -63,16 +60,19 @@ public class OutputManager implements IOutputManager {
 	 * given record. If one is found then it means that we can't directly stream out a CSV file using {@link DirectCsvWriter} (because we wouldn't
 	 * know how many fields to include in any recrd), so we have to use {@link InlineCsvWriter} instead.
 	 *
+	 * @param outputDirectory the directory to create the output file in.
 	 * @param config the mapping configuration that we are going to output the results of.
+	 * @param appendOutput if true, an existing file will be appended to.
+	 * @throws OutputManagerException if any errors occur whilst creating the output files.
 	 */
 	@Override
 	public void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException {
 		setDirectory(outputDirectory);
 
-		this.outputToWriter = new HashMap<String, ICsvWriter>();
+		this.outputToWriter = new HashMap<String, IOutputWriter>();
 		for (IMappingContainer mappingContainer : config) {
 			String outputName = mappingContainer.getContainerName();
-			ICsvWriter writer;
+			IOutputWriter writer;
 			if (mappingContainer.hasFixedOutputCardinality()) {
 				LOG.info("No unbounded mappings detected for {}, therefore using the DirectCsvWriter", outputName);
 				writer = new DirectCsvWriter();
@@ -105,12 +105,13 @@ public class OutputManager implements IOutputManager {
 	/**
 	 * Writes the records created by the XML data extractor to the appropraite output writer managed by this instance.
 	 *
-	 * @param records the records to write out.
+	 * @param outputName the name of the output to write to.
+	 * @param resultsContainer the records to write out.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
 	@Override
 	public void writeRecords(String outputName, IExtractionResultsContainer resultsContainer) throws OutputManagerException {
-		ICsvWriter writer = this.outputToWriter.get(outputName);
+		IOutputWriter writer = this.outputToWriter.get(outputName);
 		if (writer != null) {
 			writer.writeRecords(resultsContainer);
 		} else {

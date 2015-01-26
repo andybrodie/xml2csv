@@ -5,7 +5,10 @@ import java.io.File;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.output.inline.InlineCsvWriter;
 
-public interface ICsvWriter {
+/**
+ * Interface for all writers for results of extracting data.
+ */
+public interface IOutputWriter {
 
 	/**
 	 * Causes this writer to abort, releasing as many resources as possible. No exceptions should be thrown from this method, only output log entries
@@ -34,9 +37,9 @@ public interface ICsvWriter {
 	void initialise(File outputDirectory, IMappingContainer configuration, boolean appendOutput) throws OutputManagerException;
 
 	/**
-	 * Writes the records created by the XML data extractor to the output file managed by this instance
+	 * Writes the records created by the XML data extractor to the output file managed by this instance.
 	 *
-	 * @param records the records to write out.
+	 * @param container the records to write out.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
 	void writeRecords(IExtractionResultsContainer container) throws OutputManagerException;

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
-import com.locima.xml2csv.output.inline.ExtractedField;
 import com.locima.xml2csv.util.XmlUtil;
 
 public class TestHelpers {
@@ -108,22 +107,6 @@ public class TestHelpers {
 		p.execute(configFiles, xmlInputFiles, outputDirectory, false, true);
 
 		return outputFolder;
-
-	}
-
-	public static ExtractedField[] toExtractedFieldArray(String... strings) {
-		return toExtractedFieldList(strings).toArray(new ExtractedField[0]);
-
-	}
-
-	public static List<ExtractedField> toExtractedFieldList(String... strings) {
-		List<ExtractedField> list = new ArrayList<ExtractedField>();
-		for (String string : strings) {
-			// TODO Well, this isn't going to wok! We'll need proper control over the name of the extracted field
-			ExtractedField field = new ExtractedField(new int[] { 0 }, string);
-			list.add(field);
-		}
-		return list;
 
 	}
 

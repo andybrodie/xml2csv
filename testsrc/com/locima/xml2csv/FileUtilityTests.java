@@ -42,13 +42,13 @@ public class FileUtilityTests {
 	public void testPOSIXFileNameConverter() throws Exception {
 		String[] validTestCases = new String[] { "ABCDEFGHIJKLM", "NOPQRSTUVWXYZ", "abcdefghijklm", "nopqrstuvwxyz", "0123456789_.-", "Normal.file" };
 		for (String testCase : validTestCases) {
-			assertEquals(testCase, FileUtility.convertToPOSIXCompliantFileName(testCase, false));
+			assertEquals(testCase, FileUtility.convertToPOSIXCompliantFileName(testCase, null, false));
 		}
 		String[] adjustedTestCases =
 						new String[] { "-----", "", "ABC!\"£$%^-", "ABC-", "  A", "A", "1234567890ABCDEFGH", "1234567890ABCD",
-										"----1234567890ABCDEFGH", "1234567890ABCD" };
+						"----1234567890ABCDEFGH", "1234567890ABCD" };
 		for (int i = 0; i < (adjustedTestCases.length - 1); i += 2) {
-			assertEquals(adjustedTestCases[i + 1], FileUtility.convertToPOSIXCompliantFileName(adjustedTestCases[i], false));
+			assertEquals(adjustedTestCases[i + 1], FileUtility.convertToPOSIXCompliantFileName(adjustedTestCases[i], null, false));
 		}
 
 	}

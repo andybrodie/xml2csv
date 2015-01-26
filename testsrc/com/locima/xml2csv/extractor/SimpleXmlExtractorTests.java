@@ -39,12 +39,6 @@ public class SimpleXmlExtractorTests {
 		return document;
 	}
 
-	private Mapping createGreedyMapping(MappingList parent, String xPath) throws XMLException {
-		Mapping m = new Mapping(parent, xPath, NameFormat.NO_COUNTS, -1, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, xPath), 0, 0);
-		parent.add(m);
-		return m;
-	}
-
 	private Mapping createLazyMapping(MappingList parent, String xPath, int groupNumber) throws XMLException {
 		Mapping m =
 						new Mapping(parent, xPath, NameFormat.NO_COUNTS, groupNumber, MultiValueBehaviour.LAZY,

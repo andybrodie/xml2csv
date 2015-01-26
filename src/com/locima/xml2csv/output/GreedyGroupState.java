@@ -27,6 +27,8 @@ public class GreedyGroupState extends GroupState {
 	/**
 	 * Greedy groups only need to output once before they're exhausted. Only lazy groups can output in a record and not be exhausted (because they're
 	 * outputting one value per record).
+	 * 
+	 * @return <code>true</code> once this mapping has been executed at least once.
 	 */
 	@Override
 	public boolean hasNext() {

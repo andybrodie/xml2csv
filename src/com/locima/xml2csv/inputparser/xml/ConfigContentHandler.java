@@ -51,6 +51,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "behaviour";
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
+	private static final String CUSTOM_NAME_FORMAT_ATTR = "customNameFormat";
 	private static final String XPATH_ATTR = "xPath";
 
 	private int currentGroupNumber;
@@ -90,11 +91,13 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param bespokeNameFormatFormat a bespoke style to use for this mapping.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation on an element.
 	 * @param minValueCount the minimum number of values that this mapping should output for a single evaluation on an element.
-	 * @param minValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
+	 * @param maxValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
+	// CHECKSTYLE:OFF
 	private void addMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
 					String multiValueBehaviour, int minValueCount, int maxValueCount) throws SAXException {
+		// CHECKSTYLE:ON
 		MappingList current = this.mappingListStack.peek();
 		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
 		String fieldName;
@@ -113,18 +116,19 @@ public class ConfigContentHandler extends DefaultHandler {
 
 		int finalGroupNumber = groupNumber < 0 ? this.currentGroupNumber : groupNumber;
 		Mapping mapping =
-						new Mapping(current, fieldName, nameFormat, finalGroupNumber, MultiValueBehaviour.parse(multiValueBehaviour), compiledXPath,
-										minValueCount, maxValueCount);
+						new Mapping(current, fieldName, nameFormat, finalGroupNumber, MultiValueBehaviour.parse(multiValueBehaviour,
+										this.mappingConfiguration.getDefaultMultiValueBehaviour()), compiledXPath, minValueCount, maxValueCount);
 		current.add(mapping);
 	}
 
 	/**
 	 * Configures the inline behaviour (the instance of {@link MappingConfiguration} is already initialised on {@link #startDocument()}.
 	 *
+	 * @param predefinedNameFormat the name of a predefined name format (see static {@link NameFormat} instances).
 	 * @param multiValueBehaviour the inline behaviour to observe, by default, for all child mappings.
 	 */
 	private void addMappingConfiguration(String predefinedNameFormat, String multiValueBehaviour) {
-		this.mappingConfiguration.setDefaultMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour));
+		this.mappingConfiguration.setDefaultMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, MultiValueBehaviour.LAZY));
 		this.mappingConfiguration.setDefaultNameFormat(NameFormat.parse(predefinedNameFormat, null, NameFormat.NO_COUNTS));
 		this.mappingListStack = new Stack<MappingList>();
 	}
@@ -134,11 +138,10 @@ public class ConfigContentHandler extends DefaultHandler {
 	 *
 	 * @param mappingRoot The XPath expression that identifies the "root" elements for the mapping.
 	 * @param outputName The name of the output that this set of mappings should be written to.
-	 * @throws SAXException If any problems occur with the XPath in the mappingRoot attribute.
 	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @param minValueCount the minimum number of values that this mapping should output for a single evaluation on an element.
-	 * @param minValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
+	 * @param maxValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int minValueCount,
@@ -151,7 +154,7 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(e, "Invalid XPath \"%s\" found in mapping root for mapping list", mappingRoot);
 		}
 		newMapping.setOutputName(outputName);
-		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour));
+		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
 		newMapping.setMinValueCount(minValueCount);
 		newMapping.setMaxValueCount(maxValueCount);
 		this.mappingListStack.push(newMapping);
@@ -177,17 +180,14 @@ public class ConfigContentHandler extends DefaultHandler {
 	private void addPivotMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
 					String multiValueBehaviour) throws SAXException {
 		MappingList current = this.mappingListStack.peek();
-		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
-		String fieldName;
+		NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
 		if (StringUtil.isNullOrEmpty(name)) {
 			LOG.debug("No name was specified for mapping, so XPath value is used instead {}", xPath);
-			fieldName = xPath.replace('/', '_');
+			xPath.replace('/', '_');
 		} else {
-			fieldName = name;
 		}
-		XPathValue compiledXPath;
 		try {
-			compiledXPath = XmlUtil.createXPathValue(current.getNamespaceMappings(), xPath);
+			XmlUtil.createXPathValue(current.getNamespaceMappings(), xPath);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field");
 		}
@@ -270,6 +270,15 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 	}
 
+	/**
+	 * Retrieve an attribute value cast as an int, or throw an exception.
+	 *
+	 * @param atts the set of of attributes to retrieve from.
+	 * @param attrName the name of the attribute to retrieve.
+	 * @param defaultValue a default value to use if no value has been specified.
+	 * @return the value retrieved, or value in <code>defaultValue</code> if a value could not be found.
+	 * @throws SAXException thrown if the value found in the attribute is an integer.
+	 */
 	private int getAttributeValueAsInt(Attributes atts, String attrName, int defaultValue) throws SAXException {
 		String attrValueAsString = atts.getValue(attrName);
 		if (StringUtil.isNullOrEmpty(attrValueAsString)) {
@@ -352,11 +361,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
 		if (LOG.isTraceEnabled()) {
-			LOG.trace("startElement(URI={})(localName={})(qName={})", uri, localName, qName);
-			for (int i = 0; i < atts.getLength(); i++) {
-				LOG.trace("Attr[{}](LocalName={})(QName={})(Type={})(URI={})(Value={})", i, atts.getLocalName(i), atts.getQName(i), atts.getType(i),
-								atts.getURI(i), atts.getValue(i));
-			}
+			traceElement(uri, localName, qName, atts);
 		}
 
 		ElementNames elementName = getElementNameEnum(localName);
@@ -364,9 +369,11 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (MAPPING_NAMESPACE.equals(uri)) {
 			switch (elementName) {
 				case Mapping:
-					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
-									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, -2), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR),
-									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0), getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
+					final int defaultInlineGroupNumber = -2;
+					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), atts.getValue(CUSTOM_NAME_FORMAT_ATTR),
+									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, defaultInlineGroupNumber),
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
+									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case PivotMapping:
 					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
@@ -456,6 +463,22 @@ public class ConfigContentHandler extends DefaultHandler {
 			addFilter(filter);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to parse XPath {} specified for input filter.");
+		}
+	}
+
+	/**
+	 * Outputs trace information about the element being passed.
+	 *
+	 * @param uri see {@link DefaultHandler#startElement(String, String, String, Attributes)}.
+	 * @param localName see {@link DefaultHandler#startElement(String, String, String, Attributes)}.
+	 * @param qName see {@link DefaultHandler#startElement(String, String, String, Attributes)}.
+	 * @param atts see {@link DefaultHandler#startElement(String, String, String, Attributes)}.
+	 */
+	private void traceElement(String uri, String localName, String qName, Attributes atts) {
+		LOG.trace("startElement(URI={})(localName={})(qName={})", uri, localName, qName);
+		for (int i = 0; i < atts.getLength(); i++) {
+			LOG.trace("Attr[{}](LocalName={})(QName={})(Type={})(URI={})(Value={})", i, atts.getLocalName(i), atts.getQName(i), atts.getType(i),
+							atts.getURI(i), atts.getValue(i));
 		}
 	}
 

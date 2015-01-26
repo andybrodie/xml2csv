@@ -20,7 +20,7 @@ public interface IOutputManager {
 	/**
 	 * Finalises all the writers that this manager is managing.
 	 *
-	 * @throws OutputManagerException if an error occurs whilst closing any of the {@link ICsvWriter}.
+	 * @throws OutputManagerException if an error occurs whilst closing any of the {@link IOutputWriter}.
 	 */
 	void close() throws OutputManagerException;
 
@@ -35,9 +35,10 @@ public interface IOutputManager {
 	void initialise(File outputDirectory, MappingConfiguration config, boolean appendOutput) throws OutputManagerException;
 
 	/**
-	 * Writes the records created by the XML data extractor to the output file managed by this instance
+	 * Writes the records created by the XML data extractor to the output file managed by this instance.
 	 *
-	 * @param iter the extracted data from the XML document that relate to a single output.
+	 * @param outputName the name of the output that the results should be written to.
+	 * @param extractionResults the extracted data from the XML document that relate to a single output.
 	 * @throws OutputManagerException if an unrecoverable error occurs whilst writing to the output file.
 	 */
 	void writeRecords(String outputName, IExtractionResultsContainer extractionResults) throws OutputManagerException;

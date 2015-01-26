@@ -124,7 +124,7 @@ public class GroupState {
 	/**
 	 * Internal debugging method that logs the current state of this group state and all it's successors.
 	 *
-	 * @param firstState
+	 * @param firstState the first state to log.
 	 */
 	private static void logStates(GroupState firstState) {
 		GroupState state = firstState;

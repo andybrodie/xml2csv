@@ -37,9 +37,13 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
 	 * @param groupNumber the group number for this field definition.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * @param minValueCount the minimum number of values each execution of this mapping must yield.
+	 * @param maxValueCount the maximum number of values each execution of this mapping must yield.
 	 */
+	// CHECKSTYLE:OFF Number of parameters is reasonable here, don't want loads of extra setter methods for final fields.
 	public Mapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
 					XPathValue valueXPath, int minValueCount, int maxValueCount) {
+		// CHECKSTYLE:ON
 		super(parent, format, groupNumber, multiValueBehaviour, valueXPath);
 		this.baseName = baseName;
 		this.minValueCount = minValueCount;
@@ -87,6 +91,8 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	/**
 	 * If multi-record then this mapping will always return one value, to return <code>true</code>. If inline then output cardinality is only fixed if
 	 * {@link Mapping#minValueCount} equals {@link Mapping#maxValueCount} and they're both greater than zero (zero indicates unbounded).
+	 * 
+	 * @return true if this mapping always outputs the same number of fields per record regardless of input document.
 	 */
 	@Override
 	public boolean hasFixedOutputCardinality() {
@@ -116,21 +122,22 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("Mapping(");
+		final String separator = ", ";
 		sb.append(this.baseName);
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(getNameFormat());
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(getGroupNumber());
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(getMultiValueBehaviour());
 		sb.append(", \"");
 		sb.append(getValueXPath().getSource());
 		sb.append("\", ");
 		sb.append(this.minValueCount);
-		sb.append(", ");
+		sb.append(separator);
 		sb.append(this.maxValueCount);
-		sb.append(", ");
-		sb.append(this.getHighestFoundValueCount());
+		sb.append(separator);
+		sb.append(getHighestFoundValueCount());
 		sb.append(')');
 		return sb.toString();
 	}

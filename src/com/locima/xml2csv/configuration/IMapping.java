@@ -1,6 +1,6 @@
 package com.locima.xml2csv.configuration;
 
-import com.locima.xml2csv.extractor.ExtractionContext;
+import com.locima.xml2csv.extractor.AbstractExtractionContext;
 
 /**
  * The basic interface for any kind of mapping (may map single or multiple data items).
@@ -26,10 +26,12 @@ public interface IMapping {
 	 * Get the most number of results that this mapping has found so far in a single evaluation.
 	 * <p>
 	 * Whilst this isn't static configuration (it's updated as documents are processed during the execution of mappings), I needed somewhere to keep
-	 * track of this that was shared between all {@link ExtractionContext} instances that used the same {@link IMapping}. The alternative was to
-	 * create another shared object between ExtractionContext instances have a common mapping. This would probably involve creating a shared factory
-	 * that needs to be progated throughout all ExtractionContext instances. It was quickest and easiest to break the purity of
+	 * track of this that was shared between all {@link AbstractExtractionContext} instances that used the same {@link IMapping}. The alternative was
+	 * to create another shared object between AbstractExtractionContext instances have a common mapping. This would probably involve creating a
+	 * shared factory that needs to be progated throughout all AbstractExtractionContext instances. It was quickest and easiest to break the purity of
 	 * {@link IMapping} to achieve this.
+	 * 
+	 * @return the most number of results that this mapping has found so far in a single evaluation.
 	 */
 	int getHighestFoundValueCount();
 
@@ -50,9 +52,9 @@ public interface IMapping {
 	int getMinValueCount();
 
 	/**
-	 * Retrieves the multi-value behaviour (inline or multi-record) for this mapping.
+	 * Retrieves the multi-value behaviour for this mapping.
 	 *
-	 * @return
+	 * @return the multi-value behaviour for this mapping.
 	 */
 	MultiValueBehaviour getMultiValueBehaviour();
 

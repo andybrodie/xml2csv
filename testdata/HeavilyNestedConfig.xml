@@ -7,18 +7,8 @@
 		<m:Mapping name="Level1" xPath="../@data" behaviour="Lazy" group="1" />
 		<m:Mapping name="Level2" xPath="@data" behaviour="Lazy" group="1" />
 		<m:MappingList name="Level3List" mappingRoot="Level3" behaviour="Greedy">
-		<m:Mapping name="Level3" xPath="@data" behaviour="Greedy" group="2" nameFormat="WithParentCount" />
-		<m:Mapping name="Level4" xPath="Level4/@data" behaviour="Greedy" group="2" nameFormat="WithCount" />
+			<m:Mapping name="Level3" xPath="@data" behaviour="Greedy" group="2" nameFormat="WithParentCount" />
+			<m:Mapping name="Level4" xPath="Level4/@data" behaviour="Greedy" group="2" nameFormat="Custom" customNameFormat="%1$s_%4$d_%2$d" />
 		</m:MappingList>
 	</m:MappingList>
-<!-- 
-	<m:MappingList mappingRoot="/Level1/Level2" name="HeavilyNestedInstance">
-		<m:Mapping name="Level1" xPath="../@data" inlineStyle="NoCounts" />
-		<m:Mapping name="Level2" xPath="@data" inlineStyle="NoCounts" />
-		<m:MappingList name="Level3List" mappingRoot="Level3">
-			<m:Mapping name="Level3" xPath="@data" inlineStyle="WithParentCount" />
-			<m:Mapping name="Level4" xPath="Level4/@data" inlineStyle="WithCount" />
-		</m:MappingList>
-	</m:MappingList>
- -->
 </m:MappingConfiguration>

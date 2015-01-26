@@ -54,10 +54,7 @@ public class Tuple<T, U> {
 		if ((this.first == null) && (this.second == null)) {
 			return "".hashCode();
 		}
-		if (this.first == null) {
-			return this.second.hashCode();
-		}
-		return this.first.hashCode() ^ this.second.hashCode();
+		return this.first == null ? this.second.hashCode() : this.first.hashCode() ^ this.second.hashCode();
 	}
 
 	@Override

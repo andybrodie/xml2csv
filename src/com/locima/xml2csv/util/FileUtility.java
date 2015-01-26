@@ -30,6 +30,8 @@ public class FileUtility {
 	public static final int CAN_WRITE = 2;
 	private static final Logger LOG = LoggerFactory.getLogger(FileUtility.class);
 
+	private static final int MAX_POSIX_LEN = 14;
+
 	/**
 	 * Checks the permissions on a file, throwing an exception if not what the caller wants (specified by <code>flags</code>).
 	 *
@@ -60,26 +62,39 @@ public class FileUtility {
 	 * </ol>
 	 *
 	 * @param baseName a string that needs to be converted to a file name.
-	 * @return a string that only contains POSIX-compliant filename characters and length.
+	 * @param extension an extension that should always be present in the returned file name.
+	 * @param ignoreLength if true then the length restriction of 14 characters will be ignored.
+	 * @return a string that only contains POSIX-compliant filename characters and length (depending on <code>ignoreLength</code>). Returns
+	 *         <code>null</code> if <code>null</code> is passed in <code>baseName</code>.
 	 */
-	public static String convertToPOSIXCompliantFileName(String baseName, boolean ignoreLength) {
+	// CHECKSTYLE:OFF Cyclomatic complexity caused by that big "if" statement
+	public static String convertToPOSIXCompliantFileName(String baseName, String extension, boolean ignoreLength) {
+		// CHECKSTYLE:ON
 		if (baseName == null) {
 			return null;
 		}
-		/*
-		 * TODO Fix this up properly, extension must often be preserved, then you want "trimleft" and "trimright" options.
-		 */
-		final int maxPermittedLength = ignoreLength ? Integer.MAX_VALUE : 14;
+		int maxPermittedLength = ignoreLength ? Integer.MAX_VALUE : MAX_POSIX_LEN;
+		if (extension != null) {
+			maxPermittedLength -= extension.length();
+		}
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; (i < baseName.length()) && (sb.length() < maxPermittedLength); i++) {
+		int baseNameLen = baseName.length();
+		int addedCharCount = 0;
+		for (int i = 0; (i < baseNameLen) && (addedCharCount < maxPermittedLength); i++) {
 			char ch = baseName.charAt(i);
+			// CHECKSTYLE:OFF Can't think of a better way to do this "if" statement.
 			if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')) || ((ch >= '0') && (ch <= '9')) || (ch == '.') || (ch == '_')
-							|| ((ch == '-') && (sb.length() > 0))) {
+							|| ((ch == '-') && (addedCharCount > 0))) {
+				// CHECKSTYLE:ON
 				sb.append(ch);
+				addedCharCount++;
 			}
 		}
+		if (extension != null) {
+			sb.append(extension);
+		}
 		String fileName = sb.toString();
-		LOG.info("Created file name {} from {}", fileName, baseName);
+		LOG.info("Created file name {} from {} and {}", fileName, baseName, extension);
 		return fileName;
 	}
 

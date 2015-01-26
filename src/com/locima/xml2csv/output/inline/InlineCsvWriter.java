@@ -5,13 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.Writer;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
@@ -22,18 +16,16 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
+import com.locima.xml2csv.extractor.AbstractExtractionContext;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
-import com.locima.xml2csv.extractor.ExtractionContext;
 import com.locima.xml2csv.extractor.MappingExtractionContext;
-import com.locima.xml2csv.output.ICsvWriter;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.IOutputManager;
+import com.locima.xml2csv.output.IOutputWriter;
 import com.locima.xml2csv.output.OutputManagerException;
 import com.locima.xml2csv.output.OutputUtil;
 import com.locima.xml2csv.output.direct.DirectCsvWriter;
-import com.locima.xml2csv.output.direct.DirectOutputRecordIterator;
 import com.locima.xml2csv.util.FileUtility;
-import com.locima.xml2csv.util.StringUtil;
 
 /**
  * Manages the output for a single CSV file where the results of conversion from XML when the mapping configuration contains a variable number of
@@ -43,13 +35,18 @@ import com.locima.xml2csv.util.StringUtil;
  * we cannot write a CSV file directly. This {@link IOutputManager} does this by writing an intermediate file which is then converted to a CSV file
  * once the number of fields required is known.
  * <p>
- * This is done by simply deferring the final conversion of {@link ExtractionContext} results to a CSV file by saving the serialized form of the
- * {@link ExtractionContext} data in a "CSI" file. When all the inputs have been processed, we now know the highest number of iterations any one
- * {@link IMapping} instance has found during execution, and can now insert all the blank fields in the CSV that we need to keep all the data aligned.
+ * This is done by simply deferring the final conversion of {@link AbstractExtractionContext} results to a CSV file by saving the serialized form of
+ * the {@link AbstractExtractionContext} data in a "CSI" file. When all the inputs have been processed, we now know the highest number of iterations
+ * any one {@link IMapping} instance has found during execution, and can now insert all the blank fields in the CSV that we need to keep all the data
+ * aligned.
  */
-public class InlineCsvWriter implements ICsvWriter {
+public class InlineCsvWriter implements IOutputWriter {
+
+	private static final String CONTAINER_NAME_PREFIX = "C_";
 
 	private static final Logger LOG = LoggerFactory.getLogger(InlineCsvWriter.class);
+
+	private static final String VALUE_NAME_PREFIX = "V_";
 
 	/**
 	 * Records whether, when creating the CSV file, output should be appended to an existing file or create a new file or overwrite an existing file.
@@ -68,6 +65,8 @@ public class InlineCsvWriter implements ICsvWriter {
 	 */
 	private ObjectOutputStream csiWriter;
 
+	private Map<String, IMapping> nameToMapping;
+
 	/**
 	 * The final CSV output file that will contain our desired output.
 	 */
@@ -77,8 +76,6 @@ public class InlineCsvWriter implements ICsvWriter {
 	 * The name of the output managed by this writer.
 	 */
 	private String outputName;
-
-	private Map<String, IMapping> nameToMapping;
 
 	/**
 	 * TODO Tidies up (i.e. deletes) all intermediate files. Currently throws an exception as it's not implemented.
@@ -91,6 +88,8 @@ public class InlineCsvWriter implements ICsvWriter {
 
 	/**
 	 * Closes the intermediate CSI file and converts it to a CSV file using {@link DirectCsvWriter}.
+	 *
+	 * @throws OutputManagerException if an unexpected error occurs whilst executing.
 	 */
 	@Override
 	public void close() throws OutputManagerException {
@@ -104,7 +103,7 @@ public class InlineCsvWriter implements ICsvWriter {
 	 * Algorithm as follows:
 	 * <ol>
 	 * <li>Create a DirectCsvWriter instance of this InlineCsvWriter.
-	 * <li>For each serialized ExtractionContext instance written to the CSI file.</li>
+	 * <li>For each serialized AbstractExtractionContext instance written to the CSI file.</li>
 	 * <li>Read it</li>
 	 * <li>Pass it to a DirectCsvWriter instance.</li>
 	 * <li>Close the CSV file.</li>
@@ -119,9 +118,9 @@ public class InlineCsvWriter implements ICsvWriter {
 		csiInput = getCsiInput();
 
 		DirectCsvWriter csvWriter = new DirectCsvWriter();
-		csvWriter.initialise(this.outputDirectory, container, appendOutput);
+		csvWriter.initialise(this.outputDirectory, this.container, this.appendOutput);
 		try {
-			// Go through all the records, reading each snapshot ExtractionContext state then passing it to the DirectCsvWriter
+			// Go through all the records, reading each snapshot AbstractExtractionContext state then passing it to the DirectCsvWriter
 			ContainerExtractionContext cec = csiInput.getNextRecord();
 			while (cec != null) {
 				csvWriter.writeRecords(cec);
@@ -142,6 +141,12 @@ public class InlineCsvWriter implements ICsvWriter {
 		}
 	}
 
+	/**
+	 * Creates the output stream for the CSI file.
+	 *
+	 * @return an output stream to write {@link ExtractionContext} instances to.
+	 * @throws OutputManagerException if anything goes wrong creating the output stream.
+	 */
 	private ObjectOutputStream createCsiOutput() throws OutputManagerException {
 		File file = this.csiOutputFile;
 		LOG.info("Creating csiWriter for {}", file.getAbsolutePath());
@@ -155,57 +160,18 @@ public class InlineCsvWriter implements ICsvWriter {
 		}
 	}
 
-	private CsiInputStream getCsiInput() throws OutputManagerException {
-		try {
-			LOG.info("Re-opening {} to read intermediate file", this.csiOutputFile.getAbsolutePath());
-			return new CsiInputStream(this.nameToMapping, new FileInputStream(this.csiOutputFile));
-		} catch (IOException e) {
-			throw new OutputManagerException(e, "Unable to open CSI file {} for reading.", this.csiOutputFile.getAbsolutePath());
-		}
-	}
-
-	/**
-	 * Works out the index, relative to a CSV field, that a specific extracted field should appear in.
-	 *
-	 * @param field the field to obtain the index of.
-	 * @return an index.
-	 */
-	private int getFieldIndexWithinCsv(ExtractedField field) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void initialise(File outputDirectory, IMappingContainer container, boolean appendOutput) throws OutputManagerException {
-		this.outputName = container.getContainerName();
-		this.outputDirectory = outputDirectory;
-
-		String csiFileNameBasis = this.outputName + ".csi";
-		this.csiOutputFile = new File(this.outputDirectory, FileUtility.convertToPOSIXCompliantFileName(csiFileNameBasis, true));
-		this.container = container;
-		this.csiWriter = createCsiOutput();
-
-		this.nameToMapping = createMappingMap(container);
-
-		/* Append output is only relevant to the output CSV file, so store it away until required */
-		this.appendOutput = appendOutput;
-	}
-
-	private static final String CONTAINER_NAME_PREFIX = "C_";
-	private static final String VALUE_NAME_PREFIX = "V_";
-
 	/**
 	 * Creates a mapping from an {@link IMapping} name to the {@link IMapping} instance. This is used by the {@link CsiInputStream} to allow
 	 * {@link ContainerExtractionContext} and {@link MappingExtractionContext} to restore the reference to the {@link IMapping} instance that they
 	 * related to (as we don't serialize {@link IMapping} instances, just the name).
-	 * 
-	 * @param container the container to create mappings for.
+	 *
 	 * @return a map, never null, never empty.
 	 */
-	private Map<String, IMapping> createMappingMap(IMappingContainer container) {
+	private Map<String, IMapping> createMappingMap() {
 		Map<String, IMapping> dic = new HashMap<String, IMapping>();
 		// Implemented with a tree iteration, no recursion
 		Stack<IMapping> toDo = new Stack<IMapping>();
-		toDo.push(container);
+		toDo.push(this.container);
 		while (!toDo.empty()) {
 			IMapping current = toDo.pop();
 			if (current instanceof IValueMapping) {
@@ -227,6 +193,39 @@ public class InlineCsvWriter implements ICsvWriter {
 		return dic;
 	}
 
+	/**
+	 * Opens the CSI file for reading back (to create the CSV file).
+	 *
+	 * @return an input stream for the contexts stored in the CSI file.
+	 * @throws OutputManagerException if an unexpected error occurs whilst writing to the CSI file.
+	 */
+	private CsiInputStream getCsiInput() throws OutputManagerException {
+		try {
+			LOG.info("Re-opening {} to read intermediate file", this.csiOutputFile.getAbsolutePath());
+			return new CsiInputStream(this.nameToMapping, new FileInputStream(this.csiOutputFile));
+		} catch (IOException e) {
+			throw new OutputManagerException(e, "Unable to open CSI file {} for reading.", this.csiOutputFile.getAbsolutePath());
+		}
+	}
+
+	@Override
+	// CHECKSTYLE:OFF Field hiding is fine here because this is for initialising the obeject after a constructor call.
+	public void initialise(File outputDirectory, IMappingContainer container, boolean appendOutput) throws OutputManagerException {
+		// CHECKSTYLE:ON
+		this.outputName = container.getContainerName();
+		this.outputDirectory = outputDirectory;
+
+		String csiFileNameBasis = this.outputName;
+		this.csiOutputFile = new File(this.outputDirectory, FileUtility.convertToPOSIXCompliantFileName(csiFileNameBasis, "CSI", true));
+		this.container = container;
+		this.csiWriter = createCsiOutput();
+
+		this.nameToMapping = createMappingMap();
+
+		/* Append output is only relevant to the output CSV file, so store it away until required */
+		this.appendOutput = appendOutput;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -240,6 +239,12 @@ public class InlineCsvWriter implements ICsvWriter {
 		return sb.toString();
 	}
 
+	/**
+	 * Uses Java serialization to write out the <code>context</code> passed to the CSI file.
+	 *
+	 * @param context write the records for this context to the CSI file.
+	 * @throws OutputManagerException if an unexpected error occurs whilst writing to the CSI file.
+	 */
 	@Override
 	public void writeRecords(IExtractionResultsContainer context) throws OutputManagerException {
 		try {
@@ -248,22 +253,4 @@ public class InlineCsvWriter implements ICsvWriter {
 			throw new OutputManagerException(e, "Unable to write CEC to CSI file %s", this.csiOutputFile.getAbsolutePath());
 		}
 	}
-	// @Override
-	// public void writeRecords(IExtractionResultsContainer context) throws OutputManagerException {
-	// Iterator<List<ExtractedField>> recordIterator = new InlineOutputRecordIterator(context);
-	// while (recordIterator.hasNext()) {
-	// List<ExtractedField> record = recordIterator.next();
-	// ExtractedField[] efArray = record.toArray(EMPTY_EXTRACTEDFIELD_ARRAY);
-	// try {
-	// if (LOG.isTraceEnabled()) {
-	// LOG.trace("Writing output {}: {}", this.csiOutputFile.getAbsolutePath(), StringUtil.toString(efArray));
-	// }
-	// this.csiWriter.writeObject(efArray);
-	// } catch (IOException ioe) {
-	// throw new OutputManagerException(ioe, "Unable to write to %1$s(%2$s): %3$s", this.outputName, this.csiOutputFile.getAbsolutePath(),
-	// StringUtil.toString(efArray));
-	// }
-	// }
-	// }
-
 }

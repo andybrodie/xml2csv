@@ -30,12 +30,19 @@ public enum MultiValueBehaviour {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MultiValueBehaviour.class);
 
-	public static MultiValueBehaviour parse(String multiValueBehaviourAsString) {
+	/**
+	 * Convert a string value of a {@link MultiValueBehaviour} to the enum value.
+	 * 
+	 * @param multiValueBehaviourAsString the string version of {@link MultiValueBehaviour}.
+	 * @param defaultValue a value to return if null or an empty string is passed in <code>multiValueBehaviourAsString</code>.
+	 * @return an enum value based on the parameters.
+	 */
+	public static MultiValueBehaviour parse(String multiValueBehaviourAsString, MultiValueBehaviour defaultValue) {
 		if (StringUtil.isNullOrEmpty(multiValueBehaviourAsString)) {
-			LOG.debug("Parsing {} to {}", multiValueBehaviourAsString == null ? "(null)" : multiValueBehaviourAsString, MultiValueBehaviour.DEFAULT);
-			return DEFAULT;
+			return defaultValue;
 		}
-		String uc = multiValueBehaviourAsString.toUpperCase();
+		String uc = multiValueBehaviourAsString.trim().toUpperCase();
+		MultiValueBehaviour.valueOf(uc);
 		MultiValueBehaviour retVal = ("GREEDY".equals(uc) || "INLINE".equals(uc)) ? GREEDY : LAZY;
 		LOG.debug("Parsing {} to {}", multiValueBehaviourAsString, retVal);
 		return retVal;

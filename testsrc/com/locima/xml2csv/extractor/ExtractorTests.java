@@ -28,7 +28,7 @@ public class ExtractorTests {
 	}
 
 	private File testInstanceCounts(String configFile, int[] instanceCounts, String... inputFiles) throws IOException, XMLException,
-					FileParserException, OutputManagerException, DataExtractorException {
+	FileParserException, OutputManagerException, DataExtractorException {
 		MappingConfiguration config = loadMappingConfiguration(configFile);
 
 		TemporaryFolder outputFolder = new TemporaryFolder();

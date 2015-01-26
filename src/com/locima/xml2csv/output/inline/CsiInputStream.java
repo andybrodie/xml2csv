@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
-import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -32,11 +31,25 @@ public class CsiInputStream extends ObjectInputStream {
 	 */
 	private int readCount;
 
-	public CsiInputStream(Map<String, IMapping> iMappingDictionary, InputStream in) throws IOException {
-		super(in);
+	/**
+	 * Create a new instance based on the CSI input stream passed.
+	 *
+	 * @param iMappingDictionary mapping from container/mapping name to the {@link IMapping} instance.
+	 * @param csiInputStream the CSI input stream to wrap.
+	 * @throws IOException if any exceptions occur whilst initialising the input stream (thrown from
+	 *             {@link ObjectInputStream#ObjectInputStream(InputStream).}
+	 */
+	public CsiInputStream(Map<String, IMapping> iMappingDictionary, InputStream csiInputStream) throws IOException {
+		super(csiInputStream);
 		this.nameToMapping = iMappingDictionary;
 	}
 
+	/**
+	 * Retrieve the {@link IValueMapping} instance associated with the name passed.
+	 *
+	 * @param mappingName the name of the mapping to retrieve.
+	 * @return either an {@link IValueMapping} or null if it could not be found.
+	 */
 	public IValueMapping getIValueMapping(String mappingName) {
 		IMapping mapping = this.nameToMapping.get("V_" + mappingName);
 		if ((mapping != null) && (mapping instanceof IValueMapping)) {
@@ -47,6 +60,12 @@ public class CsiInputStream extends ObjectInputStream {
 		return null;
 	}
 
+	/**
+	 * Retrieve the {@link IMappingContainer} instance associated with the name passed.
+	 *
+	 * @param mappingName the name of the mapping to retrieve.
+	 * @return either an {@link IMappingContainer} or null if it could not be found.
+	 */
 	public IMappingContainer getMappingContainer(String mappingName) {
 		IMapping mapping = this.nameToMapping.get("C_" + mappingName);
 		if ((mapping != null) && (mapping instanceof IMappingContainer)) {
@@ -57,6 +76,12 @@ public class CsiInputStream extends ObjectInputStream {
 		return null;
 	}
 
+	/**
+	 * Get the next {@link ContainerExtractionContext} from the stream this object is wrapping.
+	 *
+	 * @return the next extraction context found in the CSI input file, or null if there are no more (end of file).
+	 * @throws OutputManagerException if an unexpected object was found in the stream.
+	 */
 	public ContainerExtractionContext getNextRecord() throws OutputManagerException {
 		Object ctxObject;
 		try {

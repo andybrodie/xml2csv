@@ -15,6 +15,12 @@ public interface IMappingContainer extends IMapping, List<IMapping> {
 	 */
 	String getContainerName();
 
+	/**
+	 * Retrieve the mapping root for this container. The mapping root is an XPath expression that will be executed, relative to a parent node (or
+	 * document node, if this is a top-level mapping), will be used as a the basis for executing child mappings.
+	 *
+	 * @return an XPath amount. If null then the node provided by a parent container, or document node (if none) should be used.
+	 */
 	XPathValue getMappingRoot();
 
 	/**
@@ -24,7 +30,5 @@ public interface IMappingContainer extends IMapping, List<IMapping> {
 	 */
 	@Override
 	int size();
-
-	IMapping findMapping(String mappingName);
 
 }

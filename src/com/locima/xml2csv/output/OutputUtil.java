@@ -19,9 +19,7 @@ import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.MappingIndexAncestors;
-import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.util.StringUtil;
-import com.locima.xml2csv.util.Tuple;
 
 /**
  * Utility methods required by both the direct and inline CSV writers.
@@ -35,6 +33,14 @@ public class OutputUtil {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OutputUtil.class);
 
+	/**
+	 * Closes the stream passed with enough additional information to provide trace.
+	 *
+	 * @param outputName the name of the output being closed, in terms of the mapping output name.
+	 * @param fileName the filename of the file to be closed.
+	 * @param outputStream the stream to close.
+	 * @throws OutputManagerException if any unexpected conditions occur whilst closing the stream.
+	 */
 	public static void close(String outputName, String fileName, OutputStream outputStream) throws OutputManagerException {
 		LOG.info("Closing {} ({})", outputName, fileName);
 		try {
@@ -45,6 +51,14 @@ public class OutputUtil {
 		}
 	}
 
+	/**
+	 * Closes the writer passed with enough additional information to provide trace.
+	 *
+	 * @param outputName the name of the output being closed, in terms of the mapping output name.
+	 * @param fileName the filename of the file to be closed.
+	 * @param writer the writer to close.
+	 * @throws OutputManagerException if any unexpected conditions occur whilst closing the writer.
+	 */
 	public static void close(String outputName, String fileName, Writer writer) throws OutputManagerException {
 		LOG.info("Closing writer for {} ({})", outputName, fileName);
 		try {
@@ -55,6 +69,17 @@ public class OutputUtil {
 		LOG.info("Successfully closed {} ({})", outputName, fileName);
 	}
 
+	/**
+	 * Creates a CSV file ready to have records written out to it, which includes writing the field names out as the first line if
+	 * <code>appendOutput</code> is false.
+	 *
+	 * @param container the mapping container for which we're initialising the CSV file writer
+	 * @param file the file that should be created or appended to.
+	 * @param appendOutput whether any existing file should be appended to (if there is no existing file method will behave as if parameter was
+	 *            false).
+	 * @return a writer to the CSV file.
+	 * @throws OutputManagerException if any unexpected errors occur whilst initialising the CSV file.
+	 */
 	public static Writer createCsvWriter(IMappingContainer container, File file, boolean appendOutput) throws OutputManagerException {
 		LOG.info("Creating writer for {}", file.getAbsolutePath());
 		try {
@@ -73,10 +98,19 @@ public class OutputUtil {
 		}
 	}
 
-	public static Writer createWriter(File file, boolean appendOutput) throws OutputManagerException {
+	/**
+	 * Creates a writer object for the file passed.
+	 *
+	 * @param file the file to create a writer for. See {@link FileOutputStream#FileOutputStream(File, boolean)}.
+	 * @param append whether an existing file should be appended to (i.e. position the writer at the end of the file). See
+	 *            {@link FileOutputStream#FileOutputStream(File, boolean)}.
+	 * @return an open writer.
+	 * @throws OutputManagerException if any unexpected errors occur whilst creating the writer.
+	 */
+	public static Writer createWriter(File file, boolean append) throws OutputManagerException {
 		LOG.debug("Creating writer for {}", file.getAbsolutePath());
 		try {
-			Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, appendOutput), ENCODING));
+			Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, append), ENCODING));
 			LOG.info("Created writer for {}", file.getAbsolutePath());
 			return writer;
 		} catch (FileNotFoundException fileNotFoundException) {
@@ -91,7 +125,7 @@ public class OutputUtil {
 	/**
 	 * Retrieve the field names for the mapping container passed.
 	 *
-	 * @param fieldNames the list of field names that this method should add to.
+	 * @param container the contains for which to generate the field names.
 	 * @return the number of field names that this method added.
 	 */
 	private static List<String> getFieldNames(IMappingContainer container) {
@@ -106,6 +140,7 @@ public class OutputUtil {
 	 *
 	 * @param fieldNames the list of column names that is being built up.
 	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
+	 * @param container the container from which to generate the field names.
 	 * @return the number of columns added by this invocation.
 	 */
 	private static int getFieldNames(List<String> fieldNames, MappingIndexAncestors parentContext, IMappingContainer container) {
@@ -134,6 +169,14 @@ public class OutputUtil {
 		return fieldCount;
 	}
 
+	/**
+	 * Adds the field names for the given {@link IValueMapping} instance to the list of <code>fieldNames</code> passed.
+	 *
+	 * @param fieldNames the list of column names that is being built up.
+	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
+	 * @param mapping the mapping from which to generate field names.
+	 * @return the number of columns added by this invocation.
+	 */
 	private static int getFieldNames(List<String> fieldNames, MappingIndexAncestors parentContext, IValueMapping mapping) {
 		/*
 		 * The number of fields output is the maximum number of values found in a single execution of this mapping, constrained by this.minValueCount
@@ -165,16 +208,17 @@ public class OutputUtil {
 	 *
 	 * @param container the mapping container that we are wanting to write the field names for.
 	 * @param writer the writer to write the field names to.
+	 * @throws OutputManagerException if any unexpected errors occur whilst writing the field names to the <code>writer</code> passed.
 	 */
-	public static void writeFieldNames(IMappingContainer ctx, Writer writer) throws OutputManagerException {
+	public static void writeFieldNames(IMappingContainer container, Writer writer) throws OutputManagerException {
 		try {
-			List<String> fieldNames = getFieldNames(ctx);
+			List<String> fieldNames = getFieldNames(container);
 			String escapedFieldNames = StringUtil.toCsvRecord(fieldNames);
-			LOG.info("Writing field names to {}: {}", ctx.getContainerName(), escapedFieldNames);
+			LOG.info("Writing field names to {}: {}", container.getContainerName(), escapedFieldNames);
 			writer.write(escapedFieldNames);
-			writer.write(StringUtil.getLineSeparator());
+			writer.write(StringUtil.LINE_SEPARATOR);
 		} catch (IOException ioe) {
-			throw new OutputManagerException(ioe, "Unable to write field names for container %s", ctx.getContainerName());
+			throw new OutputManagerException(ioe, "Unable to write field names for container %s", container.getContainerName());
 		}
 	}
 

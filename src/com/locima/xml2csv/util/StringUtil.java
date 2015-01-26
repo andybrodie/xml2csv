@@ -31,7 +31,7 @@ public class StringUtil {
 	 */
 	public static final String EMPTY_STRING = "";
 
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+	public static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	public static final String NULL_OR_EMPTY_MESSAGE = "Must be a string containing at least one character.";
 
@@ -109,10 +109,6 @@ public class StringUtil {
 		return quotesRequired ? quote + returnValue + quote : returnValue;
 	}
 
-	public static String getLineSeparator() {
-		return LINE_SEPARATOR;
-	}
-
 	/**
 	 * Returns true if the passed string is either null or has zero length.
 	 *
@@ -123,6 +119,14 @@ public class StringUtil {
 		return (s == null) || (s.length() == 0);
 	}
 
+	/**
+	 * Converts the passed collection to a string ready for output to a CSV file. Each element of <code>inputCollection</code> will have its
+	 * {@link Object#toString()} method called to get an output value.
+	 * 
+	 * @param inputCollection a collection of objects.
+	 * @param <T> the type of object contained within <code>inputCollection</code>.
+	 * @return a string in CSV format, ready for output in to a CSV file.
+	 */
 	public static <T> String toCsvRecord(Collection<T> inputCollection) {
 		StringUtil.IConverter<T> genericConverter = new StringUtil.IConverter<T>() {
 
@@ -207,7 +211,7 @@ public class StringUtil {
 		if (strings == null) {
 			return new ArrayList<String>(0);
 		}
-		ArrayList<String> list = new ArrayList<String>(strings.length);
+		List<String> list = new ArrayList<String>(strings.length);
 		for (String s : strings) {
 			list.add(s);
 		}
