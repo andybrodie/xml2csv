@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<family>
+	<record>
+		<field name="name" value="Tom" />
+		<field name="age" value="32" />
+		<field name="address" value="Home" />
+	</record>
+	<record>
+		<field name="title" value="Dr"/>
+		<field name="address" value="Home" />
+		<field name="age" value="20" />
+		<field name="name" value="Dick" />
+	</record>
+	<record>
+		<field name="name" value="Harry" />
+		<field name="age" value="44" />
+		<field name="address" value="Away" />
+		<field name="title" value="Mr" />
+	</record>
+	<record>
+		<field name="age" value="10" />
+		<field name="suffix" value="Jr" />
+		<field name="name" value="John" />
+	</record>
+</family>

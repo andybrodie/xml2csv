@@ -13,23 +13,7 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	private static final Logger LOG = LoggerFactory.getLogger(Mapping.class);
 
 	/**
-	 * The baseName of the field that will be created by this mapping.
-	 */
-	private String baseName;
-
-	/**
-	 * Specifies the largest number of values that this mapping should return for a single mapping. If an execution of this mapping yields a number of
-	 * results more than this value then values will be discarded.
-	 */
-	private int maxValueCount;
-	/**
-	 * Specifies the smallest number of values that this mapping should return for a single mapping. If an execution of this mapping yields a number
-	 * of results fewer than this value, empty results will be appended to make up this value.
-	 */
-	private int minValueCount;
-
-	/**
-	 * Creates a new immutable Field Definition.
+	 * Creates a new mapping configuration object for fields in the output CSV file.
 	 *
 	 * @param parent the parent mapping container.
 	 * @param baseName the outputName of the field, must a string of length > 0.
@@ -44,10 +28,7 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	public Mapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
 					XPathValue valueXPath, int minValueCount, int maxValueCount) {
 		// CHECKSTYLE:ON
-		super(parent, format, groupNumber, multiValueBehaviour, valueXPath);
-		this.baseName = baseName;
-		this.minValueCount = minValueCount;
-		this.maxValueCount = maxValueCount;
+		super(parent, baseName, format, groupNumber, multiValueBehaviour, valueXPath, minValueCount, maxValueCount);
 	}
 
 	@Override
@@ -57,41 +38,33 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		}
 		if (obj instanceof Mapping) {
 			Mapping that = (Mapping) obj;
-			return EqualsUtil.areEqual(this.baseName, that.baseName) && EqualsUtil.areEqual(this.minValueCount, that.minValueCount)
-							&& EqualsUtil.areEqual(this.maxValueCount, that.minValueCount) && super.equals(that);
+			return super.equals(that);
 		} else {
 			return false;
 		}
 	}
 
 	@Override
-	public String getBaseName() {
-		return this.baseName;
-	}
-
-	@Override
-	public int getMaxValueCount() {
-		return this.maxValueCount;
-	}
-
-	@Override
-	public int getMinValueCount() {
-		return this.minValueCount;
-	}
-
-	/**
-	 * If multi-record then this mapping will always return one value, to return <code>true</code>. If inline then output cardinality is only fixed if
-	 * {@link Mapping#minValueCount} equals {@link Mapping#maxValueCount} and they're both greater than zero (zero indicates unbounded).
-	 * 
-	 * @return true if this mapping always outputs the same number of fields per record regardless of input document.
-	 */
-	@Override
-	public boolean hasFixedOutputCardinality() {
-		boolean isFixed =
-						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-						|| ((this.maxValueCount == this.minValueCount) && (this.minValueCount > 0));
-		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
-		return isFixed;
+	public String toString() {
+		StringBuilder sb = new StringBuilder("Mapping(");
+		final String separator = ", ";
+		sb.append(this.getBaseName());
+		sb.append(separator);
+		sb.append(getNameFormat());
+		sb.append(separator);
+		sb.append(getGroupNumber());
+		sb.append(separator);
+		sb.append(getMultiValueBehaviour());
+		sb.append(", \"");
+		sb.append(getValueXPath().getSource());
+		sb.append("\", ");
+		sb.append(this.getMinValueCount());
+		sb.append(separator);
+		sb.append(this.getMaxValueCount());
+		sb.append(separator);
+		sb.append(getHighestFoundValueCount());
+		sb.append(')');
+		return sb.toString();
 	}
 
 	/**
@@ -102,35 +75,9 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 	 */
 	@Override
 	public int hashCode() {
-		return this.baseName.hashCode();
-	}
-
-	@Override
-	public boolean requiresTrimWhitespace() {
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder("Mapping(");
-		final String separator = ", ";
-		sb.append(this.baseName);
-		sb.append(separator);
-		sb.append(getNameFormat());
-		sb.append(separator);
-		sb.append(getGroupNumber());
-		sb.append(separator);
-		sb.append(getMultiValueBehaviour());
-		sb.append(", \"");
-		sb.append(getValueXPath().getSource());
-		sb.append("\", ");
-		sb.append(this.minValueCount);
-		sb.append(separator);
-		sb.append(this.maxValueCount);
-		sb.append(separator);
-		sb.append(getHighestFoundValueCount());
-		sb.append(')');
-		return sb.toString();
+		// There's no state expicit to Mapping, so using the superclass's hashCode implementation will work here
+		// TODO Think about the wisdom of this a bit more, it feels wrong.
+		return super.hashCode();
 	}
 
 }

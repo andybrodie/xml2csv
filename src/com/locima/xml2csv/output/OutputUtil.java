@@ -149,7 +149,7 @@ public class OutputUtil {
 		 * output, not the number of fields (as a nested, in-line MappingList would indicate. Therefore, only process as in-line if nested.
 		 */
 		int repeats = container.getFieldCountForSingleRecord();
-		LOG.info("Generating field names for {} ({} repeats)", container, repeats);
+		LOG.info("Generating field names for {} ({} iteration(s))", container, repeats);
 		String name = container.getContainerName();
 		int fieldCount = 0;
 		for (int containerIteration = 0; containerIteration < repeats; containerIteration++) {

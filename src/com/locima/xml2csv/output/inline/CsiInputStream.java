@@ -95,7 +95,7 @@ public class CsiInputStream extends ObjectInputStream {
 		} catch (EOFException eofe) {
 			return null;
 		} catch (IOException e) {
-			throw new OutputManagerException(e, "Unable to read next CEC");
+			throw new OutputManagerException(e, "Error reading to read CEC at index %d", this.readCount);
 		}
 		if (ctxObject instanceof ContainerExtractionContext) {
 			return (ContainerExtractionContext) ctxObject;

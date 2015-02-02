@@ -5,7 +5,10 @@ import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
+import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.PivotMapping;
+import com.locima.xml2csv.output.IExtractionResultsContainer;
 
 /**
  * Common implementation between {@link MappingExtractionContext} and {@link ContainerExtractionContext}.
@@ -32,20 +35,20 @@ public abstract class AbstractExtractionContext implements IExtractionContext {
 	 *            beneath the parent.
 	 * @return either a {@link MappingExtractionContext} or {@link ContainerExtractionContext} instance. Never null.
 	 */
-	public static IExtractionContext create(ContainerExtractionContext parent, IMapping mapping, int positionRelativeToOtherRootNodes,
+	public static IExtractionContext create(IExtractionResultsContainer parent, IMapping mapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		IExtractionContext ctx;
 		if (mapping == null) {
 			throw new ArgumentNullException("mapping");
 		}
 		if (mapping instanceof IValueMapping) {
-			ctx =
-							new MappingExtractionContext(parent, ((IValueMapping) mapping), positionRelativeToOtherRootNodes,
-											positionRelativeToIMappingSiblings);
-		} else if (mapping instanceof IMappingContainer) {
+			ctx = new MappingExtractionContext(parent, (IValueMapping) mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
+		} else if (mapping instanceof MappingList) {
 			ctx =
 							new ContainerExtractionContext(parent, (IMappingContainer) mapping, positionRelativeToOtherRootNodes,
 											positionRelativeToIMappingSiblings);
+		} else if (mapping instanceof PivotMapping) {
+			ctx = new PivotExtractionContext(parent, (PivotMapping) mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 		} else {
 			throw new BugException("Passed mapping that is not a value mapping or mapping container: %s", mapping);
 		}
@@ -78,7 +81,7 @@ public abstract class AbstractExtractionContext implements IExtractionContext {
 	 * @param positionRelativeToIMappingSiblings the position of this extraction context with respect to its sibling {@link IMapping} instances
 	 *            beneath the parent.
 	 */
-	protected AbstractExtractionContext(ContainerExtractionContext parent, int positionRelativeToOtherRootNodes,
+	protected AbstractExtractionContext(IExtractionResultsContainer parent, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		this.positionRelativeToIMappingSiblings = positionRelativeToIMappingSiblings;
 		this.positionRelativeToOtherRootNodes = positionRelativeToOtherRootNodes;

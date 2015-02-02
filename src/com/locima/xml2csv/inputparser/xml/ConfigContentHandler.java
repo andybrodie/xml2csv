@@ -20,6 +20,7 @@ import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.configuration.PivotMapping;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.configuration.filter.FileNameInputFilter;
 import com.locima.xml2csv.configuration.filter.IInputFilter;
@@ -41,8 +42,10 @@ public class ConfigContentHandler extends DefaultHandler {
 		FileNameInputFilter, Filters, Mapping, MappingConfiguration, MappingList, PivotMapping, XPathInputFilter
 	}
 
-	private static final String GROUP_NUMBER_ATTR = "group";
+	private static final String CUSTOM_NAME_FORMAT_ATTR = "customNameFormat";
 
+	private static final String GROUP_NUMBER_ATTR = "group";
+	private static final String KEY_XPATH_ATTR = "keyXPath";
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 	private static final String MAPPING_ROOT_ATTR = "mappingRoot";
@@ -51,7 +54,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String MULTI_VALUE_BEHAVIOUR_ATTR = "behaviour";
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
-	private static final String CUSTOM_NAME_FORMAT_ATTR = "customNameFormat";
+	private static final String VALUE_XPATH_ATTR = "valueXPath";
 	private static final String XPATH_ATTR = "xPath";
 
 	private int currentGroupNumber;
@@ -170,28 +173,44 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * Adds a column mapping to the current MappingList instance being defined.
 	 *
 	 * @param name the name of the column.
-	 * @param xPath the XPath that should be executed to get the value of the column.
-	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
+	 * @param keyXPathSource the XPath that should be executed to each key.
+	 * @param valueXPathSource the XPath that should be executed to get the value, relative to each key.
+	 * @param templateNameFormatName the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param groupNumber the group number that applies to this mapping.
-	 * @param bespokeNameFormatFormat a bespoke style to use for this mapping.
+	 * @param customTemplateNameFormat a bespoke style to use for this mapping.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addPivotMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
-					String multiValueBehaviour) throws SAXException {
-		MappingList current = this.mappingListStack.peek();
-		NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
-		if (StringUtil.isNullOrEmpty(name)) {
-			LOG.debug("No name was specified for mapping, so XPath value is used instead {}", xPath);
-			xPath.replace('/', '_');
-		} else {
-		}
+	private void addPivotMapping(String name, String mappingRootSource, String keyXPathSource, String valueXPathSource,
+					String templateNameFormatName, String customTemplateNameFormat, int groupNumber, String multiValueBehaviour) throws SAXException {
+		MappingList parent = this.mappingListStack.peek();
 		try {
-			XmlUtil.createXPathValue(current.getNamespaceMappings(), xPath);
+			String mappingName;
+			if (StringUtil.isNullOrEmpty(name)) {
+				LOG.debug("No name was specified for mapping, so XPath value is used instead {}", keyXPathSource);
+				mappingName = keyXPathSource.replace('/', '_');
+			} else {
+				mappingName = name;
+			}
+
+			XPathValue rootXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), mappingRootSource);
+			XPathValue keyXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), keyXPathSource);
+			XPathValue valueXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), valueXPathSource);
+			NameFormat templateNameFormat = NameFormat.parse(templateNameFormatName, customTemplateNameFormat, NameFormat.NO_COUNTS);
+			PivotMapping mapping = new PivotMapping();
+			mapping.setParent(parent);
+			mapping.setMappingRoot(rootXPath);
+			mapping.setMappingName(mappingName);
+			mapping.setKeyXPath(keyXPath);
+			mapping.setValueXPath(valueXPath);
+			mapping.setNameFormat(templateNameFormat);
+			mapping.setGroupNumber(groupNumber);
+			MultiValueBehaviour mvb = MultiValueBehaviour.parse(multiValueBehaviour, MultiValueBehaviour.GREEDY);
+			mapping.setMultiValueBehaviour(mvb);
+			parent.add(mapping);
 		} catch (XMLException e) {
-			throw getException(e, "Unable to add field");
+			throw getException(e, "Unable to add pivot mapping definition to configuration due to a problem in the XML configuration.");
 		}
-		throw new UnsupportedOperationException("Haven't implemented pivot mappings yet!");
 	}
 
 	/**
@@ -370,13 +389,15 @@ public class ConfigContentHandler extends DefaultHandler {
 			switch (elementName) {
 				case Mapping:
 					final int defaultInlineGroupNumber = -2;
-					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), atts.getValue(CUSTOM_NAME_FORMAT_ATTR),
+					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR),
+									atts.getValue(CUSTOM_NAME_FORMAT_ATTR),
 									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, defaultInlineGroupNumber),
 									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
 									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case PivotMapping:
-					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
+					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(KEY_XPATH_ATTR),
+									atts.getValue(VALUE_XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
 									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 					break;
 				case MappingList:

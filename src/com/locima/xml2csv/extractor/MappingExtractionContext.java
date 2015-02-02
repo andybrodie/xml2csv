@@ -18,6 +18,7 @@ import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.XPathValue;
+import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.IExtractionResultsValues;
 import com.locima.xml2csv.output.inline.CsiInputStream;
 import com.locima.xml2csv.util.StringUtil;
@@ -62,9 +63,10 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
 	 *            beneath the parent.
 	 */
-	public MappingExtractionContext(ContainerExtractionContext parent, IValueMapping mapping, int positionRelativeToOtherRootNodes,
+	public MappingExtractionContext(IExtractionResultsContainer parent, IValueMapping mapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
+		if (mapping==null) throw new ArgumentNullException("mapping");
 		this.mapping = mapping;
 	}
 

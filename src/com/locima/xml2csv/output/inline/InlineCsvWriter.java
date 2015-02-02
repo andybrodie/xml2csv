@@ -78,12 +78,18 @@ public class InlineCsvWriter implements IOutputWriter {
 	private String outputName;
 
 	/**
-	 * TODO Tidies up (i.e. deletes) all intermediate files. Currently throws an exception as it's not implemented.
+	 * Tidies up (i.e. deletes) all intermediate files. If this fails then only logging will be produced.
 	 */
 	@Override
 	public void abort() {
-		throw new UnsupportedOperationException();
-		// TODO Auto-generated method stub
+		if (this.csiWriter != null) {
+			try {
+				OutputUtil.close(this.outputName, this.csiOutputFile.getAbsolutePath(), this.csiWriter);
+				this.csiOutputFile.delete();
+			} catch (OutputManagerException e) {
+				LOG.error("Unable to close and delete CSI writer during abort", e);
+			}
+		}
 	}
 
 	/**
@@ -200,7 +206,10 @@ public class InlineCsvWriter implements IOutputWriter {
 	 * @throws OutputManagerException if an unexpected error occurs whilst writing to the CSI file.
 	 */
 	private CsiInputStream getCsiInput() throws OutputManagerException {
+		this.nameToMapping = createMappingMap();
+
 		try {
+			
 			LOG.info("Re-opening {} to read intermediate file", this.csiOutputFile.getAbsolutePath());
 			return new CsiInputStream(this.nameToMapping, new FileInputStream(this.csiOutputFile));
 		} catch (IOException e) {
@@ -219,8 +228,6 @@ public class InlineCsvWriter implements IOutputWriter {
 		this.csiOutputFile = new File(this.outputDirectory, FileUtility.convertToPOSIXCompliantFileName(csiFileNameBasis, "CSI", true));
 		this.container = container;
 		this.csiWriter = createCsiOutput();
-
-		this.nameToMapping = createMappingMap();
 
 		/* Append output is only relevant to the output CSV file, so store it away until required */
 		this.appendOutput = appendOutput;

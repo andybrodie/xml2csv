@@ -44,7 +44,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 			indentSb.append("  ");
 		}
 		String indent = indentSb.toString();
-		if (ctx instanceof ContainerExtractionContext) {
+		if (ctx instanceof IExtractionResultsContainer) {
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("{}{}:{}", indent, offset, ctx);
 			}
@@ -53,7 +53,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 			for (List<IExtractionResults> children : ((IExtractionResultsContainer) ctx).getChildren()) {
 				LOG.trace("{}  {}", indent, childResultsSetCount++);
 				for (IExtractionResults child : children) {
-					logResults(child, childCount++, indentCount + 2);
+					logResults(child, childCount++, indentCount + 1);
 				}
 				childCount = 0;
 			}
@@ -92,7 +92,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
 	 *            beneath the parent.
 	 */
-	public ContainerExtractionContext(ContainerExtractionContext parent, IMappingContainer mapping, int positionRelativeToOtherRootNodes,
+	public ContainerExtractionContext(IExtractionResultsContainer parent, IMappingContainer mapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 		this.mapping = mapping;

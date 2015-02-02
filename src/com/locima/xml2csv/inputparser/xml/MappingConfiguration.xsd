@@ -73,13 +73,12 @@
 		<attributeGroup ref="tns:cardinalityAttributes" />
 	</complexType>
 
-	<complexType name="Mapping">
+	<complexType name="AbstractMapping">
 		<annotation>
 			<documentation>Specifies a single field in an output record using an
 				XPath expression (relative to the parent Mapping's mappingRoot).
 			</documentation>
 		</annotation>
-		<attribute name="xPath" type="string" use="required" />
 		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
 		<attribute name="name" type="string" use="optional">
 			<annotation>
@@ -92,25 +91,32 @@
 		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
 		<attribute name="customNameFormat" type="string" use="optional">
 			<annotation>
-				<documentation>Only used when sibling nameFormat attribute is "Custom", this specifies a format string (see Java documentation for String.format
-					at http://docs.oracle.com/javase/6/docs/api/java/util/Formatter.html#detail) for the field names created by this mapping.
-					The set of parameters
-					passed to this string expect alternate
-						strings and ints that represent the current and all ancestors of the
-					the current node. The value at index n
-					is a string which contains the name of
-					the mapping or container. The value at index n+1 is an integer
-					that represents the position of the
-					corresponding mapping or container at position
-					n. To explain through examples, the following are the values
-					used for all the built-in name formats:
-					NoCounts=$%1$s; WithCount=%1$s_%2$d;
-					WithCountAndParentCount="%1$s_%4$d_%2$d; WithParentCount=%1$s_%4$d.
+				<documentation>
+					Only used when sibling nameFormat attribute is "Custom", this specifies a format string (see Java documentation for String.format
+					at
+					http://docs.oracle.com/javase/6/docs/api/java/util/Formatter.html#detail) for the field names created by this mapping. The set of parameters
+					passed to this string expect alternate strings and ints that represent the current and all ancestors of the the current node. The value at
+					index n
+					is a string which contains the name of the mapping or container. The value at index n+1 is an integer that represents the position of
+					the
+					corresponding mapping or container at position n. To explain through examples, the following are the values used for all the built-in name
+					formats: NoCounts=$%1$s; WithCount=%1$s_%2$d; WithCountAndParentCount="%1$s_%4$d_%2$d; WithParentCount=%1$s_%4$d.
 				</documentation>
 			</annotation>
 		</attribute>
 		<attribute name="group" type="tns:MappingGroup" use="optional" />
 		<attributeGroup ref="tns:cardinalityAttributes" />
+	</complexType>
+
+	<complexType name="Mapping">
+		<annotation>
+			<documentation>Species a mapping that uses a single XPath value to obtain a value for a field.</documentation>
+		</annotation>
+		<complexContent>
+			<extension base="tns:AbstractMapping">
+				<attribute name="xPath" type="string" use="required" />
+			</extension>
+		</complexContent>
 	</complexType>
 
 	<complexType name="PivotMapping">
@@ -120,15 +126,33 @@
 			</documentation>
 		</annotation>
 		<complexContent>
-			<restriction base="tns:Mapping">
-				<attribute name="name" type="string" use="required">
+			<extension base="tns:AbstractMapping">
+				<attribute name="mappingRoot" type="string">
 					<annotation>
-						<documentation>
-							Mandatory XPath expression that derives the names of the columns.
+						<documentation>XPath expression, relative to the parent mapping (or
+							document element if parent is MappingConfiguration), of the root
+							node for
+							these mappings. If omitted, document element is assumed.
+							An expression that returns multiple nodes will result in multiple
+							rows in the output file.
 						</documentation>
 					</annotation>
 				</attribute>
-			</restriction>
+				<attribute name="keyXPath" type="string" use="required">
+					<annotation>
+						<documentation>
+							Mandatory XPath expression that derives the names of the fields.
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="valueXPath" type="string" use="required">
+					<annotation>
+						<documentation>
+							Mandatory XPath expression that derives the value, relative to the node that yielded the key (in keyXPath).
+						</documentation>
+					</annotation>
+				</attribute>
+			</extension>
 		</complexContent>
 	</complexType>
 
@@ -213,7 +237,7 @@
 
 	<simpleType name="NaturalNumber">
 		<restriction base="int">
-			<minInclusive value="1" />
+			<minInclusive value="0" />
 		</restriction>
 	</simpleType>
 

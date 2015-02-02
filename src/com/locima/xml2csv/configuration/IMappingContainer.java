@@ -1,11 +1,9 @@
 package com.locima.xml2csv.configuration;
 
-import java.util.List;
-
 /**
  * Used for objects that contain ordered collections of mappings of field name to XPath.
  */
-public interface IMappingContainer extends IMapping, List<IMapping> {
+public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 
 	/**
 	 * Returns an output name associated with this mapping container.
@@ -28,7 +26,6 @@ public interface IMappingContainer extends IMapping, List<IMapping> {
 	 *
 	 * @return the number of child mappings contained within this container.
 	 */
-	@Override
 	int size();
 
 }

@@ -18,11 +18,6 @@ import com.locima.xml2csv.util.XmlUtil;
  */
 public class MappingList extends ArrayList<IMapping> implements IMappingContainer {
 
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = -7735577777081946390L;
-
 	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
 
 	private String containerName;
@@ -119,7 +114,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public Map<String, String> getNamespaceMappings() {
 		return this.namespaceMappings;
 	}
-
+	
 	@Override
 	public IMappingContainer getParent() {
 		throw new UnsupportedOperationException();

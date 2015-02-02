@@ -70,7 +70,7 @@ public class XmlDataExtractor {
 			ctx.evaluate(xmlDoc);
 
 			if (LOG.isTraceEnabled()) {
-				LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", this);
+				LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", mapping);
 				ContainerExtractionContext.logResults(ctx, 0, 0);
 				LOG.trace("END RESULTS OUTPUT");
 			}

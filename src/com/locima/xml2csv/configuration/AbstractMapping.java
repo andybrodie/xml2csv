@@ -1,12 +1,22 @@
 package com.locima.xml2csv.configuration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.locima.xml2csv.output.GroupState;
 import com.locima.xml2csv.util.EqualsUtil;
 
 /**
  * Common attributes and behaviours for mapping implementations.
  */
-public abstract class AbstractMapping implements IMapping {
+public abstract class AbstractMapping implements IValueMapping {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractMapping.class);
+
+	/**
+	 * The baseName of the field that will be created by this mapping.
+	 */
+	private String baseName;
 
 	/**
 	 * To understand how groups work, see {@link GroupState}.
@@ -14,6 +24,18 @@ public abstract class AbstractMapping implements IMapping {
 	private int groupNumber;
 
 	private int highestFoundValueCount;
+
+	/**
+	 * Specifies the largest number of values that this mapping should return for a single mapping. If an execution of this mapping yields a number of
+	 * results more than this value then values will be discarded.
+	 */
+	private int maxValueCount;
+
+	/**
+	 * Specifies the smallest number of values that this mapping should return for a single mapping. If an execution of this mapping yields a number
+	 * of results fewer than this value, empty results will be appended to make up this value.
+	 */
+	private int minValueCount;
 
 	/**
 	 * The behaviour for this mapping to use when encountering multiple values for a single execution.
@@ -44,13 +66,16 @@ public abstract class AbstractMapping implements IMapping {
 	 * @param groupNumber the group number for this field definition.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 */
-	public AbstractMapping(IMappingContainer parent, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
-					XPathValue valueXPath) {
+	public AbstractMapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
+					XPathValue valueXPath, int minValueCount, int maxValueCount) {
 		this.parent = parent;
+		this.baseName = baseName;
 		this.groupNumber = groupNumber;
 		this.multiValueBehaviour = multiValueBehaviour;
 		this.nameFormat = format == null ? NameFormat.NO_COUNTS : format;
 		this.valueXPath = valueXPath;
+		this.minValueCount = minValueCount;
+		this.maxValueCount = maxValueCount;
 	}
 
 	@Override
@@ -59,15 +84,39 @@ public abstract class AbstractMapping implements IMapping {
 			return true;
 		}
 		if (obj instanceof AbstractMapping) {
-			//CHECKSTYLE:OFF Can't think of another way to provide a base class implementation of equals
+			// CHECKSTYLE:OFF Can't think of another way to provide a base class implementation of equals
 			AbstractMapping that = (AbstractMapping) obj;
-			//CHECKSTYLE:ON 
+			// CHECKSTYLE:ON
 			return EqualsUtil.areEqual(this.nameFormat, that.nameFormat) && EqualsUtil.areEqual(this.groupNumber, that.groupNumber)
 							&& EqualsUtil.areEqual(this.multiValueBehaviour, that.multiValueBehaviour)
-							&& EqualsUtil.areEqual(this.valueXPath, that.valueXPath);
+							&& EqualsUtil.areEqual(this.valueXPath, that.valueXPath) && EqualsUtil.areEqual(this.baseName, that.baseName)
+							&& EqualsUtil.areEqual(this.minValueCount, that.minValueCount)
+							&& EqualsUtil.areEqual(this.maxValueCount, that.maxValueCount);
 		} else {
 			return false;
 		}
+	}
+	
+
+	/**
+	 * Returns a hash code solely based on the name of the field, as this is the only thing that really makes a difference between storing and
+	 * indexing.
+	 *
+	 * @return the hash code of the base name of this definition.
+	 */
+	@Override
+	public int hashCode() {
+		return this.baseName.hashCode();
+	}
+
+	@Override
+	public String getBaseName() {
+		return this.baseName;
+	}
+
+	@Override
+	public int getFieldCountForSingleRecord() {
+		return getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
 	}
 
 	@Override
@@ -78,6 +127,16 @@ public abstract class AbstractMapping implements IMapping {
 	@Override
 	public int getHighestFoundValueCount() {
 		return this.highestFoundValueCount;
+	}
+
+	@Override
+	public int getMaxValueCount() {
+		return this.maxValueCount;
+	}
+
+	@Override
+	public int getMinValueCount() {
+		return this.minValueCount;
 	}
 
 	@Override
@@ -109,8 +168,24 @@ public abstract class AbstractMapping implements IMapping {
 		return this.valueXPath;
 	}
 
+	/**
+	 * If this mapping is lazy then it will only ever return field per record, so return <code>true</code>. If greedy then output cardinality is only
+	 * fixed if {@link Mapping#minValueCount} equals {@link Mapping#maxValueCount} and they're both greater than zero (as zero indicates unbounded).
+	 *
+	 * @return true if this mapping always outputs the same number of fields per record regardless of input document.
+	 */
 	@Override
-	public abstract int hashCode();
+	public boolean hasFixedOutputCardinality() {
+		boolean isFixed =
+						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
+										|| ((getMaxValueCount() == getMinValueCount()) && (getMinValueCount() > 0));
+		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
+		return isFixed;
+	}
+
+	public boolean requiresTrimWhitespace() {
+		return true;
+	}
 
 	@Override
 	public void setHighestFoundValueCount(int valueFound) {
@@ -119,11 +194,5 @@ public abstract class AbstractMapping implements IMapping {
 
 	@Override
 	public abstract String toString();
-
-	@Override
-	public int getFieldCountForSingleRecord() {
-		return getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
-	}
-
 
 }
