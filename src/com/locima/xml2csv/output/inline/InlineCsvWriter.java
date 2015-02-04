@@ -13,6 +13,8 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sun.security.pkcs.EncodingException;
+
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
@@ -127,7 +129,7 @@ public class InlineCsvWriter implements IOutputWriter {
 		csvWriter.initialise(this.outputDirectory, this.container, this.appendOutput);
 		try {
 			// Go through all the records, reading each snapshot AbstractExtractionContext state then passing it to the DirectCsvWriter
-			ContainerExtractionContext cec = csiInput.getNextRecord();
+			IExtractionResultsContainer cec = csiInput.getNextRecord();
 			while (cec != null) {
 				csvWriter.writeRecords(cec);
 				cec = csiInput.getNextRecord();

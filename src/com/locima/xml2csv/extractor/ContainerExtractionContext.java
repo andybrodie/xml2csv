@@ -51,16 +51,16 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 			int childResultsSetCount = 0;
 			int childCount = 0;
 			for (List<IExtractionResults> children : ((IExtractionResultsContainer) ctx).getChildren()) {
-				LOG.trace("{}  {}", indent, childResultsSetCount++);
+				LOG.trace("{}  MappingRoot[{}]", indent, childResultsSetCount++);
 				for (IExtractionResults child : children) {
-					logResults(child, childCount++, indentCount + 1);
+					logResults(child, childCount++, indentCount + 2);
 				}
 				childCount = 0;
 			}
 		} else {
 			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
 			if (LOG.isTraceEnabled()) {
-				LOG.trace("{}{}:{}({})", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getResults(), ",", null));
+				LOG.trace("{}[{}]:{} = {}", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getResults(), ",", null));
 			}
 		}
 	}
@@ -118,7 +118,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	 * <li>Getting the mapping root(s) of the mapping, relative to the rootNode passed.</li>
 	 * <li>If there isn't a mapping root, use the root node passed.</li>
 	 * <li>Execute this mapping for each of the root(s).</li>
-	 * <li>Each execution results in a single call to om (one CSV line).</li>
+	 * <li>Each execution results in a single call to om (one or more CSV records though).</li>
 	 * </ol>
 	 *
 	 * @param rootNode the XML node against which to evaluate the mapping.
@@ -197,11 +197,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 
 	@Override
 	public List<IExtractionResults> getResultsSetAt(int valueIndex) {
-		if (this.children.size() > valueIndex) {
-			return this.children.get(valueIndex);
-		} else {
-			return null;
-		}
+		return (this.children.size() > valueIndex) ? this.children.get(valueIndex) : null;
 	}
 
 	/**
@@ -214,7 +210,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	@SuppressWarnings("unchecked")
 	private void readObject(ObjectInputStream rawInputStream) throws IOException, ClassNotFoundException {
 		if (!(rawInputStream instanceof CsiInputStream)) {
-			throw new BugException("Bug found when deserializing CEC.  I've been given an ObjectInputStream instead of a CsiInputStream!");
+			throw new BugException("Bug found when deserializing PEC.  I've been given a %s instead of a CsiInputStream", rawInputStream.getClass());
 		}
 		CsiInputStream stream = (CsiInputStream) rawInputStream;
 		Object readObject = stream.readObject();

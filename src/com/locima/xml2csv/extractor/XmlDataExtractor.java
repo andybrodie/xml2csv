@@ -9,6 +9,7 @@ import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.PivotMapping;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -61,21 +62,31 @@ public class XmlDataExtractor {
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
 	public void extractTo(XdmNode xmlDoc, IOutputManager outputManager, int positionRelativeToOtherRootNodes) throws DataExtractorException,
-	OutputManagerException {
+					OutputManagerException {
 		LOG.info("Executing {} sets of mappingConfiguration", this.mappingConfiguration.size());
 		this.mappingConfiguration.log();
 		int mappingSiblingIndex = 0;
 		for (IMappingContainer mapping : this.mappingConfiguration) {
-			ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
-			ctx.evaluate(xmlDoc);
-
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", mapping);
-				ContainerExtractionContext.logResults(ctx, 0, 0);
-				LOG.trace("END RESULTS OUTPUT");
+			// TODO Need to properly resolve whether PivotMappings are really Containers and re-architect interface appropriately
+			if (mapping instanceof MappingList) {
+				ContainerExtractionContext ctx = new ContainerExtractionContext(mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
+				ctx.evaluate(xmlDoc);
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", mapping);
+					ContainerExtractionContext.logResults(ctx, 0, 0);
+					LOG.trace("END RESULTS OUTPUT");
+				}
+				outputManager.writeRecords(mapping.getContainerName(), ctx);
+			} else {
+				PivotExtractionContext ctx = new PivotExtractionContext((PivotMapping) mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
+				ctx.evaluate(xmlDoc);
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", mapping);
+					ContainerExtractionContext.logResults(ctx, 0, 0);
+					LOG.trace("END RESULTS OUTPUT");
+				}
+				outputManager.writeRecords(mapping.getContainerName(), ctx);
 			}
-
-			outputManager.writeRecords(mapping.getContainerName(), ctx);
 			mappingSiblingIndex++;
 		}
 	}

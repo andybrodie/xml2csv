@@ -39,6 +39,17 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	private GroupState baseGroupState;
 
 	/**
+	 * Tracks the value to be returned by {@link #hasNext()}. Set by {@link #hasNext()}.
+	 */
+	private boolean hasNext;
+
+	/**
+	 * Tracks whether the value in {@link #hasNext()} is stale and needs refreshing. Used to work out whether to do work in {@link #hasNext()} and set
+	 * to <code>false</code> by {@link #next()}.
+	 */
+	private boolean isHasNextStale = true;
+
+	/**
 	 * The tree of rootContainer that this iterator is walking.
 	 */
 	private IExtractionResultsContainer rootContainer;
@@ -55,7 +66,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 
 	/**
 	 * Adds empty fields as required (based on {@link IMapping#getMinValueCount()} in mapping configurations.
-	 * 
+	 *
 	 * @param csvFields the list of CSV fields to append to.
 	 * @param context the context to extract results from and append to <code>csvFields</code>.
 	 * @param containerIterationCount the count of container instances already output.
@@ -68,7 +79,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 
 	/**
 	 * Add empty fields to <code>csvFields</code> based on {@link IMapping#getMinValueCount()} value of the passed <code>mapping</code>.
-	 * 
+	 *
 	 * @param csvFields the set of CSV fields to add to.
 	 * @param mapping the mapping to work out how many fields are required from.
 	 * @param existingResultsCount how many results have already been output.
@@ -157,14 +168,15 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 				 * found to satisfy this requirement (i.e. add lots of empty fields).
 				 */
 				addEmptyCsvFields(csvFields, context, containerIterationCount);
-
 				break;
 			case LAZY:
 				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
 				List<IExtractionResults> results = context.getResultsSetAt(valueIndex);
-				for (IExtractionResults child : results) {
-					LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex++, child, context);
-					createCsvValues(csvFields, child);
+				if (results != null) {
+					for (IExtractionResults child : results) {
+						LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex++, child, context);
+						createCsvValues(csvFields, child);
+					}
 				}
 				break;
 			case DEFAULT:
@@ -239,7 +251,11 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	 */
 	@Override
 	public boolean hasNext() {
-		return (this.baseGroupState == null) ? false : this.baseGroupState.hasNext();
+		if (this.isHasNextStale) {
+			this.hasNext = (this.baseGroupState == null) ? false : this.baseGroupState.hasNext();
+			this.isHasNextStale = false;
+		}
+		return this.hasNext;
 	}
 
 	/**
@@ -254,6 +270,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 		}
 		List<String> values = createCsvValues();
 		this.baseGroupState.increment();
+		this.isHasNextStale = true;
 		return values;
 	}
 
@@ -262,7 +279,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	 */
 	@Override
 	public void remove() {
-		throw new UnsupportedOperationException("remove() should never be called on ExtractedRecordList: " + this);
+		throw new UnsupportedOperationException("remove() should never be called on this: " + this);
 	}
 
 }

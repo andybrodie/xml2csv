@@ -13,6 +13,7 @@ import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
+import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.OutputManagerException;
 
 /**
@@ -82,25 +83,30 @@ public class CsiInputStream extends ObjectInputStream {
 	 * @return the next extraction context found in the CSI input file, or null if there are no more (end of file).
 	 * @throws OutputManagerException if an unexpected object was found in the stream.
 	 */
-	public ContainerExtractionContext getNextRecord() throws OutputManagerException {
+	public IExtractionResultsContainer getNextRecord() throws OutputManagerException {
 		Object ctxObject;
 		try {
 			if (LOG.isInfoEnabled()) {
-				LOG.info("Reading CEC {} from CSI", this.readCount);
+				LOG.info("Reading next extraction context {} from CSI", this.readCount);
 			}
 			ctxObject = readObject();
 			this.readCount++;
 		} catch (ClassNotFoundException cnfe) {
-			throw new OutputManagerException(cnfe, "Unexpected object in CSI");
+			throw new OutputManagerException(cnfe, "Unexpected object in CSI, only expecting IExtractionResultsContainer instances.");
 		} catch (EOFException eofe) {
 			return null;
 		} catch (IOException e) {
-			throw new OutputManagerException(e, "Error reading to read CEC at index %d", this.readCount);
+			throw new OutputManagerException(e, "Error reading CEC at index %d", this.readCount);
 		}
-		if (ctxObject instanceof ContainerExtractionContext) {
-			return (ContainerExtractionContext) ctxObject;
+		if (ctxObject instanceof IExtractionResultsContainer) {
+			IExtractionResultsContainer container;
+			LOG.info("Read context {} successfully from CSI", this.readCount);
+			container = (IExtractionResultsContainer) ctxObject;
+			ContainerExtractionContext.logResults(container, 0, 0);
+			return container;
 		} else {
-			throw new OutputManagerException("Unexpected object in CSI: %s", ctxObject.getClass().getName());
+			throw new OutputManagerException("Unexpected object in CSI %s, only expecting IExtractionResultsContainer instances.",
+							ctxObject.getClass().getName());
 		}
 	}
 

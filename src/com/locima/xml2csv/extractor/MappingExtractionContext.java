@@ -93,7 +93,8 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 			LOG.trace("Extracting value for \"{}\" using XPath \"{}\"", fieldName, xPath.getSource());
 		}
 
-		List<String> values = new ArrayList<String>();
+		// Typically there is only one result, so use that as the normal case
+		List<String> values = new ArrayList<String>(1); 
 		int maxValueCount = thisMapping.getMaxValueCount();
 
 		XPathSelector selector = xPath.evaluate(mappingRoot);
@@ -198,7 +199,11 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("MEC(");
-		sb.append(getMapping());
+		sb.append(this.mapping);
+		sb.append(", ");
+		sb.append(getPositionRelativeToIMappingSiblings());
+		sb.append(", ");
+		sb.append(getPositionRelativeToOtherRootNodes());
 		sb.append(")");
 		return sb.toString();
 	}

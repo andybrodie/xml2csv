@@ -6,7 +6,7 @@
 		<field name="address" value="Home" />
 	</record>
 	<record>
-		<field name="title" value="Dr"/>
+		<field name="title" value="Dr" />
 		<field name="address" value="Home" />
 		<field name="age" value="20" />
 		<field name="name" value="Dick" />

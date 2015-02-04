@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	private static final Logger LOG = LoggerFactory.getLogger(PivotExtractionContext.class);
 
 	private static final long serialVersionUID = 1L;
-	private List<IExtractionResults> children;
+	private List<List<IExtractionResults>> children;
 	private transient PivotMapping mapping;
 
 	public PivotExtractionContext(IExtractionResultsContainer parent, PivotMapping pivotMapping, int positionRelativeToOtherRootNodes,
@@ -38,19 +39,23 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 		this.mapping = pivotMapping;
 	}
 
+	public PivotExtractionContext(PivotMapping pivotMapping, int positionRelativeToOtherRootNodes, int mappingSiblingIndex) {
+		this(null, pivotMapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
+	}
+
 	/**
 	 * Creates or re-uses an existing {@link MappingExtractionContext} that is dynamically created, along with its child {@link PivotKeyMapping} to
 	 * hold the values extracted form the XML.
 	 *
 	 * @param baseName the name of the key. All values found for keys with the same name are added to the same MEC.
-	 * @param keyCount
 	 * @return either an existing MEC or a newly created one to manage mappings for the key specifid by <code>baseName</code>.
 	 */
-	private MappingExtractionContext ensureMec(Map<String, MappingExtractionContext> mecs, String baseName, int keyCount) {
+	private MappingExtractionContext ensureMec(Map<String, MappingExtractionContext> mecs, String baseName, int positionRelativeToOtherRootNodes,
+					int positionRelativeToIMappingSiblings) {
 		LOG.info("Creating new MEC for {}", baseName);
 		Mapping keyMapping = this.mapping.getPivotKeyMapping(baseName);
-		MappingExtractionContext mec = new MappingExtractionContext(this, keyMapping, 0, keyCount);
-		this.children.add(mec);
+		MappingExtractionContext mec =
+						new MappingExtractionContext(this, keyMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 		return mec;
 	}
 
@@ -62,7 +67,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	 */
 	@Override
 	public void evaluate(XdmNode rootNode) throws DataExtractorException {
-		this.children = new ArrayList<IExtractionResults>();
+		this.children = new ArrayList<List<IExtractionResults>>();
 		XPathValue mappingRoot = this.mapping.getMappingRoot();
 		// If there's no mapping root expression, use the passed node as a single root
 		int rootCount = 0;
@@ -72,13 +77,13 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 			for (XdmItem item : rootIterator) {
 				if (item instanceof XdmNode) {
 					// All evaluations have to be done in terms of nodes, so if the XPath returns something like a value then warn and move on.
-					evaluateChildren((XdmNode) item, rootCount);
+					evaluateKVPairs((XdmNode) item, rootCount);
 				} else {
 					LOG.warn("Expected to find only elements after executing XPath on mapping list, got {}", item.getClass().getName());
 				}
 				rootCount++;
 			}
-			if (rootCount == 0 && LOG.isDebugEnabled()) {
+			if ((rootCount == 0) && LOG.isDebugEnabled()) {
 				LOG.debug("No results found for executing mapping root {} on {}", mappingRoot, this);
 			}
 		} else {
@@ -86,7 +91,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No mapping root specified for {}, so executing against passed context node", mappingRoot, this.mapping);
 			}
-			evaluateChildren(rootNode, rootCount);
+			evaluateKVPairs(rootNode, rootCount);
 			rootCount = 1;
 		}
 
@@ -103,38 +108,84 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
-	private void evaluateChildren(XdmNode node, int positionRelativeToOtherRootNodes) throws DataExtractorException {
+	private void evaluateKVPairs(XdmNode node, int positionRelativeToOtherRootNodes) throws DataExtractorException {
+		XPathValue kvPairRoot = this.mapping.getKVPairRoot();
 		XPathValue keyXPath = this.mapping.getKeyXPath();
 		XPathValue rootXPath = this.mapping.getMappingRoot();
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Executing keyXPath mapping {} for {}", keyXPath, this.mapping);
+			LOG.debug("Getting Key/Value Pair Roots using {} for {}", keyXPath, this.mapping);
 		}
-		XPathSelector keyIterator = keyXPath.evaluate(node);
-		int keyCount = 0;
-		for (XdmItem keyItem : keyIterator) {
-			String baseName = keyItem.getStringValue();
-			if (StringUtil.isNullOrEmpty(baseName)) {
-				LOG.debug("Found null key value at index {} for pivot mapping {} after executing {}.  Skipping.", keyCount, this, rootXPath);
+		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>();
+		// TODO Permit kvPairRoot to be null, in which case we use the single passed root as the only key/value pair
+		XPathSelector kvIterator = kvPairRoot.evaluate(node);
+		int positionRelativeToIMappingSiblings = 0;
+		for (XdmItem kvItem : kvIterator) {
+			if (!(kvItem instanceof XdmNode)) {
+				LOG.warn("KVPair Root yielded a {} ({}) instead of XdmNode.  Cannot find keys/values from here!", kvItem, kvItem.getClass());
 				continue;
 			}
-			baseName = baseName.trim();
-			LOG.debug("Found pivot mapping key {}", baseName);
-			MappingExtractionContext mec = ensureMec(null, baseName, keyCount);
-			mec.evaluate(node);
-			keyCount++;
+
+			XdmNode kvNode = (XdmNode) kvItem;
+			String keyName = getKey(kvNode, keyXPath);
+			if (keyName == null) {
+				LOG.info("No key could be found for {} on {}.  Moving on.", keyXPath, this.mapping);
+			} else {
+				LOG.debug("Found pivot mapping key {}", keyName);
+				MappingExtractionContext childCtx = ensureMec(null, keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
+				childCtx.evaluate(kvNode);
+				positionRelativeToIMappingSiblings++;
+				iterationECs.add(childCtx);
+			}
 		}
-		if (LOG.isInfoEnabled()) {
-			if (keyCount == 0) {
-				LOG.debug("Found no keys for pivot mapping {} after executing ", this, rootXPath);
+
+		if (iterationECs.size() > 0) {
+			if (positionRelativeToIMappingSiblings == 0) {
+				LOG.debug("Added {} keys for pivot mapping {} after executing ", positionRelativeToIMappingSiblings, rootXPath);
+			}
+			this.children.add(iterationECs);
+		} else {
+			if (LOG.isInfoEnabled()) {
+				if (positionRelativeToIMappingSiblings == 0) {
+					LOG.debug("Found no keys for pivot mapping {} after executing ", this, rootXPath);
+				}
 			}
 		}
 	}
 
 	@Override
 	public List<List<IExtractionResults>> getChildren() {
-		List<List<IExtractionResults>> childrenList = new ArrayList<List<IExtractionResults>>();
-		childrenList.add(this.children);
-		return childrenList;
+		return this.children;
+	}
+
+	/**
+	 * Retrieves a key name by taking the first result from executing <code>keyXPath</code> against <code>kvNode</code>. If there are multiple results
+	 * then all but the first are disregarded. If there are no results, or the first result does not yield a string when passed to
+	 * {@link XdmItem#getStringValue()} then null is returned.
+	 *
+	 * @param kvNode the context node from which to execute <code>keyXPath</code>.
+	 * @param keyXPath the XPath statement to execute from <code>kvNode</code>.
+	 * @return either a string key name, or null if one could not be found.
+	 * @throws DataExtractorException if any errors occur whilst extracting the key value from the XML.
+	 */
+	private String getKey(XdmNode kvNode, XPathValue keyXPath) throws DataExtractorException {
+		String keyName;
+		XPathSelector keyIterator = keyXPath.evaluate(kvNode);
+		Iterator<XdmItem> items = keyIterator.iterator();
+		if (!items.hasNext()) {
+			LOG.warn("KVPair key XPath {} yielded no results", keyXPath);
+			keyName = null;
+		} else {
+			XdmItem keyItem = items.next();
+			String baseName = keyItem.getStringValue();
+			if (StringUtil.isNullOrEmpty(baseName)) {
+				LOG.debug("Found XML node for key {} but had null/empty value", keyXPath);
+				keyName = null;
+			} else {
+				keyName = baseName.trim();
+				LOG.debug("Found key name {} from {}", keyName, keyXPath);
+			}
+		}
+		return keyName;
 	}
 
 	@Override
@@ -148,8 +199,8 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	}
 
 	@Override
-	public List<IExtractionResults> getResultsSetAt(int index) {
-		return index == 0 ? this.children : null;
+	public List<IExtractionResults> getResultsSetAt(int valueIndex) {
+		return (this.children.size() > valueIndex) ? this.children.get(valueIndex) : null;
 	}
 
 	/**
@@ -167,9 +218,9 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 		CsiInputStream stream = (CsiInputStream) rawInputStream;
 		Object readObject = stream.readObject();
 		try {
-			this.children = (List<IExtractionResults>) readObject;
+			this.children = (List<List<IExtractionResults>>) readObject;
 		} catch (ClassCastException cce) {
-			throw new IOException("Unexpected object type found in stream.  Expected List<IExtractionResults> but got "
+			throw new IOException("Unexpected object type found in stream.  Expected List<List<IExtractionResults>> but got "
 							+ readObject.getClass().getName());
 		}
 		readObject = stream.readObject();

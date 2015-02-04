@@ -34,6 +34,8 @@ public class PivotMapping implements IMappingContainer {
 
 	private XPathValue valueXPath;
 
+	private XPathValue kvPairRoot;
+
 	/**
 	 * Creates a new instance of a Pivot Mapping object.
 	 */
@@ -63,8 +65,7 @@ public class PivotMapping implements IMappingContainer {
 
 	@Override
 	public int getFieldCountForSingleRecord() {
-		return this.children.size();
-		// throw new UnsupportedOperationException();
+		return getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
 	}
 
 	@Override
@@ -79,6 +80,14 @@ public class PivotMapping implements IMappingContainer {
 
 	public XPathValue getKeyXPath() {
 		return this.keyXPath;
+	}
+
+	public XPathValue getKVPairRoot() {
+		return this.kvPairRoot;
+	}
+
+	public void setKVPairRoot(XPathValue kvPairRoot) {
+		this.kvPairRoot = kvPairRoot;
 	}
 
 	/**
@@ -127,24 +136,33 @@ public class PivotMapping implements IMappingContainer {
 		Mapping pkm = findChild(keyName);
 		if (pkm != null) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Returning existing PVM ", pkm);
+				LOG.debug("Returning existing PVM: {}", pkm);
 			}
 		} else {
-			// TODO I'm probably going to want separately configurabl values for MVB, minValueCount and maxValueCount later, but ok for now.
+			// TODO I'm probably going to want separately configurable values for MVB, minValueCount and maxValueCount later, but ok for now.
 			pkm =
-							new Mapping(this, keyName, getNameFormat(), getGroupNumber(), getMultiValueBehaviour(), getValueXPath(),
+							new Mapping(this, keyName, getNameFormat(), getGroupNumber() + 1, getMultiValueBehaviour(), getValueXPath(),
 											getMinValueCount(), getMaxValueCount());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Created new PVM: {}", pkm);
+			}
 			this.children.add(pkm);
 		}
 		return pkm;
 	}
 
+	/**
+	 * Get the XPath expression that, when executed relative to the results of {@link #getKVPairRoot()} will return 0 or more values.
+	 * 
+	 * @return the XPath expression that, when executed relative to the results of {@link #getKVPairRoot()} will return 0 or more values.
+	 */
 	public XPathValue getValueXPath() {
 		return this.valueXPath;
 	}
 
 	/**
-	 * By their nature, pivot mappings cannot predict how many fields they will return, always returns <code>false</code>.
+	 * Because pivot mapping columns depend on the documents passed to them, pivot mappings cannot predict how many fields they will return, so always
+	 * returns <code>false</code>.
 	 *
 	 * @return false.
 	 */
@@ -272,6 +290,9 @@ public class PivotMapping implements IMappingContainer {
 		sb.append(separator);
 		sb.append(" Root(");
 		sb.append(this.mappingRoot);
+		sb.append("), Value(");
+		sb.append(" KVPairRoot(");
+		sb.append(this.kvPairRoot);
 		sb.append("), Value(");
 		sb.append(" Key(");
 		sb.append(this.keyXPath);

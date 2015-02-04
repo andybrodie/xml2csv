@@ -44,12 +44,13 @@ public class ConfigBuilders {
 	 * @param parent The parent of this mapping container. Must be null if this is a top level mapping container.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public static PivotMapping createPivotMapping(IMappingContainer parent, String pivotMappingName, XPathValue rootXPath, XPathValue keyXPath,
+	public static PivotMapping createPivotMapping(IMappingContainer parent, String pivotMappingName, XPathValue mappingRoot, XPathValue kvPairRoot, XPathValue keyXPath,
 					XPathValue valueXPath, NameFormat nameFormat, int groupNumber, MultiValueBehaviour multiValueBehaviour) throws XMLException {
 		PivotMapping pivotMapping = new PivotMapping();
 		pivotMapping.setParent(parent);
 		pivotMapping.setMappingName(pivotMappingName);
-		pivotMapping.setMappingRoot(rootXPath);
+		pivotMapping.setMappingRoot(mappingRoot);
+		pivotMapping.setKVPairRoot(kvPairRoot);
 		pivotMapping.setKeyXPath(keyXPath);
 		pivotMapping.setValueXPath(valueXPath);
 		pivotMapping.setNameFormat(nameFormat);
@@ -73,9 +74,10 @@ public class ConfigBuilders {
 	 * @param parent The parent of this mapping container. Must be null if this is a top level mapping container.
 	 * @throws XMLException If there was problem compiling the expression (for example, if the XPath is invalid).
 	 */
-	public static PivotMapping createPivotMapping(IMappingContainer parent, String pivotMappingName, String rootXPath, String keyXPath,
+	public static PivotMapping createPivotMapping(IMappingContainer parent, String pivotMappingName, String rootXPath, String kvPairXPath, String keyXPath,
 					String valueXPath, NameFormat nameFormat, int groupNumber, MultiValueBehaviour multiValueBehaviour) throws XMLException {
-		return createPivotMapping(parent, pivotMappingName, XmlUtil.createXPathValue(null, rootXPath), XmlUtil.createXPathValue(null, keyXPath),
+		return createPivotMapping(parent, pivotMappingName, XmlUtil.createXPathValue(null, rootXPath), 
+						XmlUtil.createXPathValue(null, kvPairXPath), XmlUtil.createXPathValue(null, keyXPath),
 						XmlUtil.createXPathValue(null, valueXPath), nameFormat, groupNumber, multiValueBehaviour);
 	}
 
