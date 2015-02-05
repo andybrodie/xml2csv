@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.BugException;
+import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
@@ -31,7 +32,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	private static final Logger LOG = LoggerFactory.getLogger(MappingExtractionContext.class);
 
 	/**
-	 *
+	 * Default value (1)L.
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -66,7 +67,9 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	public MappingExtractionContext(IExtractionResultsContainer parent, IValueMapping mapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
-		if (mapping==null) throw new ArgumentNullException("mapping");
+		if (mapping == null) {
+			throw new ArgumentNullException("mapping");
+		}
 		this.mapping = mapping;
 	}
 
@@ -77,9 +80,9 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */
-	//CHECKSTYLE:OFF Cyclomatic complexity limit up to 11, would be less but I need logging here and splitting would make more complex.
+	// CHECKSTYLE:OFF Cyclomatic complexity limit up to 11, would be less but I need logging here and splitting would make more complex.
 	@Override
-	//CHECKSTYLE:ON 
+	// CHECKSTYLE:ON
 	public void evaluate(XdmNode mappingRoot) throws DataExtractorException {
 		if (mappingRoot == null) {
 			throw new ArgumentNullException("mappingRoot");
@@ -94,7 +97,9 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 		}
 
 		// Typically there is only one result, so use that as the normal case
-		List<String> values = new ArrayList<String>(1); 
+		// CHECKSTYLE:OFF I want to use trimToSize later, so need to refer to ArrayList
+		ArrayList<String> values = new ArrayList<String>(1);
+		// CHECKSTYLE:ON
 		int maxValueCount = thisMapping.getMaxValueCount();
 
 		XPathSelector selector = xPath.evaluate(mappingRoot);
@@ -130,6 +135,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Adding values to {}: {}", thisMapping, StringUtil.collectionToString(values, ",", "\""));
 		}
+		values.trimToSize();
 		this.results = values;
 	}
 

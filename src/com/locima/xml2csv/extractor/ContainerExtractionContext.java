@@ -174,7 +174,11 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 			IExtractionContext childCtx =
 							AbstractExtractionContext.create(this, childMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 			childCtx.evaluate(node);
-			iterationECs.add(childCtx);
+			
+			// Only add a CEC or MEC to the collection if it's not empty.
+			if (childCtx.size() > 0) {
+				iterationECs.add(childCtx);
+			}
 			positionRelativeToIMappingSiblings++;
 		}
 		this.children.add(iterationECs);
@@ -215,7 +219,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 		CsiInputStream stream = (CsiInputStream) rawInputStream;
 		Object readObject = stream.readObject();
 		try {
-			this.children = (List<List<IExtractionResults>>) readObject;
+			this.children = (ArrayList<List<IExtractionResults>>) readObject;
 		} catch (ClassCastException cce) {
 			throw new IOException("Unexpected object type found in stream.  Expected List<List<IExtractionResults>> but got "
 							+ readObject.getClass().getName());

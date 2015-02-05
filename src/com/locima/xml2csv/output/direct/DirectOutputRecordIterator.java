@@ -21,11 +21,11 @@ import com.locima.xml2csv.output.IExtractionResultsValues;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
- * Iterates over a tree of {@link ContainerExtractionContext} to output a set of CSV output lines. This is where the hierarchical results of all the
+ * Iterates over a tree of {@link ContainerExtractionContext} to output a set of CSV records. This is where the hierarchical results of all the
  * extraction of data for a single document (modelled using {@link AbstractExtractionContext} instances are finally flattened in to a set of records.
  * <p>
  * When initialised, this creates a linked list of {@link GroupState} objects that maintain the state of each group for multi-record mappings, and a
- * special group for all the inline mappings (group number isn't used for inline mappings).
+ * special group for all the inline mappings (group number isn't used for inline mappings as it has no relevance).
  */
 public class DirectOutputRecordIterator implements Iterator<List<String>> {
 
@@ -146,18 +146,19 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	 * @param context the {@link AbstractExtractionContext} the relevant (contained) values of which should be added to <code>csvFields</code>.
 	 */
 	private void createCsvValuesFromContainer(List<String> csvFields, IExtractionResultsContainer context) {
-		IMappingContainer mapping = context.getMapping();
-		switch (mapping.getMultiValueBehaviour()) {
+		int resultIndexForTrace;
+		switch (context.getMultiValueBehaviour()) {
 			case GREEDY:
 				int containerIterationCount = 0;
-				int resultIndexForTrace = 0;
-				List<List<IExtractionResults>> allResults = context.getChildren();
-				for (List<IExtractionResults> results : allResults) {
-					for (IExtractionResults child : results) {
+				resultIndexForTrace = 0;
+				List<List<IExtractionResults>> resultsForAllRoots = context.getChildren();
+				for (List<IExtractionResults> resultsForSingleRoot : resultsForAllRoots) {
+					for (IExtractionResults resultsForChild : resultsForSingleRoot) {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("Greedy eval of child {}.{} ({}) from {}", containerIterationCount, resultIndexForTrace++, child, context);
+							LOG.debug("Greedy eval of child[{}] {} ({}) from {}", containerIterationCount, resultIndexForTrace++, resultsForChild,
+											context);
 						}
-						createCsvValues(csvFields, child);
+						createCsvValues(csvFields, resultsForChild);
 					}
 					containerIterationCount++;
 					resultIndexForTrace = 0;
@@ -170,21 +171,22 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 				addEmptyCsvFields(csvFields, context, containerIterationCount);
 				break;
 			case LAZY:
-				int valueIndex = getIndexForGroup(context.getMapping().getGroupNumber());
+				int valueIndex = getIndexForGroup(context.getGroupNumber());
 				List<IExtractionResults> results = context.getResultsSetAt(valueIndex);
 				if (results != null) {
+					resultIndexForTrace = 0;
 					for (IExtractionResults child : results) {
-						LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex++, child, context);
+						LOG.debug("Lazy eval of child[{}] {} ({}) from {}", resultIndexForTrace, valueIndex, child, context);
 						createCsvValues(csvFields, child);
 					}
+					resultIndexForTrace++;
 				}
 				break;
 			case DEFAULT:
 				throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
 								+ "Mapping.getMultiValueBehaviour().");
 			default:
-				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().",
-								context.getMapping().getMultiValueBehaviour());
+				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().", context.getMultiValueBehaviour());
 		}
 	}
 
@@ -201,7 +203,8 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 				/* Greedy mappings output as much as they can */
 				List<String> fields = context.getResults();
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Greedily adding all fields {} to as output of {}", StringUtil.collectionToString(fields, ", ", null), context);
+					LOG.debug("Greedily adding all {} fields {} to as output of {}", fields.size(),
+									StringUtil.collectionToString(fields, ", ", null), context);
 				}
 				csvFields.addAll(fields);
 
@@ -218,7 +221,9 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 				/* The most typical option: just process the next value and move on */
 				int valueIndex = getIndexForGroup(context.getGroupNumber());
 				String field = context.getValueAt(valueIndex);
-				LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, field, context);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Lazy eval of child {} ({}) from {}", valueIndex, field, context);
+				}
 				csvFields.add(field);
 				break;
 			case DEFAULT:
