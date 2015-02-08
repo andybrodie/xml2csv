@@ -30,7 +30,7 @@ public interface IMapping {
 	 * to create another shared object between AbstractExtractionContext instances have a common mapping. This would probably involve creating a
 	 * shared factory that needs to be progated throughout all AbstractExtractionContext instances. It was quickest and easiest to break the purity of
 	 * {@link IMapping} to achieve this.
-	 * 
+	 *
 	 * @return the most number of results that this mapping has found so far in a single evaluation.
 	 */
 	int getHighestFoundValueCount();

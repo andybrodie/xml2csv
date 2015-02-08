@@ -62,7 +62,7 @@ public class XmlDataExtractor {
 	 * @throws OutputManagerException If an error occurred writing data to the output manager.
 	 */
 	public void extractTo(XdmNode xmlDoc, IOutputManager outputManager, int positionRelativeToOtherRootNodes) throws DataExtractorException,
-					OutputManagerException {
+	OutputManagerException {
 		LOG.info("Executing {} sets of mappingConfiguration", this.mappingConfiguration.size());
 		this.mappingConfiguration.log();
 		int mappingSiblingIndex = 0;
@@ -78,7 +78,8 @@ public class XmlDataExtractor {
 				}
 				outputManager.writeRecords(mapping.getContainerName(), ctx);
 			} else {
-				PivotExtractionContext ctx = new PivotExtractionContext((PivotMapping) mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
+				PivotExtractionContext ctx =
+								new PivotExtractionContext((PivotMapping) mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
 				ctx.evaluate(xmlDoc);
 				if (LOG.isTraceEnabled()) {
 					LOG.trace("START RESULTS OUTPUT after completed mapping container {} against document", mapping);

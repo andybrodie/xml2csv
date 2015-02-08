@@ -93,6 +93,9 @@ public abstract class AbstractExtractionContext implements IExtractionContext {
 	}
 
 	@Override
+	public abstract IMapping getMapping();
+
+	@Override
 	public int getMinCount() {
 		return getMapping().getMinValueCount();
 	}

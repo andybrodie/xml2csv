@@ -25,6 +25,9 @@ import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.inline.CsiInputStream;
 import com.locima.xml2csv.util.StringUtil;
 
+/**
+ * Used to manage the evaluation and storage of results of an {@link PivotMapping} instance.
+ */
 public class PivotExtractionContext extends AbstractExtractionContext implements IExtractionResultsContainer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PivotExtractionContext.class);
@@ -115,26 +118,41 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Getting Key/Value Pair Roots using {} for {}", keyXPath, this.mapping);
 		}
-		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>();
-		// TODO Permit kvPairRoot to be null, in which case we use the single passed root as the only key/value pair
-		XPathSelector kvIterator = kvPairRoot.evaluate(node);
 		int positionRelativeToIMappingSiblings = 0;
-		for (XdmItem kvItem : kvIterator) {
-			if (!(kvItem instanceof XdmNode)) {
-				LOG.warn("KVPair Root yielded a {} ({}) instead of XdmNode.  Cannot find keys/values from here!", kvItem, kvItem.getClass());
-				continue;
-			}
+		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>();
 
-			XdmNode kvNode = (XdmNode) kvItem;
-			String keyName = getKey(kvNode, keyXPath);
+		// TODO Permit kvPairRoot to be null, in which case we use the single passed root as the only key/value pair
+		if (kvPairRoot == null) {
+			String keyName = getKey(node, keyXPath);
 			if (keyName == null) {
 				LOG.info("No key could be found for {} on {}.  Moving on.", keyXPath, this.mapping);
 			} else {
 				LOG.debug("Found pivot mapping key {}", keyName);
 				MappingExtractionContext childCtx = ensureMec(null, keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
-				childCtx.evaluate(kvNode);
+				childCtx.evaluate(node);
 				positionRelativeToIMappingSiblings++;
 				iterationECs.add(childCtx);
+			}
+		} else {
+			XPathSelector kvIterator = kvPairRoot.evaluate(node);
+			for (XdmItem kvItem : kvIterator) {
+				if (!(kvItem instanceof XdmNode)) {
+					LOG.warn("KVPair Root yielded a {} ({}) instead of XdmNode.  Cannot find keys/values from here!", kvItem, kvItem.getClass());
+					continue;
+				}
+
+				XdmNode kvNode = (XdmNode) kvItem;
+				String keyName = getKey(kvNode, keyXPath);
+				if (keyName == null) {
+					LOG.info("No key could be found for {} on {}.  Moving on.", keyXPath, this.mapping);
+				} else {
+					LOG.debug("Found pivot mapping key {}", keyName);
+					MappingExtractionContext childCtx =
+									ensureMec(null, keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
+					childCtx.evaluate(kvNode);
+					positionRelativeToIMappingSiblings++;
+					iterationECs.add(childCtx);
+				}
 			}
 		}
 
@@ -190,6 +208,11 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 
 	@Override
 	public IMappingContainer getMapping() {
+		return this.mapping;
+	}
+
+	@Override
+	public IMappingContainer getMappingContainer() {
 		return this.mapping;
 	}
 

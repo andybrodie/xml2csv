@@ -61,6 +61,9 @@ public abstract class AbstractMapping implements IValueMapping {
 	 * Creates a new immutable Field Definition.
 	 *
 	 * @param parent the parent of this mapping. May be null if this is a top level mapping container.
+	 * @param baseName the name of this mapping, must be unique within the configuration.
+	 * @param minValueCount the fewest number of values, or sets of values, that may be returned by this mapping.
+	 * @param maxValueCount the most number of values, or sets of values, that may be returned by this mapping.
 	 * @param valueXPath a compiled XPath expression that will extract the values required for this field.
 	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
 	 * @param groupNumber the group number for this field definition.
@@ -95,18 +98,6 @@ public abstract class AbstractMapping implements IValueMapping {
 		} else {
 			return false;
 		}
-	}
-	
-
-	/**
-	 * Returns a hash code solely based on the name of the field, as this is the only thing that really makes a difference between storing and
-	 * indexing.
-	 *
-	 * @return the hash code of the base name of this definition.
-	 */
-	@Override
-	public int hashCode() {
-		return this.baseName.hashCode();
 	}
 
 	@Override
@@ -164,6 +155,7 @@ public abstract class AbstractMapping implements IValueMapping {
 	 *
 	 * @return the XPath statement that will execute this mapping.
 	 */
+	@Override
 	public XPathValue getValueXPath() {
 		return this.valueXPath;
 	}
@@ -178,11 +170,28 @@ public abstract class AbstractMapping implements IValueMapping {
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-										|| ((getMaxValueCount() == getMinValueCount()) && (getMinValueCount() > 0));
+						|| ((getMaxValueCount() == getMinValueCount()) && (getMinValueCount() > 0));
 		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
 	}
 
+	/**
+	 * Returns a hash code solely based on the name of the field, as this is the only thing that really makes a difference between storing and
+	 * indexing.
+	 *
+	 * @return the hash code of the base name of this definition.
+	 */
+	@Override
+	public int hashCode() {
+		return this.baseName.hashCode();
+	}
+
+	/**
+	 * Returns whether or not whitespace should be trimmed from found values in the document.
+	 * 
+	 * @return whether or not whitespace should be trimmed from found values in the document.
+	 */
+	@Override
 	public boolean requiresTrimWhitespace() {
 		return true;
 	}

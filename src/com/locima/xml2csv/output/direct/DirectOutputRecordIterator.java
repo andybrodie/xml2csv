@@ -65,19 +65,6 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	}
 
 	/**
-	 * Adds empty fields as required (based on {@link IMapping#getMinValueCount()} in mapping configurations.
-	 *
-	 * @param csvFields the list of CSV fields to append to.
-	 * @param context the context to extract results from and append to <code>csvFields</code>.
-	 * @param containerIterationCount the count of container instances already output.
-	 */
-	private void addEmptyCsvFields(List<String> csvFields, IExtractionResultsContainer context, int containerIterationCount) {
-		// TODO Check this logic, it was the commented out version, but that seems wrong?
-		// addEmptyCsvFields(csvFields, context.getMapping(), context.size());
-		addEmptyCsvFields(csvFields, context.getMapping(), containerIterationCount);
-	}
-
-	/**
 	 * Add empty fields to <code>csvFields</code> based on {@link IMapping#getMinValueCount()} value of the passed <code>mapping</code>.
 	 *
 	 * @param csvFields the set of CSV fields to add to.
@@ -114,11 +101,10 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	 */
 	private List<String> createCsvValues() {
 		List<String> csvFields = new ArrayList<String>();
-
-		createCsvValues(csvFields, this.rootContainer);
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Created record as follows ({})", StringUtil.collectionToString(csvFields, ",", null));
+		LOG.info("Creating next CSV record");
+		createCsvValuesFromContainer(csvFields, this.rootContainer);
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Created record as follows ({})", StringUtil.collectionToString(csvFields, ",", null));
 		}
 		return csvFields;
 	}
@@ -140,47 +126,74 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	}
 
 	/**
+	 * Iterates through all of the mappings that exist under the <code>resultsForSingleRoot</code> and append the fields required.
+	 * <p>
+	 * At this point don't go through the results for a single root, because it's the Mapping configuration that defines that results SHOULD be
+	 * output, rather than HAVE been found. <code>resultsForASingleRoot</code> won't contains MECs or children for context that had no results.
+	 * Fortunately, as an IMappingContainer or IValueMapping can contain the same child only once, we don't have a problem of retrieving by mapping
+	 * name.
+	 *
+	 * @param csvFields the CSV record that is being built up. This method should append to this list.
+	 * @param container the mapping configuration that <code>resultsForSingleRoot</code> was generated from.
+	 * @param resultsForSingleRoot the specific result child that we're going to process.
+	 */
+	private void createCsvValuesForSingleContainerRoot(List<String> csvFields, IMappingContainer container,
+					List<IExtractionResults> resultsForSingleRoot) {
+		int mappingIndex = 0;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Iterating over {} mapping children of this container: {}", container.size(), container);
+		}
+		for (IMapping childMapping : container) {
+			IExtractionResults childResults = findResultsForMapping(resultsForSingleRoot, childMapping);
+			// If there's no results for this mapping config, add empty fields, otherwise add real fields
+			if (childResults == null) {
+				if (LOG.isInfoEnabled()) {
+					LOG.info("There are no results for greedy mapping[{}]({}), so adding empty fields", mappingIndex, childMapping);
+				}
+				addEmptyCsvFields(csvFields, childMapping, 0);
+			} else {
+				if (LOG.isInfoEnabled()) {
+					LOG.info("Adding fields for greedy mapping[{}]({})", mappingIndex, childMapping);
+				}
+				createCsvValues(csvFields, childResults);
+			}
+			mappingIndex++;
+		}
+	}
+
+	/**
 	 * Adds to the passed <code>csvFields</code> list the relevant {@link ExtractedField} values found by this container.
 	 *
 	 * @param csvFields a list of fields being built up for a single output record.
 	 * @param context the {@link AbstractExtractionContext} the relevant (contained) values of which should be added to <code>csvFields</code>.
 	 */
 	private void createCsvValuesFromContainer(List<String> csvFields, IExtractionResultsContainer context) {
-		int resultIndexForTrace;
 		switch (context.getMultiValueBehaviour()) {
 			case GREEDY:
-				int containerIterationCount = 0;
-				resultIndexForTrace = 0;
+				/*
+				 * Greedy mappings always output as many fields as they can, so go through all the available results
+				 */
+				/*
+				 * Ah, I shouldn't be iterating over all the children, I need to iterate over the number of children I'm expecting.
+				 */
 				List<List<IExtractionResults>> resultsForAllRoots = context.getChildren();
 				for (List<IExtractionResults> resultsForSingleRoot : resultsForAllRoots) {
-					for (IExtractionResults resultsForChild : resultsForSingleRoot) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Greedy eval of child[{}] {} ({}) from {}", containerIterationCount, resultIndexForTrace++, resultsForChild,
-											context);
-						}
-						createCsvValues(csvFields, resultsForChild);
-					}
-					containerIterationCount++;
-					resultIndexForTrace = 0;
+					createCsvValuesForSingleContainerRoot(csvFields, context.getMappingContainer(), resultsForSingleRoot);
 				}
-
 				/*
 				 * If required, add extra empty fields where a minimum number of iterations of a container are required but not enough results were
 				 * found to satisfy this requirement (i.e. add lots of empty fields).
 				 */
-				addEmptyCsvFields(csvFields, context, containerIterationCount);
+				addEmptyCsvFields(csvFields, context.getMapping(), resultsForAllRoots.size());
+
 				break;
 			case LAZY:
+				/*
+				 * Lazy mappings only retrieve the set of results indicated by the current index of the group they're a member of.
+				 */
 				int valueIndex = getIndexForGroup(context.getGroupNumber());
-				List<IExtractionResults> results = context.getResultsSetAt(valueIndex);
-				if (results != null) {
-					resultIndexForTrace = 0;
-					for (IExtractionResults child : results) {
-						LOG.debug("Lazy eval of child[{}] {} ({}) from {}", resultIndexForTrace, valueIndex, child, context);
-						createCsvValues(csvFields, child);
-					}
-					resultIndexForTrace++;
-				}
+				List<IExtractionResults> resultsForSingleRoot = context.getResultsSetAt(valueIndex);
+				createCsvValuesForSingleContainerRoot(csvFields, context.getMappingContainer(), resultsForSingleRoot);
 				break;
 			case DEFAULT:
 				throw new BugException("Found DEFAULT MultiValueBehaviour whilst transforming to output, this should have been resolved by "
@@ -203,19 +216,20 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 				/* Greedy mappings output as much as they can */
 				List<String> fields = context.getResults();
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Greedily adding all {} fields {} to as output of {}", fields.size(),
-									StringUtil.collectionToString(fields, ", ", null), context);
+					LOG.debug("Greedy adding to {}: {} fields {} to as output of {}", StringUtil.collectionToString(csvFields, ", ", null),
+									fields.size(), StringUtil.collectionToString(fields, ", ", null), context);
 				}
 				csvFields.addAll(fields);
 
 				// Add extra null fields required for alignment with other records
 				int fieldsRequired = context.getMapping().getHighestFoundValueCount();
 				int extraFieldsRequired = fieldsRequired - fields.size();
-				LOG.debug("Adding {} extra fields to pad out to {}", extraFieldsRequired, fieldsRequired);
-				for (int i = 0; i < extraFieldsRequired; i++) {
-					csvFields.add(null);
+				if (extraFieldsRequired > 0) {
+					LOG.debug("Adding {} extra fields to pad out to {}", extraFieldsRequired, fieldsRequired);
+					for (int i = 0; i < extraFieldsRequired; i++) {
+						csvFields.add(null);
+					}
 				}
-
 				break;
 			case LAZY:
 				/* The most typical option: just process the next value and move on */
@@ -232,6 +246,24 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 			default:
 				throw new BugException("Found unexpected (%s) value in Mapping.getMultiValueBehaviour().", context.getMultiValueBehaviour());
 		}
+	}
+
+	/**
+	 * Find the member of <code>resultsForSingleRoot</code> that was created from <code>childMapping</code>.
+	 *
+	 * @param resultsForSingleRoot a set of mapping results for a single root value fond.
+	 * @param childMapping the mapping configuration that we're searching for within <code>resultsForSingleRoot</code>.
+	 * @return either the set of results that related to the parameters, or null if there aren't any.
+	 */
+	private IExtractionResults findResultsForMapping(List<IExtractionResults> resultsForSingleRoot, IMapping childMapping) {
+		if (resultsForSingleRoot != null) {
+			for (IExtractionResults results : resultsForSingleRoot) {
+				if (results.getMapping().equals(childMapping)) {
+					return results;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**

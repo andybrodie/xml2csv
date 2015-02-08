@@ -177,6 +177,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param valueXPathSource the XPath that should be executed to get the value, relative to each key.
 	 * @param templateNameFormatName the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param groupNumber the group number that applies to this mapping.
+	 * @param mappingRootSource an optional XPath expression that returns a set of nodes that will be the basis of the mapping.
 	 * @param customTemplateNameFormat a bespoke style to use for this mapping.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.

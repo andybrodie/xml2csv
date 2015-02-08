@@ -165,6 +165,11 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 		return value;
 	}
 
+	@Override
+	public IValueMapping getValueMapping() {
+		return this.mapping;
+	}
+
 	/**
 	 * Overridden to manage not writing {@link #mapping} to the output stream.
 	 *

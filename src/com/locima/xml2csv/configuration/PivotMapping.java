@@ -22,6 +22,10 @@ public class PivotMapping implements IMappingContainer {
 
 	private XPathValue keyXPath;
 
+	private XPathValue kvPairRoot;
+
+	private XPathValue mappingRoot;
+
 	private MultiValueBehaviour multiValueBehaviour;
 
 	private NameFormat nameFormat;
@@ -30,11 +34,7 @@ public class PivotMapping implements IMappingContainer {
 
 	private String pivotMappingName;
 
-	private XPathValue mappingRoot;
-
 	private XPathValue valueXPath;
-
-	private XPathValue kvPairRoot;
 
 	/**
 	 * Creates a new instance of a Pivot Mapping object.
@@ -78,21 +78,29 @@ public class PivotMapping implements IMappingContainer {
 		return this.highesFoundValueCount;
 	}
 
+	/**
+	 * Return the XPath expression that will return a set of key values when executed.
+	 * 
+	 * @return the XPath expression that will return a set of key values when executed. Will never be null.
+	 */
 	public XPathValue getKeyXPath() {
 		return this.keyXPath;
 	}
 
+	/**
+	 * Return the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
+	 * expressions. May be null.
+	 * 
+	 * @return the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
+	 *         expressions. May be null.
+	 */
 	public XPathValue getKVPairRoot() {
 		return this.kvPairRoot;
 	}
 
-	public void setKVPairRoot(XPathValue kvPairRoot) {
-		this.kvPairRoot = kvPairRoot;
-	}
-
 	/**
 	 * Gets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 * 
+	 *
 	 * @return the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
 	 */
 	@Override
@@ -153,7 +161,7 @@ public class PivotMapping implements IMappingContainer {
 
 	/**
 	 * Get the XPath expression that, when executed relative to the results of {@link #getKVPairRoot()} will return 0 or more values.
-	 * 
+	 *
 	 * @return the XPath expression that, when executed relative to the results of {@link #getKVPairRoot()} will return 0 or more values.
 	 */
 	public XPathValue getValueXPath() {
@@ -193,7 +201,7 @@ public class PivotMapping implements IMappingContainer {
 
 	/**
 	 * Sets the logical group number of this mapping container.
-	 * 
+	 *
 	 * @param groupNumber the logical group number of this mapping container.
 	 */
 	public void setGroupNumber(int groupNumber) {
@@ -208,7 +216,7 @@ public class PivotMapping implements IMappingContainer {
 	/**
 	 * Sets the XPath expression that, when executed relative to the mapping root of the parent, will yield the base name of the fields that this
 	 * pivot mapping will return. Must not be null.
-	 * 
+	 *
 	 * @param keyXPath the XPath expression that, when executed relative to the mapping root of the parent, will yield the base name of the fields
 	 *            that this pivot mapping will return. Must not be null.
 	 */
@@ -217,8 +225,19 @@ public class PivotMapping implements IMappingContainer {
 	}
 
 	/**
-	 * Sets the name given to this pivot mapping, if top-level will be used to generate the output file name.
+	 * Sets the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
+	 * expressions. May be null.
 	 * 
+	 * @param newKVPairRoot the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
+	 *         expressions. May be null.
+	 */
+	public void setKVPairRoot(XPathValue newKVPairRoot) {
+		this.kvPairRoot = newKVPairRoot;
+	}
+
+	/**
+	 * Sets the name given to this pivot mapping, if top-level will be used to generate the output file name.
+	 *
 	 * @param mappingName the name given to this pivot mapping, if top-level will be used to generate the output file name.
 	 */
 	public void setMappingName(String mappingName) {
@@ -226,8 +245,17 @@ public class PivotMapping implements IMappingContainer {
 	}
 
 	/**
+	 * Sets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
+	 *
+	 * @param mappingRoot the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
+	 */
+	public void setMappingRoot(XPathValue mappingRoot) {
+		this.mappingRoot = mappingRoot;
+	}
+
+	/**
 	 * Sets what should happen when multiple values are found for a single evaluation of a single field wtihin this mapping.
-	 * 
+	 *
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation of a single field wtihin this
 	 *            mapping.
 	 */
@@ -237,7 +265,7 @@ public class PivotMapping implements IMappingContainer {
 
 	/**
 	 * Sets the format to be used for the {@link Mapping} instance that this method creates.
-	 * 
+	 *
 	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
 	 */
 	public void setNameFormat(NameFormat nameFormat) {
@@ -246,7 +274,7 @@ public class PivotMapping implements IMappingContainer {
 
 	/**
 	 * Sets the logical group number of this mapping container.
-	 * 
+	 *
 	 * @param parent the logical group number of this mapping container.
 	 */
 	public void setParent(IMappingContainer parent) {
@@ -254,17 +282,8 @@ public class PivotMapping implements IMappingContainer {
 	}
 
 	/**
-	 * Sets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 * 
-	 * @param mappingRoot the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 */
-	public void setMappingRoot(XPathValue mappingRoot) {
-		this.mappingRoot = mappingRoot;
-	}
-
-	/**
 	 * Set the name given to this pivot mapping, if top-level will be used to generate the output file name.
-	 * 
+	 *
 	 * @param valueXPath the name given to this pivot mapping, if top-level will be used to generate the output file name.
 	 */
 	public void setValueXPath(XPathValue valueXPath) {
@@ -288,13 +307,11 @@ public class PivotMapping implements IMappingContainer {
 		sb.append(separator);
 		sb.append(getMultiValueBehaviour());
 		sb.append(separator);
-		sb.append(" Root(");
+		sb.append("Root(");
 		sb.append(this.mappingRoot);
-		sb.append("), Value(");
-		sb.append(" KVPairRoot(");
+		sb.append("), KVPairRoot(");
 		sb.append(this.kvPairRoot);
-		sb.append("), Value(");
-		sb.append(" Key(");
+		sb.append("), Key(");
 		sb.append(this.keyXPath);
 		sb.append("), Value(");
 		sb.append(this.valueXPath);

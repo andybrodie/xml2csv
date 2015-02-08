@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
@@ -23,7 +24,7 @@ import com.locima.xml2csv.output.inline.CsiInputStream;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
- * Used to manage the evaluation and storage of results of an {@link IMappingContainer} instance.
+ * Used to manage the evaluation and storage of results of an {@link MappingList} instance.
  */
 public class ContainerExtractionContext extends AbstractExtractionContext implements IExtractionResultsContainer {
 
@@ -174,7 +175,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 			IExtractionContext childCtx =
 							AbstractExtractionContext.create(this, childMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 			childCtx.evaluate(node);
-			
+
 			// Only add a CEC or MEC to the collection if it's not empty.
 			if (childCtx.size() > 0) {
 				iterationECs.add(childCtx);
@@ -190,7 +191,12 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	}
 
 	@Override
-	public IMappingContainer getMapping() {
+	public IMapping getMapping() {
+		return this.mapping;
+	}
+
+	@Override
+	public IMappingContainer getMappingContainer() {
 		return this.mapping;
 	}
 
@@ -266,7 +272,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	 * @throws IOException if any issues occur during writing.
 	 */
 	private void writeObject(ObjectOutputStream stream) throws IOException {
-		String mappingName = getMapping().getContainerName();
+		String mappingName = getMappingContainer().getContainerName();
 		int size = this.children.size();
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Writing {} results to the CSI file for {}", size, mappingName);

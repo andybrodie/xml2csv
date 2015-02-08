@@ -1,7 +1,6 @@
 package com.locima.xml2csv.configuration;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -17,6 +16,11 @@ import com.locima.xml2csv.util.XmlUtil;
  * Models an ordered list of mappings of column containerName to XPath expression.
  */
 public class MappingList extends ArrayList<IMapping> implements IMappingContainer {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = -7735577777081946390L;
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
 
@@ -114,7 +118,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public Map<String, String> getNamespaceMappings() {
 		return this.namespaceMappings;
 	}
-	
+
 	@Override
 	public IMappingContainer getParent() {
 		throw new UnsupportedOperationException();
@@ -132,7 +136,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-										|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
+						|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
 
 		if (isFixed) {
 			for (IMapping mapping : this) {
@@ -232,15 +236,14 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		sb.append(this.maxValueCount);
 		sb.append(separator);
 		sb.append(this.highestFoundValueCount);
+		sb.append(separator);
 		sb.append(")[");
-		Iterator<IMapping> mappings = iterator();
-		while (mappings.hasNext()) {
-			sb.append(mappings.next().toString());
-			if (mappings.hasNext()) {
-				sb.append(separator);
-			}
-		}
-		sb.append("]");
+		sb.append(size());
+		sb.append(" children]");
+		/*
+		 * sb.append(")["); Iterator<IMapping> mappings = iterator(); while (mappings.hasNext()) { sb.append(mappings.next().toString()); if
+		 * (mappings.hasNext()) { sb.append(separator); } } sb.append("]");
+		 */
 		return sb.toString();
 	}
 

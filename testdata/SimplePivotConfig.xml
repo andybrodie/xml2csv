@@ -3,6 +3,6 @@
 <!-- Simple Pivot Configuration -->
 <m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<m:MappingList name="SimplePivotOutput" mappingRoot="family/record" behaviour="Lazy">
-		<m:PivotMapping name="Family" mappingRoot="field" keyXPath="@name" valueXPath="@value" behaviour="Lazy" group="1" />
+		<m:PivotMapping name="Family" mappingRoot="field" keyXPath="@name" valueXPath="@value" behaviour="Greedy" group="1" />
 	</m:MappingList>
 </m:MappingConfiguration>

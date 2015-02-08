@@ -32,7 +32,7 @@ public enum MultiValueBehaviour {
 
 	/**
 	 * Convert a string value of a {@link MultiValueBehaviour} to the enum value.
-	 * 
+	 *
 	 * @param multiValueBehaviourAsString the string version of {@link MultiValueBehaviour}.
 	 * @param defaultValue a value to return if null or an empty string is passed in <code>multiValueBehaviourAsString</code>.
 	 * @return an enum value based on the parameters.

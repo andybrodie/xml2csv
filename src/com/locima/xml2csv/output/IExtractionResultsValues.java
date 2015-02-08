@@ -11,13 +11,6 @@ import com.locima.xml2csv.extractor.MappingExtractionContext;
 public interface IExtractionResultsValues extends IExtractionResults {
 
 	/**
-	 * Retrieves the mapping configuration object that the results for this object have been obtained from.
-	 *
-	 * @return a mapping container configuration instance, never null.
-	 */
-	IValueMapping getMapping();
-
-	/**
 	 * Needed for {@link IValueMapping} only.
 	 *
 	 * @return the values found by executing this mapping.
@@ -32,5 +25,12 @@ public interface IExtractionResultsValues extends IExtractionResults {
 	 *         exception for this).
 	 */
 	String getValueAt(int index);
+
+	/**
+	 * Retrieves the mapping configuration object that the results for this object have been obtained from.
+	 *
+	 * @return a mapping container configuration instance, never null.
+	 */
+	IValueMapping getValueMapping();
 
 }

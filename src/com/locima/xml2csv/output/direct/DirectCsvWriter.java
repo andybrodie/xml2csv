@@ -57,7 +57,7 @@ public class DirectCsvWriter implements IOutputWriter {
 
 	/**
 	 * Initialise the CSV file that this writer is repsonsible for.
-	 * 
+	 *
 	 * @param outputDirectory the directory to write the output CSV file to.
 	 * @param container the mapping container that determines what outputs will be written. Must not be null.
 	 * @param appendOutput true if output should be appended to existing files, false if new files should overwrite existing ones.

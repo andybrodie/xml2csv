@@ -37,13 +37,6 @@ public interface IExtractionContext extends IExtractionResults, Serializable {
 	void evaluate(XdmNode rootNode) throws DataExtractorException;
 
 	/**
-	 * Retrieve the mapping that this context is going to execute.
-	 *
-	 * @return never returns null.
-	 */
-	IMapping getMapping();
-
-	/**
 	 * Retrieves the name of the mapping (either {@link IMappingContainer#getContainerName()} or {@link IValueMapping#getBaseName()}.
 	 *
 	 * @return the name of the mapping, never null or a zero length string.

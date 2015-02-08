@@ -24,7 +24,7 @@ public interface IExtractionResultsContainer extends IExtractionResults {
 	 *
 	 * @return a mapping container configuration instance, never null.
 	 */
-	IMappingContainer getMapping();
+	IMappingContainer getMappingContainer();
 
 	/**
 	 * Needed for {@link IMappingContainer} only.

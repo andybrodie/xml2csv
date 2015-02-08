@@ -122,7 +122,7 @@ public class StringUtil {
 	/**
 	 * Converts the passed collection to a string ready for output to a CSV file. Each element of <code>inputCollection</code> will have its
 	 * {@link Object#toString()} method called to get an output value.
-	 * 
+	 *
 	 * @param inputCollection a collection of objects.
 	 * @param <T> the type of object contained within <code>inputCollection</code>.
 	 * @return a string in CSV format, ready for output in to a CSV file.

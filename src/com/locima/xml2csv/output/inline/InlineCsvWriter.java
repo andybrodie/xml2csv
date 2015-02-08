@@ -13,8 +13,6 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.security.pkcs.EncodingException;
-
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
@@ -211,7 +209,7 @@ public class InlineCsvWriter implements IOutputWriter {
 		this.nameToMapping = createMappingMap();
 
 		try {
-			
+
 			LOG.info("Re-opening {} to read intermediate file", this.csiOutputFile.getAbsolutePath());
 			return new CsiInputStream(this.nameToMapping, new FileInputStream(this.csiOutputFile));
 		} catch (IOException e) {

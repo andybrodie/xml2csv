@@ -1,5 +1,6 @@
 package com.locima.xml2csv.output;
 
+import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 
 /**
@@ -13,6 +14,13 @@ public interface IExtractionResults {
 	 * @return the group number.
 	 */
 	int getGroupNumber();
+
+	/**
+	 * Retrieves the mapping configuration object that the results for this object have been obtained from.
+	 *
+	 * @return an {@link IMapping} instance, never null.
+	 */
+	IMapping getMapping();
 
 	/**
 	 * Get the minimum number of results that this mapping can return. If there are not enough values found to make up this number, then nulls are

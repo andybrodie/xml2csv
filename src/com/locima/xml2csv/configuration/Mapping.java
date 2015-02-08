@@ -3,8 +3,6 @@ package com.locima.xml2csv.configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.util.EqualsUtil;
-
 /**
  * Represents a single column to XPath mapping.
  */
@@ -44,29 +42,6 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		}
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder("Mapping(");
-		final String separator = ", ";
-		sb.append(this.getBaseName());
-		sb.append(separator);
-		sb.append(getNameFormat());
-		sb.append(separator);
-		sb.append(getGroupNumber());
-		sb.append(separator);
-		sb.append(getMultiValueBehaviour());
-		sb.append(", \"");
-		sb.append(getValueXPath().getSource());
-		sb.append("\", ");
-		sb.append(this.getMinValueCount());
-		sb.append(separator);
-		sb.append(this.getMaxValueCount());
-		sb.append(separator);
-		sb.append(getHighestFoundValueCount());
-		sb.append(')');
-		return sb.toString();
-	}
-
 	/**
 	 * Returns a hash code solely based on the name of the field, as this is the only thing that really makes a difference between storing and
 	 * indexing.
@@ -78,6 +53,29 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		// There's no state expicit to Mapping, so using the superclass's hashCode implementation will work here
 		// TODO Think about the wisdom of this a bit more, it feels wrong.
 		return super.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("Mapping(");
+		final String separator = ", ";
+		sb.append(getBaseName());
+		sb.append(separator);
+		sb.append(getNameFormat());
+		sb.append(separator);
+		sb.append(getGroupNumber());
+		sb.append(separator);
+		sb.append(getMultiValueBehaviour());
+		sb.append(", \"");
+		sb.append(getValueXPath().getSource());
+		sb.append("\", ");
+		sb.append(getMinValueCount());
+		sb.append(separator);
+		sb.append(getMaxValueCount());
+		sb.append(separator);
+		sb.append(getHighestFoundValueCount());
+		sb.append(')');
+		return sb.toString();
 	}
 
 }
