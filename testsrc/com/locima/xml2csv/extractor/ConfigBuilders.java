@@ -22,10 +22,10 @@ public class ConfigBuilders {
 
 	public static MappingList createMappingList(String xPath, int groupNumber, MultiValueBehaviour mvb) throws XMLException {
 		MappingList ml = new MappingList();
-		ml.setOutputName(xPath);
+		ml.setName(xPath);
 		ml.setGroupNumber(groupNumber);
 		ml.setMultiValueBehaviour(mvb);
-		ml.setMappingRoot(xPath);
+		ml.setMappingRoot(XmlUtil.createXPathValue(xPath));
 		return ml;
 	}
 

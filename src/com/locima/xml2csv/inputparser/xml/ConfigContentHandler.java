@@ -1,5 +1,6 @@
 package com.locima.xml2csv.inputparser.xml;
 
+import java.util.Map;
 import java.util.Stack;
 import java.util.regex.PatternSyntaxException;
 
@@ -114,7 +115,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		XPathValue compiledXPath;
 		try {
-			compiledXPath = XmlUtil.createXPathValue(current.getNamespaceMappings(), xPath);
+			compiledXPath = XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), xPath);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field %s as there was a problem with the XPath value \"%s\"", name, xPath);
 		}
@@ -154,11 +155,11 @@ public class ConfigContentHandler extends DefaultHandler {
 		// IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
 		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
 		try {
-			newMapping.setMappingRoot(mappingRoot);
+			newMapping.setMappingRoot(XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), mappingRoot));
 		} catch (XMLException e) {
 			throw getException(e, "Invalid XPath \"%s\" found in mapping root for mapping list", mappingRoot);
 		}
-		newMapping.setOutputName(outputName);
+		newMapping.setName(outputName);
 		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
 		newMapping.setMinValueCount(minValueCount);
 		newMapping.setMaxValueCount(maxValueCount);
@@ -175,6 +176,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * Adds a column mapping to the current MappingList instance being defined.
 	 *
 	 * @param name the name of the column.
+	 * @param kvPairRootSource the XPath that, when executed, will return the roots from which <code>keyXPathSource</code> and
+	 *            <code>valueXPathSource</code> will be executed.
 	 * @param keyXPathSource the XPath that should be executed to each key.
 	 * @param valueXPathSource the XPath that should be executed to get the value, relative to each key.
 	 * @param templateNameFormatName the name of one of the built-in styles (see {@link NameFormat} public members.
@@ -196,10 +199,11 @@ public class ConfigContentHandler extends DefaultHandler {
 				mappingName = name;
 			}
 
-			XPathValue rootXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), mappingRootSource);
-			XPathValue keyXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), keyXPathSource);
-			XPathValue valueXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), valueXPathSource);
-			XPathValue kvPairRoot = XmlUtil.createXPathValue(parent.getNamespaceMappings(), kvPairRootSource);
+			Map<String, String> namespaceMap = this.mappingConfiguration.getNamespaceMap();
+			XPathValue rootXPath = XmlUtil.createXPathValue(namespaceMap, mappingRootSource);
+			XPathValue keyXPath = XmlUtil.createXPathValue(namespaceMap, keyXPathSource);
+			XPathValue valueXPath = XmlUtil.createXPathValue(namespaceMap, valueXPathSource);
+			XPathValue kvPairRoot = XmlUtil.createXPathValue(namespaceMap, kvPairRootSource);
 			NameFormat templateNameFormat = NameFormat.parse(templateNameFormatName, customTemplateNameFormat, NameFormat.NO_COUNTS);
 			PivotMapping mapping = new PivotMapping();
 			mapping.setParent(parent);
@@ -217,7 +221,7 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(e, "Unable to add pivot mapping definition to configuration due to a problem in the XML configuration.");
 		}
 	}
-
+	
 	/**
 	 * Checks to ensure that the {@link #mappingListStack} is empty.
 	 *

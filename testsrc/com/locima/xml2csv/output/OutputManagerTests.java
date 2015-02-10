@@ -56,7 +56,7 @@ public class OutputManagerTests {
 
 	private IMappingContainer createMappingList(String containerName, String... fieldNames) throws XMLException {
 		MappingList container = new MappingList();
-		container.setOutputName(containerName);
+		container.setName(containerName);
 		container.setMultiValueBehaviour(MultiValueBehaviour.GREEDY);
 		container.setMinValueCount(fieldNames.length);
 		container.setMaxValueCount(fieldNames.length);

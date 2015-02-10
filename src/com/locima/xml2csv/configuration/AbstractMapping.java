@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.output.GroupState;
 
-public class AbstractMapping implements IMapping {
+public abstract class AbstractMapping implements IMapping {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractMapping.class);
 
@@ -176,6 +176,10 @@ public class AbstractMapping implements IMapping {
 	public void setNameFormat(NameFormat nameFormat) {
 		this.nameFormat = nameFormat;
 	}
+	
+	public void setName(String newName) {
+		this.name = newName;
+	}
 
 	/**
 	 * Sets the logical group number of this mapping container.
@@ -184,6 +188,27 @@ public class AbstractMapping implements IMapping {
 	 */
 	public void setParent(IMappingContainer parent) {
 		this.parent = parent;
+	}
+
+	/**
+	 * Sets the maximum number of results that will be processed when executing the {@link #mappingRoot}. Any results over and above this value will
+	 * be discarded.
+	 *
+	 * @param maxValueCount either 0 for no maximum, or a natural number greater than zero to apply a limit.
+	 */
+
+	public void setMaxValueCount(int maxValueCount) {
+		this.maxValueCount = maxValueCount;
+	}
+
+	/**
+	 * Sets the minimum number of results that should be processed when executing the {@link #mappingRoot}. If not enough nodes are found by executing
+	 * the {@link #mappingRoot} then blank fields will be inserted in to the output.
+	 *
+	 * @param minValueCount either 0 for no minimum, or a natural number greater than zero to apply a minimum.
+	 */
+	public void setMinValueCount(int minValueCount) {
+		this.minValueCount = minValueCount;
 	}
 
 }

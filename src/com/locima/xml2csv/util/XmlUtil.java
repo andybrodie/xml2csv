@@ -74,6 +74,17 @@ public class XmlUtil {
 	}
 
 	/**
+	 * Creates an executable XPath expression based on the XPath where no XML namespaces are referenced.
+	 *
+	 * @param xPathExpression An XPath expression to compile. Must be valid XPath or null.  If null then null is returned.
+	 * @return a Saxon executable XPath expression, or null if <code>xPathExpression</code> is null.
+	 * @throws XMLException If there are any problems compiling <code>xPathExpression</code>.
+	 */
+	public static XPathValue createXPathValue(String xPathExpression) throws XMLException {
+		return createXPathValue(null, xPathExpression);
+	}
+
+	/**
 	 * Returns the singleton instance.
 	 *
 	 * @return instance of the Saxon processor manager, never returns null.
