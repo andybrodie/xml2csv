@@ -273,7 +273,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	 * @return the index of the result to return (min 0, unbounded max)
 	 */
 	private int getIndexForGroup(int group) {
-		GroupState existingGroup = this.baseGroupState.findByGroup(group);
+		GroupState existingGroup = this.baseGroupState.findGroup(group);
 		if (existingGroup == null) {
 			throw new BugException("Tried to get index for non-existant group %d", group);
 		}

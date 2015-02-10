@@ -6,7 +6,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmItem;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
+import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.PivotMapping;
@@ -36,14 +36,33 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	private List<List<IExtractionResults>> children;
 	private transient PivotMapping mapping;
 
+	/**
+	 * Constructs a new instance to manage the evaluation of the <code>mapping</code> passed.
+	 *
+	 * @param pivotMapping the mapping configuration that this context is responsible for evaluating.
+	 * @param parent the parent for this context (should be null if this is a top-level mapping on the configuration).
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
+	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
+	 *            beneath the parent.
+	 */
 	public PivotExtractionContext(IExtractionResultsContainer parent, PivotMapping pivotMapping, int positionRelativeToOtherRootNodes,
 					int positionRelativeToIMappingSiblings) {
 		super(parent, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 		this.mapping = pivotMapping;
 	}
 
-	public PivotExtractionContext(PivotMapping pivotMapping, int positionRelativeToOtherRootNodes, int mappingSiblingIndex) {
-		this(null, pivotMapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
+	/**
+	 * Constructs a new instance to manage the evaluation of the <code>mapping</code> passed with no parent.
+	 *
+	 * @param pivotMapping the mapping configuration that this context is responsible for evaluating.
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
+	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
+	 *            beneath the parent.
+	 */
+	public PivotExtractionContext(PivotMapping pivotMapping, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
+		this(null, pivotMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 	}
 
 	/**
@@ -51,10 +70,13 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	 * hold the values extracted form the XML.
 	 *
 	 * @param baseName the name of the key. All values found for keys with the same name are added to the same MEC.
+	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
+	 *            second has index 1, etc.).
+	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
+	 *            beneath the parent.
 	 * @return either an existing MEC or a newly created one to manage mappings for the key specifid by <code>baseName</code>.
 	 */
-	private MappingExtractionContext ensureMec(Map<String, MappingExtractionContext> mecs, String baseName, int positionRelativeToOtherRootNodes,
-					int positionRelativeToIMappingSiblings) {
+	private MappingExtractionContext ensureMec(String baseName, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
 		LOG.info("Creating new MEC for {}", baseName);
 		Mapping keyMapping = this.mapping.getPivotKeyMapping(baseName);
 		MappingExtractionContext mec =
@@ -121,38 +143,23 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 		int positionRelativeToIMappingSiblings = 0;
 		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>();
 
-		// TODO Permit kvPairRoot to be null, in which case we use the single passed root as the only key/value pair
-		if (kvPairRoot == null) {
-			String keyName = getKey(node, keyXPath);
+		XPathSelector kvIterator = kvPairRoot.evaluate(node);
+		for (XdmItem kvItem : kvIterator) {
+			if (!(kvItem instanceof XdmNode)) {
+				LOG.warn("KVPair Root yielded a {} ({}) instead of XdmNode.  Cannot find keys/values from here!", kvItem, kvItem.getClass());
+				continue;
+			}
+
+			XdmNode kvNode = (XdmNode) kvItem;
+			String keyName = getKey(kvNode, keyXPath);
 			if (keyName == null) {
 				LOG.info("No key could be found for {} on {}.  Moving on.", keyXPath, this.mapping);
 			} else {
 				LOG.debug("Found pivot mapping key {}", keyName);
-				MappingExtractionContext childCtx = ensureMec(null, keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
-				childCtx.evaluate(node);
+				MappingExtractionContext childCtx = ensureMec(keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
+				childCtx.evaluate(kvNode);
 				positionRelativeToIMappingSiblings++;
 				iterationECs.add(childCtx);
-			}
-		} else {
-			XPathSelector kvIterator = kvPairRoot.evaluate(node);
-			for (XdmItem kvItem : kvIterator) {
-				if (!(kvItem instanceof XdmNode)) {
-					LOG.warn("KVPair Root yielded a {} ({}) instead of XdmNode.  Cannot find keys/values from here!", kvItem, kvItem.getClass());
-					continue;
-				}
-
-				XdmNode kvNode = (XdmNode) kvItem;
-				String keyName = getKey(kvNode, keyXPath);
-				if (keyName == null) {
-					LOG.info("No key could be found for {} on {}.  Moving on.", keyXPath, this.mapping);
-				} else {
-					LOG.debug("Found pivot mapping key {}", keyName);
-					MappingExtractionContext childCtx =
-									ensureMec(null, keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
-					childCtx.evaluate(kvNode);
-					positionRelativeToIMappingSiblings++;
-					iterationECs.add(childCtx);
-				}
 			}
 		}
 
@@ -218,7 +225,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 
 	@Override
 	public String getName() {
-		return this.mapping.getContainerName();
+		return this.mapping.getName();
 	}
 
 	@Override
@@ -283,7 +290,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	 * @throws IOException if any issues occur during writing.
 	 */
 	private void writeObject(ObjectOutputStream stream) throws IOException {
-		String mappingName = getMapping().getContainerName();
+		String mappingName = getMapping().getName();
 		int size = this.children.size();
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Writing {} results to the CSI file for {}", size, mappingName);

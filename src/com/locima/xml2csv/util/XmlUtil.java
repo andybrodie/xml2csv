@@ -65,12 +65,12 @@ public class XmlUtil {
 	 * Creates an executable XPath expression based on the XPath and a set of namespace prefix to URI mappings.
 	 *
 	 * @param namespaceMappings A mapping of namespace prefix to URI mappings. May be null if there are no namespaces involved.
-	 * @param xPathExpression An XPath expression to compile. Must be valid XPath.
-	 * @return a Saxon executable XPath expression, never null.
+	 * @param xPathExpression An XPath expression to compile. Must be valid XPath or null.  If null then null is returned.
+	 * @return a Saxon executable XPath expression, or null if <code>xPathExpression</code> is null.
 	 * @throws XMLException If there are any problems compiling <code>xPathExpression</code>.
 	 */
 	public static XPathValue createXPathValue(Map<String, String> namespaceMappings, String xPathExpression) throws XMLException {
-		return new XPathValue(xPathExpression, createXPathExecutable(namespaceMappings, xPathExpression));
+		return xPathExpression == null ? null : new XPathValue(xPathExpression, createXPathExecutable(namespaceMappings, xPathExpression));
 	}
 
 	/**

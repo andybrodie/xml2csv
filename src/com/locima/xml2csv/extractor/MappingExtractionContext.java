@@ -89,7 +89,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 		}
 
 		IValueMapping thisMapping = getMapping();
-		String fieldName = thisMapping.getBaseName();
+		String fieldName = thisMapping.getName();
 		XPathValue xPath = thisMapping.getValueXPath();
 
 		if (LOG.isTraceEnabled()) {
@@ -146,7 +146,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 
 	@Override
 	public String getName() {
-		return getMapping().getBaseName();
+		return getMapping().getName();
 	}
 
 	/**
@@ -226,7 +226,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	 * @throws IOException if any issues occur during writing.
 	 */
 	private void writeObject(ObjectOutputStream stream) throws IOException {
-		String mappingName = getMapping().getBaseName();
+		String mappingName = getMapping().getName();
 		int size = this.results.size();
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Writing {} results to the CSI file for {}", size, mappingName);

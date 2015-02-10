@@ -76,7 +76,7 @@ public class XmlDataExtractor {
 					ContainerExtractionContext.logResults(ctx, 0, 0);
 					LOG.trace("END RESULTS OUTPUT");
 				}
-				outputManager.writeRecords(mapping.getContainerName(), ctx);
+				outputManager.writeRecords(mapping.getName(), ctx);
 			} else {
 				PivotExtractionContext ctx =
 								new PivotExtractionContext((PivotMapping) mapping, positionRelativeToOtherRootNodes, mappingSiblingIndex);
@@ -86,7 +86,7 @@ public class XmlDataExtractor {
 					ContainerExtractionContext.logResults(ctx, 0, 0);
 					LOG.trace("END RESULTS OUTPUT");
 				}
-				outputManager.writeRecords(mapping.getContainerName(), ctx);
+				outputManager.writeRecords(mapping.getName(), ctx);
 			}
 			mappingSiblingIndex++;
 		}

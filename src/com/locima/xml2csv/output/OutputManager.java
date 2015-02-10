@@ -71,7 +71,7 @@ public class OutputManager implements IOutputManager {
 
 		this.outputToWriter = new HashMap<String, IOutputWriter>();
 		for (IMappingContainer mappingContainer : config) {
-			String outputName = mappingContainer.getContainerName();
+			String outputName = mappingContainer.getName();
 			IOutputWriter writer;
 			if (mappingContainer.hasFixedOutputCardinality()) {
 				LOG.info("No unbounded mappings detected for {}, therefore using the DirectCsvWriter", outputName);

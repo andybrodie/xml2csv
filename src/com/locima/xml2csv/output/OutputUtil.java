@@ -150,7 +150,7 @@ public class OutputUtil {
 		 */
 		int repeats = container.getFieldCountForSingleRecord();
 		LOG.info("Generating field names for {} ({} iteration(s))", container, repeats);
-		String name = container.getContainerName();
+		String name = container.getName();
 		int fieldCount = 0;
 		for (int containerIteration = 0; containerIteration < repeats; containerIteration++) {
 			parentContext.push(name, containerIteration);
@@ -188,12 +188,12 @@ public class OutputUtil {
 		int fieldCount;
 		switch (mapping.getMultiValueBehaviour()) {
 			case LAZY:
-				fieldNames.add(mapping.getNameFormat().format(mapping.getBaseName(), 0, parentContext));
+				fieldNames.add(mapping.getNameFormat().format(mapping.getName(), 0, parentContext));
 				fieldCount = 1;
 				break;
 			case GREEDY:
 				for (fieldCount = 0; fieldCount < repeats; fieldCount++) {
-					fieldNames.add(mapping.getNameFormat().format(mapping.getBaseName(), fieldCount, parentContext));
+					fieldNames.add(mapping.getNameFormat().format(mapping.getName(), fieldCount, parentContext));
 				}
 				break;
 			default:
@@ -214,11 +214,11 @@ public class OutputUtil {
 		try {
 			List<String> fieldNames = getFieldNames(container);
 			String escapedFieldNames = StringUtil.toCsvRecord(fieldNames);
-			LOG.info("Writing field names to {}: {}", container.getContainerName(), escapedFieldNames);
+			LOG.info("Writing field names to {}: {}", container.getName(), escapedFieldNames);
 			writer.write(escapedFieldNames);
 			writer.write(StringUtil.LINE_SEPARATOR);
 		} catch (IOException ioe) {
-			throw new OutputManagerException(ioe, "Unable to write field names for container %s", container.getContainerName());
+			throw new OutputManagerException(ioe, "Unable to write field names for container %s", container.getName());
 		}
 	}
 

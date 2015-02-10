@@ -127,14 +127,23 @@
 		</annotation>
 		<complexContent>
 			<extension base="tns:AbstractMapping">
-				<attribute name="mappingRoot" type="string">
+				<attribute name="mappingRoot" type="string" use="optional">
 					<annotation>
 						<documentation>XPath expression, relative to the parent mapping (or
 							document element if parent is MappingConfiguration), of the root
 							node for
 							these mappings. If omitted, document element is assumed.
 							An expression that returns multiple nodes will result in multiple
-							rows in the output file.
+							rows in the output
+							file.
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="kvPairRoot" type="string" use="required">
+					<annotation>
+						<documentation>XPath expression, relative to the mappingRoot that will be used as the context node for
+							evaluating keyXPath and valueXPath. If
+							omitted, parent element is used.
 						</documentation>
 					</annotation>
 				</attribute>

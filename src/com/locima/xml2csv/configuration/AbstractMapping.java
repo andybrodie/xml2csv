@@ -4,19 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.output.GroupState;
-import com.locima.xml2csv.util.EqualsUtil;
 
-/**
- * Common attributes and behaviours for mapping implementations.
- */
-public abstract class AbstractMapping implements IValueMapping {
+public class AbstractMapping implements IMapping {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractMapping.class);
-
-	/**
-	 * The baseName of the field that will be created by this mapping.
-	 */
-	private String baseName;
 
 	/**
 	 * To understand how groups work, see {@link GroupState}.
@@ -43,6 +34,11 @@ public abstract class AbstractMapping implements IValueMapping {
 	private MultiValueBehaviour multiValueBehaviour;
 
 	/**
+	 * The name of the field that will be created by this mapping.
+	 */
+	private String name;
+
+	/**
 	 * How to format the name of the mapping when outputting.
 	 */
 	private NameFormat nameFormat;
@@ -52,10 +48,8 @@ public abstract class AbstractMapping implements IValueMapping {
 	 */
 	private IMappingContainer parent;
 
-	/**
-	 * The XPath to execute against an input document to find values for this mapping.
-	 */
-	private XPathValue valueXPath;
+	public AbstractMapping() {
+	}
 
 	/**
 	 * Creates a new immutable Field Definition.
@@ -64,45 +58,19 @@ public abstract class AbstractMapping implements IValueMapping {
 	 * @param baseName the name of this mapping, must be unique within the configuration.
 	 * @param minValueCount the fewest number of values, or sets of values, that may be returned by this mapping.
 	 * @param maxValueCount the most number of values, or sets of values, that may be returned by this mapping.
-	 * @param valueXPath a compiled XPath expression that will extract the values required for this field.
-	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
+	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
 	 * @param groupNumber the group number for this field definition.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 */
-	public AbstractMapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
-					XPathValue valueXPath, int minValueCount, int maxValueCount) {
+	public AbstractMapping(IMappingContainer parent, String baseName, NameFormat nameFormat, int groupNumber, MultiValueBehaviour multiValueBehaviour,
+					int minValueCount, int maxValueCount) {
 		this.parent = parent;
-		this.baseName = baseName;
+		this.name = baseName;
+		this.nameFormat = nameFormat == null ? NameFormat.NO_COUNTS : nameFormat;
 		this.groupNumber = groupNumber;
 		this.multiValueBehaviour = multiValueBehaviour;
-		this.nameFormat = format == null ? NameFormat.NO_COUNTS : format;
-		this.valueXPath = valueXPath;
 		this.minValueCount = minValueCount;
 		this.maxValueCount = maxValueCount;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj instanceof AbstractMapping) {
-			// CHECKSTYLE:OFF Can't think of another way to provide a base class implementation of equals
-			AbstractMapping that = (AbstractMapping) obj;
-			// CHECKSTYLE:ON
-			return EqualsUtil.areEqual(this.nameFormat, that.nameFormat) && EqualsUtil.areEqual(this.groupNumber, that.groupNumber)
-							&& EqualsUtil.areEqual(this.multiValueBehaviour, that.multiValueBehaviour)
-							&& EqualsUtil.areEqual(this.valueXPath, that.valueXPath) && EqualsUtil.areEqual(this.baseName, that.baseName)
-							&& EqualsUtil.areEqual(this.minValueCount, that.minValueCount)
-							&& EqualsUtil.areEqual(this.maxValueCount, that.maxValueCount);
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public String getBaseName() {
-		return this.baseName;
 	}
 
 	@Override
@@ -132,12 +100,12 @@ public abstract class AbstractMapping implements IValueMapping {
 
 	@Override
 	public MultiValueBehaviour getMultiValueBehaviour() {
-		if (this.multiValueBehaviour == MultiValueBehaviour.DEFAULT) {
-			// TODO Implement inheritence from parent (currently a mapping has no concept of parent container!)
-			return MultiValueBehaviour.LAZY;
-		} else {
-			return this.multiValueBehaviour;
-		}
+		return this.multiValueBehaviour;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
 	}
 
 	@Override
@@ -151,16 +119,6 @@ public abstract class AbstractMapping implements IValueMapping {
 	}
 
 	/**
-	 * Retrieve the XPath statement that will execute this mapping.
-	 *
-	 * @return the XPath statement that will execute this mapping.
-	 */
-	@Override
-	public XPathValue getValueXPath() {
-		return this.valueXPath;
-	}
-
-	/**
 	 * If this mapping is lazy then it will only ever return field per record, so return <code>true</code>. If greedy then output cardinality is only
 	 * fixed if {@link Mapping#minValueCount} equals {@link Mapping#maxValueCount} and they're both greater than zero (as zero indicates unbounded).
 	 *
@@ -171,37 +129,61 @@ public abstract class AbstractMapping implements IValueMapping {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
 						|| ((getMaxValueCount() == getMinValueCount()) && (getMinValueCount() > 0));
-		LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
+		}
 		return isFixed;
 	}
 
 	/**
-	 * Returns a hash code solely based on the name of the field, as this is the only thing that really makes a difference between storing and
-	 * indexing.
+	 * Sets the logical group number of this mapping container.
 	 *
-	 * @return the hash code of the base name of this definition.
+	 * @param groupNumber the logical group number of this mapping container.
 	 */
+	public void setGroupNumber(int groupNumber) {
+		this.groupNumber = groupNumber;
+	}
+
 	@Override
-	public int hashCode() {
-		return this.baseName.hashCode();
+	public void setHighestFoundValueCount(int valueCount) {
+		this.highestFoundValueCount = Math.max(valueCount, this.highestFoundValueCount);
 	}
 
 	/**
-	 * Returns whether or not whitespace should be trimmed from found values in the document.
-	 * 
-	 * @return whether or not whitespace should be trimmed from found values in the document.
+	 * Sets the name given to this pivot mapping, if top-level will be used to generate the output file name.
+	 *
+	 * @param mappingName the name given to this pivot mapping, if top-level will be used to generate the output file name.
 	 */
-	@Override
-	public boolean requiresTrimWhitespace() {
-		return true;
+	public void setMappingName(String mappingName) {
+		this.name = mappingName;
 	}
 
-	@Override
-	public void setHighestFoundValueCount(int valueFound) {
-		this.highestFoundValueCount = Math.max(valueFound, this.highestFoundValueCount);
+	/**
+	 * Sets what should happen when multiple values are found for a single evaluation of a single field wtihin this mapping.
+	 *
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation of a single field wtihin this
+	 *            mapping.
+	 */
+	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
+		this.multiValueBehaviour = multiValueBehaviour;
 	}
 
-	@Override
-	public abstract String toString();
+	/**
+	 * Sets the format to be used for the {@link Mapping} instance that this method creates.
+	 *
+	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
+	 */
+	public void setNameFormat(NameFormat nameFormat) {
+		this.nameFormat = nameFormat;
+	}
+
+	/**
+	 * Sets the logical group number of this mapping container.
+	 *
+	 * @param parent the logical group number of this mapping container.
+	 */
+	public void setParent(IMappingContainer parent) {
+		this.parent = parent;
+	}
 
 }

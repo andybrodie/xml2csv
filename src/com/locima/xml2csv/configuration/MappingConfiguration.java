@@ -73,7 +73,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 			throw new ArgumentNullException("maps");
 		}
 		// Ensure that the mapping set name is unique
-		String containerName = container.getContainerName();
+		String containerName = container.getName();
 		if (containerName == null) {
 			throw new ArgumentException("maps", "contains a null name.");
 		}
@@ -118,21 +118,21 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public boolean containsContainer(String name) {
 		for (IMappingContainer mapping : this.mappings) {
-			if (mapping.getContainerName().equals(name)) {
+			if (mapping.getName().equals(name)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-/**
+	/**
 	 * Retrieve a top level mapping container ({@link MappingList by name, or null if it doesn't exist.
-	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getContainerName()}).
+	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getName()}).
 	 * @return a mapping container instance with the matching name, or null if one doesn't exist.
 	 */
 	public IMappingContainer getContainerByName(String containerName) {
 		for (IMappingContainer container : this.mappings) {
-			if (container.getContainerName().equals(containerName)) {
+			if (container.getName().equals(containerName)) {
 				return container;
 			}
 		}

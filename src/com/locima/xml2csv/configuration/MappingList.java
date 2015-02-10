@@ -1,6 +1,8 @@
 package com.locima.xml2csv.configuration;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -15,14 +17,11 @@ import com.locima.xml2csv.util.XmlUtil;
 /**
  * Models an ordered list of mappings of column containerName to XPath expression.
  */
-public class MappingList extends ArrayList<IMapping> implements IMappingContainer {
-
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = -7735577777081946390L;
+public class MappingList implements IMappingContainer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingList.class);
+
+	private List<IMapping> children;
 
 	private String containerName;
 
@@ -58,6 +57,29 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 */
 	public MappingList(Map<String, String> namespaceMap) {
 		this.namespaceMappings = namespaceMap;
+		this.children = new ArrayList<IMapping>();
+	}
+
+	/**
+	 * Adds a new child mapping to this instance.
+	 *
+	 * @param mapping the mapping to add to this container. Must not be null.
+	 */
+	public void add(IMapping mapping) {
+		if (mapping == null) {
+			throw new ArgumentNullException("Cannot add null to child of this mapping " + this);
+		}
+		this.children.add(mapping);
+	}
+
+	/**
+	 * Retrieve the child mapping at the index specified.
+	 * 
+	 * @param index the index of the child to retrieve.
+	 * @return the child mapping at the index specified. Will never return null.
+	 */
+	public IMapping get(int index) {
+		return this.children.get(index);
 	}
 
 	/**
@@ -66,7 +88,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	 * @return the containerName of this set of mappings. Will never be null or the empty string.
 	 */
 	@Override
-	public String getContainerName() {
+	public String getName() {
 		return this.containerName;
 	}
 
@@ -136,7 +158,7 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-						|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
+										|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
 
 		if (isFixed) {
 			for (IMapping mapping : this) {
@@ -148,6 +170,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		}
 		LOG.info("MappingList {} hasFixedOutputCardinality = {}", this, isFixed);
 		return isFixed;
+	}
+
+	@Override
+	public Iterator<IMapping> iterator() {
+		return this.children.iterator();
 	}
 
 	/**
@@ -224,6 +251,11 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 	}
 
 	@Override
+	public int size() {
+		return this.children.size();
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("MappingList(");
 		sb.append(this.containerName);
@@ -231,12 +263,13 @@ public class MappingList extends ArrayList<IMapping> implements IMappingContaine
 		sb.append(separator);
 		sb.append(this.multiValueBehaviour);
 		sb.append(separator);
+		sb.append(this.groupNumber);
+		sb.append(separator);
 		sb.append(this.minValueCount);
 		sb.append(separator);
 		sb.append(this.maxValueCount);
 		sb.append(separator);
 		sb.append(this.highestFoundValueCount);
-		sb.append(separator);
 		sb.append(")[");
 		sb.append(size());
 		sb.append(" children]");

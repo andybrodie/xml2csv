@@ -44,7 +44,7 @@ public class XmlInputTests {
 		int count;
 		for (count = 0; iter.hasNext(); count++) {
 			Mapping mapping = (Mapping) iter.next();
-			assertEquals(baseNames[count], mapping.getBaseName());
+			assertEquals(baseNames[count], mapping.getName());
 		}
 		assertEquals(2, count);
 	}
@@ -70,7 +70,7 @@ public class XmlInputTests {
 
 		MappingList topLevelMappingList = (MappingList) config.getContainerByName("Family");
 		assertEquals(3, topLevelMappingList.size());
-		assertEquals("Family", topLevelMappingList.getContainerName());
+		assertEquals("Family", topLevelMappingList.getName());
 		topLevelMappingList.get(0);
 
 		MappingList membersMappingList = (MappingList) topLevelMappingList.get(1);

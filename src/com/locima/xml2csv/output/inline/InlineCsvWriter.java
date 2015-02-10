@@ -181,10 +181,10 @@ public class InlineCsvWriter implements IOutputWriter {
 		while (!toDo.empty()) {
 			IMapping current = toDo.pop();
 			if (current instanceof IValueMapping) {
-				dic.put(VALUE_NAME_PREFIX + ((IValueMapping) current).getBaseName(), current);
+				dic.put(VALUE_NAME_PREFIX + ((IValueMapping) current).getName(), current);
 			} else {
 				IMappingContainer currentContainer = (IMappingContainer) current;
-				dic.put(CONTAINER_NAME_PREFIX + ((IMappingContainer) current).getContainerName(), current);
+				dic.put(CONTAINER_NAME_PREFIX + ((IMappingContainer) current).getName(), current);
 				for (IMapping child : currentContainer) {
 					toDo.add(child);
 				}
@@ -221,7 +221,7 @@ public class InlineCsvWriter implements IOutputWriter {
 	// CHECKSTYLE:OFF Field hiding is fine here because this is for initialising the obeject after a constructor call.
 	public void initialise(File outputDirectory, IMappingContainer container, boolean appendOutput) throws OutputManagerException {
 		// CHECKSTYLE:ON
-		this.outputName = container.getContainerName();
+		this.outputName = container.getName();
 		this.outputDirectory = outputDirectory;
 
 		String csiFileNameBasis = this.outputName;

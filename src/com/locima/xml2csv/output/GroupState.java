@@ -52,9 +52,6 @@ public class GroupState {
 			switch (current.getMultiValueBehaviour()) {
 				case GREEDY:
 					if (inlineGroup == null) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Creating new inline group state for {}", current);
-						}
 						inlineGroup = new GreedyGroupState(current);
 					}
 					inlineGroup.addContext(current);
@@ -64,23 +61,14 @@ public class GroupState {
 
 					// Either add to an existing group managing that group number, or create a new one
 					if (initialState == null) {
-						if (LOG.isInfoEnabled()) {
-							LOG.info("Creating initial state for group {} for {}", groupNum, current);
-						}
 						initialState = new GroupState(groupNum, current);
 					} else {
 						GroupState existingGroup = GroupState.searchByGroup(initialState, groupNum);
 
 						if (existingGroup == null) {
-							if (LOG.isInfoEnabled()) {
-								LOG.info("Creating new group state for {} ({})", current, groupNum);
-							}
 							GroupState newState = new GroupState(groupNum, current);
 							initialState.insert(newState);
 						} else {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Adding {} to existing group state {}", current, existingGroup);
-							}
 							existingGroup.addContext(current);
 						}
 					}
@@ -88,9 +76,9 @@ public class GroupState {
 				case DEFAULT:
 				default:
 					throw new BugException("Found unexpected MultiValueBehaviour %s in %s", current.getMultiValueBehaviour().toString(), current);
-
 			}
-			// Now push all the children to our "to do" stack.
+			
+			// Now push all the children to our "to do" stack to ensure that we deal with every results container.
 			if (current instanceof IExtractionResultsContainer) {
 				IExtractionResultsContainer cec = (IExtractionResultsContainer) current;
 				for (List<IExtractionResults> child : cec.getChildren()) {
@@ -137,31 +125,50 @@ public class GroupState {
 		LOG.trace("GroupStates END");
 	}
 
+	/**
+	 * Search for a group, starting at the state passed, looking for a group with the {@link #groupNumber} specified by <code>searchGroup</code>.
+	 *
+	 * @param state the state to start searching from.
+	 * @param searchGroup the group to search for.
+	 * @return the group state that tracks the group number specified by <code>searchGroup</code>, or null if one does not exist.
+	 */
+	// CHECKSTYLE:OFF Return count is high, but efficient.
 	private static GroupState searchByGroup(GroupState state, int searchGroup) {
+		// CHECKSTYLE:ON
 		if (state == null) {
 			return null;
 		}
 		if (state.groupNumber == searchGroup) {
 			return state;
-		} else {
-			// Search forward from initialState
-			GroupState current = state;
-			do {
+		}
+
+		GroupState current = state;
+
+		if (searchGroup > state.groupNumber) {
+			current = current.next;
+			while (current != null) {
 				if (current.groupNumber == searchGroup) {
 					return current;
+				}
+				if (searchGroup < current.groupNumber) {
+					return null;
 				}
 				current = current.next;
-			} while (current != null);
-			// Search backwards from initialState
-			current = state;
-			do {
+			}
+		} else {
+			// searchGroup < state.groupNumber
+			current = current.prev;
+			while (current != null) {
 				if (current.groupNumber == searchGroup) {
 					return current;
 				}
+				if (searchGroup > current.groupNumber) {
+					return null;
+				}
 				current = current.prev;
-			} while (current != null);
+			}
 		}
-		// Didn't find one at all
+
 		return null;
 	}
 
@@ -173,30 +180,70 @@ public class GroupState {
 
 	private List<IExtractionResults> records;
 
-	public GroupState(int groupNum, IExtractionResults record) {
-		this.groupNumber = groupNum;
-		this.groupSize = Math.max(record.size(), record.getMinCount());
+	/**
+	 * Creates a new instance with a specific group number and initial associated set of results.
+	 *
+	 * @param groupNumber the group number that this instance will track. Must be unique.
+	 * @param record an initial set of results associated with this object. Further results may be added with {@link #addContext(IExtractionResults)}.
+	 */
+	public GroupState(int groupNumber, IExtractionResults record) {
+		this.groupNumber = groupNumber;
+		int calculatedGroupSize = Math.max(record.size(), record.getMinCount());
+		this.groupSize = calculatedGroupSize;
 		this.records = new ArrayList<IExtractionResults>(1);
 		this.records.add(record);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Creating new group state (Num: {}, Size: {}) for {}", groupNumber, calculatedGroupSize, record);
+		}
+
 	}
 
+	/**
+	 * Associates the <code>record</code> passed with this group.
+	 *
+	 * @param record the set of results to associated with this group.
+	 */
 	private void addContext(IExtractionResults record) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Adding {} ({} elements) to existing group state {}", record, record.size(), this);
+		}
 		this.records.add(record);
 		this.groupSize = Math.max(this.groupSize, record.size());
 	}
 
-	public GroupState findByGroup(int searchGroup) {
-		return GroupState.searchByGroup(this, searchGroup);
+	/**
+	 * Finds the group with the index <code>searchIndex</code>. If one does not exist then <code>null</code> is returned.
+	 *
+	 * @param searchIndex the index to search for.
+	 * @return the group with the index <code>searchIndex</code>. If one does not exist then <code>null</code> is returned.
+	 */
+	public GroupState findGroup(int searchIndex) {
+		return GroupState.searchByGroup(this, searchIndex);
 	}
 
+	/**
+	 * Return the current index of this {@link GroupState}, i.e. how mnay results have been returned from this.
+	 *
+	 * @return the current index of this {@link GroupState}, i.e. how mnay results have been returned from this.
+	 */
 	public int getCurrentIndex() {
 		return this.currentIndex;
 	}
 
+	/**
+	 * Return the group number assigned to this group.
+	 *
+	 * @return the group number assigned to this group.
+	 */
 	public int getGroupNumber() {
 		return this.groupNumber;
 	}
 
+	/**
+	 * Return true if there are more results to yield from this object, false if it is exhausted.
+	 *
+	 * @return true if there are more results to yield from this object, false if it is exhausted.
+	 */
 	public boolean hasNext() {
 		boolean hasNext;
 		if (!isExhausted()) {
@@ -207,6 +254,10 @@ public class GroupState {
 		return hasNext;
 	}
 
+	/**
+	 * Increments this group to the next index (see {@link #getCurrentIndex()}. If this group is exhausted then it will increment the next group (if
+	 * there is one).
+	 */
 	public void increment() {
 		this.currentIndex++;
 		if (this.currentIndex < (this.groupSize)) {

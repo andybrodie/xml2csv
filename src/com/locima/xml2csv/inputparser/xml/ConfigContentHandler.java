@@ -46,6 +46,7 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private static final String GROUP_NUMBER_ATTR = "group";
 	private static final String KEY_XPATH_ATTR = "keyXPath";
+	private static final String KVPAIR_ROOT_XPATH_ATTR = "kvPairRoot";
 	private static final Logger LOG = LoggerFactory.getLogger(ConfigContentHandler.class);
 	private static final String MAPPING_NAMESPACE = "http://locima.com/xml2csv/MappingConfiguration";
 	private static final String MAPPING_ROOT_ATTR = "mappingRoot";
@@ -55,6 +56,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
 	private static final String VALUE_XPATH_ATTR = "valueXPath";
+
 	private static final String XPATH_ATTR = "xPath";
 
 	private int currentGroupNumber;
@@ -182,7 +184,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addPivotMapping(String name, String mappingRootSource, String keyXPathSource, String valueXPathSource,
+	private void addPivotMapping(String name, String mappingRootSource, String kvPairRootSource, String keyXPathSource, String valueXPathSource,
 					String templateNameFormatName, String customTemplateNameFormat, int groupNumber, String multiValueBehaviour) throws SAXException {
 		MappingList parent = this.mappingListStack.peek();
 		try {
@@ -197,16 +199,18 @@ public class ConfigContentHandler extends DefaultHandler {
 			XPathValue rootXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), mappingRootSource);
 			XPathValue keyXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), keyXPathSource);
 			XPathValue valueXPath = XmlUtil.createXPathValue(parent.getNamespaceMappings(), valueXPathSource);
+			XPathValue kvPairRoot = XmlUtil.createXPathValue(parent.getNamespaceMappings(), kvPairRootSource);
 			NameFormat templateNameFormat = NameFormat.parse(templateNameFormatName, customTemplateNameFormat, NameFormat.NO_COUNTS);
 			PivotMapping mapping = new PivotMapping();
 			mapping.setParent(parent);
 			mapping.setMappingRoot(rootXPath);
 			mapping.setMappingName(mappingName);
+			mapping.setKVPairRoot(kvPairRoot);
 			mapping.setKeyXPath(keyXPath);
 			mapping.setValueXPath(valueXPath);
 			mapping.setNameFormat(templateNameFormat);
 			mapping.setGroupNumber(groupNumber);
-			MultiValueBehaviour mvb = MultiValueBehaviour.parse(multiValueBehaviour, MultiValueBehaviour.GREEDY);
+			MultiValueBehaviour mvb = MultiValueBehaviour.parse(multiValueBehaviour, MultiValueBehaviour.LAZY);
 			mapping.setMultiValueBehaviour(mvb);
 			parent.add(mapping);
 		} catch (XMLException e) {
@@ -260,7 +264,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Clears down the stack for filters.
+	 * Ensures that there are no open filters (would indicate a bug in this code) and wipes out {@link #inputFilterStack}.
 	 *
 	 * @throws SAXException if the input filter stack isn't empty. Indicates a bug in xml2csv.
 	 */
@@ -272,14 +276,15 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Closes off this input filter definition by popping the {@link #inputFilterStack}.
+	 * Closes off this input filter definition by popping the top {@link #inputFilterStack} value.
 	 */
 	private void endInputFilter() {
 		this.inputFilterStack.pop();
 	}
 
 	/**
-	 * Closes off a mapping list, managing the stack of them (to supported nested MappingList occurrences.
+	 * Closes off a mapping list, either adding it to the {@link #mappingConfiguration} if a top level mapping, or adding to the parent (top of the
+	 * {@link #mappingListStack} stack.
 	 */
 	private void endMappingList() {
 		IMappingContainer current = this.mappingListStack.pop();
@@ -342,7 +347,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private SAXException getException(Exception inner, String message, Object... parameters) {
 		String temp = String.format(message, parameters);
 		XMLException de =
-						new XMLException(inner, "Error parsing %s(%d,%d) %s", this.documentLocator.getSystemId(),
+						new XMLException(inner, "Error parsing %s(%d:%d) %s", this.documentLocator.getSystemId(),
 										this.documentLocator.getLineNumber(), this.documentLocator.getColumnNumber(), temp);
 		SAXException se = new SAXException(de);
 		return se;
@@ -397,8 +402,8 @@ public class ConfigContentHandler extends DefaultHandler {
 									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case PivotMapping:
-					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(KEY_XPATH_ATTR),
-									atts.getValue(VALUE_XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
+					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(KVPAIR_ROOT_XPATH_ATTR),
+									atts.getValue(KEY_XPATH_ATTR), atts.getValue(VALUE_XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
 									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 					break;
 				case MappingList:

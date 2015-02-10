@@ -84,7 +84,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	}
 
 	/**
-	 * Used to construct a root instance with no parent.
+	 * Constructs a new instance to manage the evaluation of the <code>mapping</code> passed.
 	 *
 	 * @param mapping the mapping configuration that this context is responsible for evaluating.
 	 * @param parent the parent for this context (should be null if this is a top-level mapping on the configuration).
@@ -202,7 +202,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 
 	@Override
 	public String getName() {
-		return this.mapping.getContainerName();
+		return this.mapping.getName();
 	}
 
 	@Override
@@ -272,7 +272,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	 * @throws IOException if any issues occur during writing.
 	 */
 	private void writeObject(ObjectOutputStream stream) throws IOException {
-		String mappingName = getMappingContainer().getContainerName();
+		String mappingName = getMappingContainer().getName();
 		int size = this.children.size();
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Writing {} results to the CSI file for {}", size, mappingName);

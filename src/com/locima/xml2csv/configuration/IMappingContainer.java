@@ -11,7 +11,7 @@ public interface IMappingContainer extends IMapping, Iterable<IMapping> {
 	 * @return a string, or null if this mapping container is anonymous. Note that top-level mapping containers (i.e. those stored beneath
 	 *         {@link MappingConfiguration} cannot be anonymous and must have a valid non-zero length string.
 	 */
-	String getContainerName();
+	String getName();
 
 	/**
 	 * Retrieve the mapping root for this container. The mapping root is an XPath expression that will be executed, relative to a parent node (or

@@ -65,7 +65,7 @@ public class DirectCsvWriter implements IOutputWriter {
 	 */
 	@Override
 	public void initialise(File outputDirectory, IMappingContainer container, boolean appendOutput) throws OutputManagerException {
-		this.outputName = container.getContainerName();
+		this.outputName = container.getName();
 		String fileNameBasis = this.outputName;
 		this.outputFile = new File(outputDirectory, FileUtility.convertToPOSIXCompliantFileName(fileNameBasis, ".CSV", true));
 		this.writer = OutputUtil.createCsvWriter(container, this.outputFile, appendOutput);

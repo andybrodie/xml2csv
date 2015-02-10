@@ -12,27 +12,16 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.locima.xml2csv.TestHelpers;
-import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.configuration.NameFormat;
 import com.locima.xml2csv.configuration.PivotMapping;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.OutputManager;
-import com.locima.xml2csv.util.XmlUtil;
 
 public class PivotExtractorTests {
 
 	private XdmNode testDoc;
-
-	private Mapping addMapping(MappingList parent, String name, String xPath) throws XMLException {
-		Mapping m = new Mapping(parent, name, NameFormat.NO_COUNTS, 1, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, xPath), 0, 0);
-		parent.add(m);
-		return m;
-
-	}
 
 	private File getTemporaryOutputFolder() throws IOException {
 		TemporaryFolder outputFolder = new TemporaryFolder();

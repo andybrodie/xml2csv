@@ -6,13 +6,6 @@ package com.locima.xml2csv.configuration;
 public interface IValueMapping extends IMapping {
 
 	/**
-	 * Return the base name of fields extracted by this mapping.
-	 *
-	 * @return the base name of fields extracted by this mapping.
-	 */
-	String getBaseName();
-
-	/**
 	 * Retrieve the XPath that will extract values from input XML documents.
 	 *
 	 * @return the XPath that will extract values from input XML documents.

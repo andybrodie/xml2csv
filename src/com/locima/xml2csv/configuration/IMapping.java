@@ -7,6 +7,14 @@ import com.locima.xml2csv.extractor.AbstractExtractionContext;
  */
 public interface IMapping {
 
+
+	/**
+	 * Return the base name of fields extracted by this mapping.
+	 *
+	 * @return the base name of fields extracted by this mapping.
+	 */
+	String getName();
+
 	/**
 	 * Combines the values in {@link #getMinValueCount()} and {@link #getHighestFoundValueCount()} to determine the total number of fields that this
 	 * mapping must output <em>in a single record</em>.

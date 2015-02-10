@@ -10,38 +10,25 @@ import org.slf4j.LoggerFactory;
 /**
  * Pivot mappings are pseudo-containers that dynamically create mappings based on data found within the document.
  */
-public class PivotMapping implements IMappingContainer {
+public class PivotMapping extends AbstractMappingContainer implements IMappingContainer {
+
+	public PivotMapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
+					int minValueCount, int maxValueCount) {
+		super(parent, baseName, format, groupNumber, multiValueBehaviour, minValueCount, maxValueCount);
+		this.children = new ArrayList<Mapping>();
+	}
+	
+	public PivotMapping() {
+		this.children = new ArrayList<Mapping>();
+	}
 
 	private static final Logger LOG = LoggerFactory.getLogger(PivotMapping.class);
-
-	private List<Mapping> children;
-
-	private int groupNumber;
-
-	private int highesFoundValueCount;
 
 	private XPathValue keyXPath;
 
 	private XPathValue kvPairRoot;
 
-	private XPathValue mappingRoot;
-
-	private MultiValueBehaviour multiValueBehaviour;
-
-	private NameFormat nameFormat;
-
-	private IMappingContainer parent;
-
-	private String pivotMappingName;
-
 	private XPathValue valueXPath;
-
-	/**
-	 * Creates a new instance of a Pivot Mapping object.
-	 */
-	public PivotMapping() {
-		this.children = new ArrayList<Mapping>();
-	}
 
 	/**
 	 * Finds a named child {@link PivotKeyMapping} based on the <code>keyName</code> passed.
@@ -51,7 +38,7 @@ public class PivotMapping implements IMappingContainer {
 	 */
 	private Mapping findChild(String keyName) {
 		for (Mapping pkm : this.children) {
-			if (pkm.getBaseName().equals(keyName)) {
+			if (pkm.getName().equals(keyName)) {
 				return pkm;
 			}
 		}
@@ -59,24 +46,11 @@ public class PivotMapping implements IMappingContainer {
 	}
 
 	@Override
-	public String getContainerName() {
-		return this.pivotMappingName;
+	public int size() {
+		return this.children.size();
 	}
 
-	@Override
-	public int getFieldCountForSingleRecord() {
-		return getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
-	}
-
-	@Override
-	public int getGroupNumber() {
-		return this.groupNumber;
-	}
-
-	@Override
-	public int getHighestFoundValueCount() {
-		return this.highesFoundValueCount;
-	}
+	private List<Mapping> children;
 
 	/**
 	 * Return the XPath expression that will return a set of key values when executed.
@@ -96,41 +70,6 @@ public class PivotMapping implements IMappingContainer {
 	 */
 	public XPathValue getKVPairRoot() {
 		return this.kvPairRoot;
-	}
-
-	/**
-	 * Gets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 *
-	 * @return the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 */
-	@Override
-	public XPathValue getMappingRoot() {
-		return this.mappingRoot;
-	}
-
-	@Override
-	public int getMaxValueCount() {
-		return 0;
-	}
-
-	@Override
-	public int getMinValueCount() {
-		return 0;
-	}
-
-	@Override
-	public MultiValueBehaviour getMultiValueBehaviour() {
-		return this.multiValueBehaviour;
-	}
-
-	@Override
-	public NameFormat getNameFormat() {
-		return this.nameFormat;
-	}
-
-	@Override
-	public IMappingContainer getParent() {
-		return this.parent;
 	}
 
 	/**
@@ -188,7 +127,7 @@ public class PivotMapping implements IMappingContainer {
 	 */
 	@Override
 	public int hashCode() {
-		return this.pivotMappingName.hashCode();
+		return this.getName().hashCode();
 	}
 
 	@Override
@@ -197,20 +136,6 @@ public class PivotMapping implements IMappingContainer {
 		List<IMapping> iterableIMappingInstance = new ArrayList<IMapping>(this.children.size());
 		iterableIMappingInstance.addAll(this.children);
 		return iterableIMappingInstance.iterator();
-	}
-
-	/**
-	 * Sets the logical group number of this mapping container.
-	 *
-	 * @param groupNumber the logical group number of this mapping container.
-	 */
-	public void setGroupNumber(int groupNumber) {
-		this.groupNumber = groupNumber;
-	}
-
-	@Override
-	public void setHighestFoundValueCount(int valueFound) {
-		this.highesFoundValueCount = valueFound;
 	}
 
 	/**
@@ -236,52 +161,6 @@ public class PivotMapping implements IMappingContainer {
 	}
 
 	/**
-	 * Sets the name given to this pivot mapping, if top-level will be used to generate the output file name.
-	 *
-	 * @param mappingName the name given to this pivot mapping, if top-level will be used to generate the output file name.
-	 */
-	public void setMappingName(String mappingName) {
-		this.pivotMappingName = mappingName;
-	}
-
-	/**
-	 * Sets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 *
-	 * @param mappingRoot the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
-	 */
-	public void setMappingRoot(XPathValue mappingRoot) {
-		this.mappingRoot = mappingRoot;
-	}
-
-	/**
-	 * Sets what should happen when multiple values are found for a single evaluation of a single field wtihin this mapping.
-	 *
-	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation of a single field wtihin this
-	 *            mapping.
-	 */
-	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
-		this.multiValueBehaviour = multiValueBehaviour;
-	}
-
-	/**
-	 * Sets the format to be used for the {@link Mapping} instance that this method creates.
-	 *
-	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
-	 */
-	public void setNameFormat(NameFormat nameFormat) {
-		this.nameFormat = nameFormat;
-	}
-
-	/**
-	 * Sets the logical group number of this mapping container.
-	 *
-	 * @param parent the logical group number of this mapping container.
-	 */
-	public void setParent(IMappingContainer parent) {
-		this.parent = parent;
-	}
-
-	/**
 	 * Set the name given to this pivot mapping, if top-level will be used to generate the output file name.
 	 *
 	 * @param valueXPath the name given to this pivot mapping, if top-level will be used to generate the output file name.
@@ -291,14 +170,9 @@ public class PivotMapping implements IMappingContainer {
 	}
 
 	@Override
-	public int size() {
-		return this.children.size();
-	}
-
-	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("PivotMapping(");
-		sb.append(this.pivotMappingName);
+		sb.append(this.getName());
 		final String separator = ", ";
 		sb.append(separator);
 		sb.append(getNameFormat());
@@ -308,7 +182,7 @@ public class PivotMapping implements IMappingContainer {
 		sb.append(getMultiValueBehaviour());
 		sb.append(separator);
 		sb.append("Root(");
-		sb.append(this.mappingRoot);
+		sb.append(this.getMappingRoot());
 		sb.append("), KVPairRoot(");
 		sb.append(this.kvPairRoot);
 		sb.append("), Key(");
