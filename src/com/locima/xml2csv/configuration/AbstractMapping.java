@@ -3,8 +3,13 @@ package com.locima.xml2csv.configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.output.GroupState;
+import com.locima.xml2csv.util.StringUtil;
 
+/**
+ * Common functionality for all mappings, either value ( {@link IValueMapping} or containers ({@link IMappingContainer}).
+ */
 public abstract class AbstractMapping implements IMapping {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractMapping.class);
@@ -48,29 +53,10 @@ public abstract class AbstractMapping implements IMapping {
 	 */
 	private IMappingContainer parent;
 
-	public AbstractMapping() {
-	}
-
 	/**
-	 * Creates a new immutable Field Definition.
-	 *
-	 * @param parent the parent of this mapping. May be null if this is a top level mapping container.
-	 * @param baseName the name of this mapping, must be unique within the configuration.
-	 * @param minValueCount the fewest number of values, or sets of values, that may be returned by this mapping.
-	 * @param maxValueCount the most number of values, or sets of values, that may be returned by this mapping.
-	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
-	 * @param groupNumber the group number for this field definition.
-	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * Create a new instance.
 	 */
-	public AbstractMapping(IMappingContainer parent, String baseName, NameFormat nameFormat, int groupNumber, MultiValueBehaviour multiValueBehaviour,
-					int minValueCount, int maxValueCount) {
-		this.parent = parent;
-		this.name = baseName;
-		this.nameFormat = nameFormat == null ? NameFormat.NO_COUNTS : nameFormat;
-		this.groupNumber = groupNumber;
-		this.multiValueBehaviour = multiValueBehaviour;
-		this.minValueCount = minValueCount;
-		this.maxValueCount = maxValueCount;
+	public AbstractMapping() {
 	}
 
 	@Override
@@ -128,7 +114,7 @@ public abstract class AbstractMapping implements IMapping {
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-						|| ((getMaxValueCount() == getMinValueCount()) && (getMinValueCount() > 0));
+										|| ((getMaxValueCount() == getMinValueCount()) && (getMinValueCount() > 0));
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Mapping {} hasFixedOutputCardinality = {}", this, isFixed);
 		}
@@ -159,38 +145,6 @@ public abstract class AbstractMapping implements IMapping {
 	}
 
 	/**
-	 * Sets what should happen when multiple values are found for a single evaluation of a single field wtihin this mapping.
-	 *
-	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation of a single field wtihin this
-	 *            mapping.
-	 */
-	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
-		this.multiValueBehaviour = multiValueBehaviour;
-	}
-
-	/**
-	 * Sets the format to be used for the {@link Mapping} instance that this method creates.
-	 *
-	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
-	 */
-	public void setNameFormat(NameFormat nameFormat) {
-		this.nameFormat = nameFormat;
-	}
-	
-	public void setName(String newName) {
-		this.name = newName;
-	}
-
-	/**
-	 * Sets the logical group number of this mapping container.
-	 *
-	 * @param parent the logical group number of this mapping container.
-	 */
-	public void setParent(IMappingContainer parent) {
-		this.parent = parent;
-	}
-
-	/**
 	 * Sets the maximum number of results that will be processed when executing the {@link #mappingRoot}. Any results over and above this value will
 	 * be discarded.
 	 *
@@ -209,6 +163,46 @@ public abstract class AbstractMapping implements IMapping {
 	 */
 	public void setMinValueCount(int minValueCount) {
 		this.minValueCount = minValueCount;
+	}
+
+	/**
+	 * Sets what should happen when multiple values are found for a single evaluation of a single field wtihin this mapping.
+	 *
+	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation of a single field wtihin this
+	 *            mapping.
+	 */
+	public void setMultiValueBehaviour(MultiValueBehaviour multiValueBehaviour) {
+		this.multiValueBehaviour = multiValueBehaviour;
+	}
+
+	/**
+	 * Sets a name for this mapping.
+	 *
+	 * @param name the new name of the mapping. Must not be null or the empty string.
+	 */
+	public void setName(String name) {
+		if (StringUtil.isNullOrEmpty(name)) {
+			throw new ArgumentException("name", "Must not be null or empty");
+		}
+		this.name = name;
+	}
+
+	/**
+	 * Sets the format to be used for the {@link Mapping} instance that this method creates.
+	 *
+	 * @param nameFormat the format to be used for the {@link Mapping} instance that this method creates.
+	 */
+	public void setNameFormat(NameFormat nameFormat) {
+		this.nameFormat = nameFormat;
+	}
+
+	/**
+	 * Sets the logical group number of this mapping container.
+	 *
+	 * @param parent the logical group number of this mapping container.
+	 */
+	public void setParent(IMappingContainer parent) {
+		this.parent = parent;
 	}
 
 }

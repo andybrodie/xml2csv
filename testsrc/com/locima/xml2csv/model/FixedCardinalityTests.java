@@ -8,13 +8,11 @@ import com.locima.xml2csv.XMLException;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
-import com.locima.xml2csv.configuration.NameFormat;
-import com.locima.xml2csv.util.XmlUtil;
 
 public class FixedCardinalityTests {
 
 	private Mapping createMapping(String name, MultiValueBehaviour mvb, int min, int max) throws XMLException {
-		return new Mapping(null, name, NameFormat.NO_COUNTS, 0, mvb, XmlUtil.createXPathValue(null, "."), min, max);
+		return com.locima.xml2csv.TestHelpers.addMapping(null, name, 0, mvb, ".", min, max);
 	}
 
 	private MappingList createMappingList(String name, Mapping... mappings) {

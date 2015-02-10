@@ -13,11 +13,7 @@ import com.locima.xml2csv.util.XmlUtil;
 public class ConfigBuilders {
 
 	public static Mapping createLazyMapping(MappingList parent, String xPath, int groupNumber) throws XMLException {
-		Mapping m =
-						new Mapping(parent, xPath, NameFormat.NO_COUNTS, groupNumber, MultiValueBehaviour.LAZY,
-										XmlUtil.createXPathValue(null, xPath), 0, 0);
-		parent.add(m);
-		return m;
+		return com.locima.xml2csv.TestHelpers.addMapping(parent, xPath, groupNumber, xPath);
 	}
 
 	public static MappingList createMappingList(String xPath, int groupNumber, MultiValueBehaviour mvb) throws XMLException {

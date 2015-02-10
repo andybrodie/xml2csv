@@ -3,16 +3,11 @@ package com.locima.xml2csv.configuration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.ArgumentException;
 import com.locima.xml2csv.ArgumentNullException;
-import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.util.StringUtil;
-import com.locima.xml2csv.util.XmlUtil;
 
 /**
  * Models an ordered list of mappings of column containerName to XPath expression.
@@ -23,24 +18,10 @@ public class MappingList extends AbstractMappingContainer implements IMappingCon
 
 	private List<IMapping> children;
 
-
-
-	private Map<String, String> namespaceMappings;
-
 	/**
-	 * Calls {@link MappingList#NameToXPathMappings(Map)} with an empty map.
+	 * Initialises the internal list of children.
 	 */
 	public MappingList() {
-		this(null);
-	}
-
-	/**
-	 * Initialises a Saxon processor, using the supplied map of namespace prefix to URI mappings.
-	 *
-	 * @param namespaceMap a (possibly empty, but must not be null) map of prefix to URI mappings.
-	 */
-	public MappingList(Map<String, String> namespaceMap) {
-		this.namespaceMappings = namespaceMap;
 		this.children = new ArrayList<IMapping>();
 	}
 
@@ -58,7 +39,7 @@ public class MappingList extends AbstractMappingContainer implements IMappingCon
 
 	/**
 	 * Retrieve the child mapping at the index specified.
-	 * 
+	 *
 	 * @param index the index of the child to retrieve.
 	 * @return the child mapping at the index specified. Will never return null.
 	 */
@@ -71,7 +52,6 @@ public class MappingList extends AbstractMappingContainer implements IMappingCon
 		return getMultiValueBehaviour() == MultiValueBehaviour.LAZY ? 1 : Math.max(getMinValueCount(), getHighestFoundValueCount());
 	}
 
-
 	/**
 	 * Look at all ourself and all of our contained mappings, if they're all fixed output then return <code>true</code>, if only one isn't then we
 	 * can't guarantee how many fields are output, so return <code>false</code>.
@@ -83,7 +63,7 @@ public class MappingList extends AbstractMappingContainer implements IMappingCon
 	public boolean hasFixedOutputCardinality() {
 		boolean isFixed =
 						(getMultiValueBehaviour() == MultiValueBehaviour.LAZY)
-										|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
+						|| ((getMinValueCount() == getMaxValueCount()) && (getMinValueCount() > 0));
 
 		if (isFixed) {
 			for (IMapping mapping : this) {

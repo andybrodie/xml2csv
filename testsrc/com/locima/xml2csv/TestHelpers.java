@@ -22,7 +22,12 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
+import com.locima.xml2csv.configuration.MappingList;
+import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.NameFormat;
+import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
 import com.locima.xml2csv.util.XmlUtil;
@@ -32,6 +37,36 @@ public class TestHelpers {
 	private static final Logger LOG = LoggerFactory.getLogger(TestHelpers.class);
 
 	public static final String RES_DIR = "testdata";
+
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, String valueXPath,
+					int minValueCount, int maxValueCount) throws XMLException {
+		return addMapping(mappings, name, groupNumber, mvb, XmlUtil.createXPathValue(valueXPath), minValueCount, maxValueCount);
+	}
+
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, XPathValue valueXPath,
+					int minValueCount, int maxValueCount) throws XMLException {
+		Mapping mapping = new Mapping();
+		mapping.setParent(mappings);
+		mapping.setName(name);
+		mapping.setNameFormat(NameFormat.NO_COUNTS);
+		mapping.setGroupNumber(groupNumber);
+		mapping.setMultiValueBehaviour(mvb);
+		mapping.setValueXPath(valueXPath);
+		mapping.setMinValueCount(minValueCount);
+		mapping.setMaxValueCount(maxValueCount);
+		if (mappings != null) {
+			mappings.add(mapping);
+		}
+		return mapping;
+	}
+
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, String valueXPathExpressionValue) throws XMLException {
+		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(valueXPathExpressionValue), 0, 0);
+	}
+
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, XPathValue valueXPathExpression) throws XMLException {
+		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, valueXPathExpression, 0, 0);
+	}
 
 	public static void assertCsvEquals(File expectedFile, File actualFile) throws Exception {
 		String[] expected = loadFile(expectedFile);

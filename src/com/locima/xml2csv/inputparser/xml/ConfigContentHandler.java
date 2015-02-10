@@ -121,9 +121,15 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 
 		int finalGroupNumber = groupNumber < 0 ? this.currentGroupNumber : groupNumber;
-		Mapping mapping =
-						new Mapping(current, fieldName, nameFormat, finalGroupNumber, MultiValueBehaviour.parse(multiValueBehaviour,
-										this.mappingConfiguration.getDefaultMultiValueBehaviour()), compiledXPath, minValueCount, maxValueCount);
+		Mapping mapping = new Mapping();
+		mapping.setParent(current);
+		mapping.setName(fieldName);
+		mapping.setNameFormat(nameFormat);
+		mapping.setGroupNumber(finalGroupNumber);
+		mapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
+		mapping.setValueXPath(compiledXPath);
+		mapping.setMinValueCount(minValueCount);
+		mapping.setMaxValueCount(maxValueCount);
 		current.add(mapping);
 	}
 
@@ -153,7 +159,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int minValueCount,
 					int maxValueCount) throws SAXException {
 		// IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
-		MappingList newMapping = new MappingList(this.mappingConfiguration.getNamespaceMap());
+		MappingList newMapping = new MappingList();
 		try {
 			newMapping.setMappingRoot(XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), mappingRoot));
 		} catch (XMLException e) {
@@ -221,7 +227,7 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(e, "Unable to add pivot mapping definition to configuration due to a problem in the XML configuration.");
 		}
 	}
-	
+
 	/**
 	 * Checks to ensure that the {@link #mappingListStack} is empty.
 	 *

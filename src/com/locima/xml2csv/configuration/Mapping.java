@@ -1,8 +1,5 @@
 package com.locima.xml2csv.configuration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.locima.xml2csv.util.EqualsUtil;
 
 /**
@@ -10,30 +7,10 @@ import com.locima.xml2csv.util.EqualsUtil;
  */
 public class Mapping extends AbstractMapping implements IValueMapping {
 
-	private static final Logger LOG = LoggerFactory.getLogger(Mapping.class);
-
 	/**
 	 * The XPath to execute against an input document to find values for this mapping.
 	 */
 	private XPathValue valueXPath;
-
-	/**
-	 * Creates a new immutable Field Definition.
-	 *
-	 * @param parent the parent of this mapping. May be null if this is a top level mapping container.
-	 * @param baseName the name of this mapping, must be unique within the configuration.
-	 * @param minValueCount the fewest number of values, or sets of values, that may be returned by this mapping.
-	 * @param maxValueCount the most number of values, or sets of values, that may be returned by this mapping.
-	 * @param valueXPath a compiled XPath expression that will extract the values required for this field.
-	 * @param format the format to be used for the {@link Mapping} instance that this method creates.
-	 * @param groupNumber the group number for this field definition.
-	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
-	 */
-	public Mapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
-					XPathValue valueXPath, int minValueCount, int maxValueCount) {
-		super(parent, baseName, format, groupNumber, multiValueBehaviour, minValueCount, maxValueCount);
-		this.valueXPath = valueXPath;
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -106,6 +83,15 @@ public class Mapping extends AbstractMapping implements IValueMapping {
 		sb.append(getHighestFoundValueCount());
 		sb.append(')');
 		return sb.toString();
+	}
+
+	/**
+	 * Sets the XPath expression that, when executed, will find the values to insert in the CSV output.
+	 * 
+	 * @param valueXPath the XPath expression that, when executed, will find the values to insert in the CSV output.
+	 */
+	public void setValueXPath(XPathValue valueXPath) {
+		this.valueXPath = valueXPath;
 	}
 
 }

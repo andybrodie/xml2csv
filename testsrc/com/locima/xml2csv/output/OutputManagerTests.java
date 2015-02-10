@@ -61,9 +61,15 @@ public class OutputManagerTests {
 		container.setMinValueCount(fieldNames.length);
 		container.setMaxValueCount(fieldNames.length);
 		for (String fieldName : fieldNames) {
-			Mapping mapping =
-							new Mapping(container, fieldName, NameFormat.NO_COUNTS, 0, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(null, "."),
-											0, 0);
+			Mapping mapping = new Mapping();
+			mapping.setParent(container);
+			mapping.setName(fieldName);
+			mapping.setNameFormat(NameFormat.NO_COUNTS);
+			mapping.setGroupNumber(0);
+			mapping.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
+			mapping.setValueXPath(XmlUtil.createXPathValue("."));
+			mapping.setMinValueCount(0);
+			mapping.setMaxValueCount(0);
 			container.add(mapping);
 		}
 		return container;

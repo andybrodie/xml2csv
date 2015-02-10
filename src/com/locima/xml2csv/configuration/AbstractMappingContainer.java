@@ -1,20 +1,18 @@
 package com.locima.xml2csv.configuration;
 
-import java.util.List;
 
+/**
+ * Provides common functionality for mapping containers ({@link MappingList} and {@link PivotMapping}).
+ */
 public abstract class AbstractMappingContainer extends AbstractMapping implements IMappingContainer {
-	
-	public AbstractMappingContainer(IMappingContainer parent, String baseName, NameFormat format, int groupNumber,
-					MultiValueBehaviour multiValueBehaviour, int minValueCount, int maxValueCount) {
-		super(parent, baseName, format, groupNumber, multiValueBehaviour, minValueCount, maxValueCount);
-	}
-	
-	public AbstractMappingContainer() {
-		
-	}
-
 
 	private XPathValue mappingRoot;
+
+	/**
+	 * No-op constructor.
+	 */
+	public AbstractMappingContainer() {
+	}
 
 	/**
 	 * Gets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
@@ -25,7 +23,6 @@ public abstract class AbstractMappingContainer extends AbstractMapping implement
 	public XPathValue getMappingRoot() {
 		return this.mappingRoot;
 	}
-
 
 	/**
 	 * Sets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.

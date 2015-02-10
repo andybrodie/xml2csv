@@ -1,5 +1,6 @@
 package com.locima.xml2csv.extractor;
 
+import static com.locima.xml2csv.TestHelpers.addMapping;
 import static org.junit.Assert.fail;
 
 import java.io.StringReader;
@@ -30,13 +31,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
-import com.locima.xml2csv.configuration.NameFormat;
-import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.util.XmlUtil;
 
@@ -55,20 +52,6 @@ public class ExtractionContextTests {
 	}
 
 	private Processor saxonProcessor;
-
-	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, int groupNumber, MultiValueBehaviour mvb,
-					String valueXPathExpression) throws XMLException {
-		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
-		Mapping m = new Mapping(mappings, baseName, NameFormat.NO_COUNTS, groupNumber, mvb, valueXPath, 0, 0);
-		mappings.add(m);
-	}
-
-	private void addMapping(MappingList mappings, Map<String, String> prefixUriMap, String baseName, int groupNumber, String valueXPathExpression)
-					throws XMLException {
-		XPathValue valueXPath = XmlUtil.createXPathValue(prefixUriMap, valueXPathExpression);
-		Mapping m = new Mapping(mappings, baseName, NameFormat.NO_COUNTS, groupNumber, MultiValueBehaviour.LAZY, valueXPath, 0, 0);
-		mappings.add(m);
-	}
 
 	/**
 	 * Verifies values in a {@link ContainerExtractionContext} tree.
@@ -147,7 +130,7 @@ public class ExtractionContextTests {
 		parents.setName("Parents");
 		parents.setMappingRoot(XmlUtil.createXPathValue("/root/parent"));
 		parents.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(parents, null, "data", 1, "data");
+		addMapping(parents, "data", 1, "data");
 
 		XdmNode testDoc = createFromString("<root><parent><data>ParentData1</data></parent><parent><data>ParentData2</data></parent></root>");
 
@@ -163,16 +146,9 @@ public class ExtractionContextTests {
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		mappings.setName("Test");
 
-		Mapping m =
-						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
-										"person/name"), 0, 0);
-		mappings.add(m);
-		m = new Mapping(mappings, "Age", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 0, 1);
-		mappings.add(m);
-		m =
-						new Mapping(mappings, "Address", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
-										"person/address"), 0, 2);
-		mappings.add(m);
+		addMapping(mappings, "Name", 0, MultiValueBehaviour.GREEDY, "person/name", 0, 0);
+		addMapping(mappings, "Age", 0, MultiValueBehaviour.GREEDY, "person/age", 0, 1);
+		addMapping(mappings, "Address", 0, MultiValueBehaviour.GREEDY, "person/address", 0, 2);
 
 		XdmNode testDoc =
 						createFromString("<person><name>Andy</name><name>Andy2</name><name>Andy3</name>"
@@ -196,13 +172,13 @@ public class ExtractionContextTests {
 		parents.setName("Parents");
 		parents.setMappingRoot(XmlUtil.createXPathValue("/root/parent"));
 		parents.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(parents, null, "data", 1, "data");
+		addMapping(parents, "data", 1, "data");
 
 		MappingList children = new MappingList();
 		children.setName("Children");
 		children.setMappingRoot(XmlUtil.createXPathValue("/root/parent/child"));
 		children.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(children, null, "data", 1, "data");
+		addMapping(children, "data", 1, "data");
 
 		XdmNode testDoc =
 						createFromString("<root><parent><data>ParentData1</data>" + "<child><data>ParentData1Child1</data></child>"
@@ -227,13 +203,13 @@ public class ExtractionContextTests {
 		families.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		families.setName("Families");
 		families.setMappingRoot(XmlUtil.createXPathValue("/families/family"));
-		addMapping(families, null, "Name", 1, "name");
+		addMapping(families, "Name", 1, "name");
 
 		MappingList familyMembers = new MappingList();
 		familyMembers.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(familyMembers, null, "Name", 2, "name");
-		addMapping(familyMembers, null, "Age", 2, "age");
-		addMapping(familyMembers, null, "Address", 2, "address");
+		addMapping(familyMembers, "Name", 2, "name");
+		addMapping(familyMembers, "Age", 2, "age");
+		addMapping(familyMembers, "Address", 2, "address");
 		familyMembers.setName("FamilyMembers");
 		familyMembers.setMappingRoot(XmlUtil.createXPathValue("/families/family/member"));
 
@@ -286,9 +262,9 @@ public class ExtractionContextTests {
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		mappings.setMappingRoot(XmlUtil.createXPathValue("/root/c"));
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.DEFAULT);
-		addMapping(mappings, null, "parent", 1, MultiValueBehaviour.LAZY, "../name");
-		addMapping(mappings, null, "a1", 1, MultiValueBehaviour.LAZY, "a1");
-		addMapping(mappings, null, "a2", 1, MultiValueBehaviour.LAZY, "a2");
+		addMapping(mappings, "parent", 1, MultiValueBehaviour.LAZY, "../name", 0, 0);
+		addMapping(mappings, "a1", 1, MultiValueBehaviour.LAZY, "a1", 0, 0);
+		addMapping(mappings, "a2", 1, MultiValueBehaviour.LAZY, "a2", 0, 0);
 
 		XdmNode testDoc = createFromString("<root><name>parent</name><c><a1>c1a1</a1><a2>c1a2</a2></c><c><a1>c2a1</a1><a2>c2a2</a2></c></root>");
 
@@ -310,16 +286,9 @@ public class ExtractionContextTests {
 		mappings.setName("Test");
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 
-		Mapping m =
-						new Mapping(mappings, "Name", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
-										"person/name"), 3, 0);
-		mappings.add(m);
-		m = new Mapping(mappings, "Age", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null, "person/age"), 1, 0);
-		mappings.add(m);
-		m =
-						new Mapping(mappings, "Address", NameFormat.NO_COUNTS, 0, MultiValueBehaviour.GREEDY, XmlUtil.createXPathValue(null,
-										"person/address"), 0, 0);
-		mappings.add(m);
+		addMapping(mappings, "Name", 0, MultiValueBehaviour.GREEDY, "person/name", 3, 0);
+		addMapping(mappings, "Age", 0, MultiValueBehaviour.GREEDY, "person/age", 1, 0);
+		addMapping(mappings, "Address", 0, MultiValueBehaviour.GREEDY, "person/address", 0, 0);
 
 		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><age>22</age><address>Home</address></person>");
 
@@ -335,9 +304,9 @@ public class ExtractionContextTests {
 	public void testSimpleMappings() throws Exception {
 		MappingList mappings = new MappingList();
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(mappings, null, "Name", 1, "/person/name");
-		addMapping(mappings, null, "Age", 1, "/person/age");
-		addMapping(mappings, null, "Address", 1, "/person/address");
+		addMapping(mappings, "Name", 1, "/person/name");
+		addMapping(mappings, "Age", 1, "/person/age");
+		addMapping(mappings, "Address", 1, "/person/address");
 		mappings.setName("Test");
 
 		XdmNode testDoc = createFromString("<person><name>Andy</name><age>21</age><address>Home</address></person>");
@@ -356,11 +325,11 @@ public class ExtractionContextTests {
 		prefixUriMap.put("a", "http://example.com/a");
 		prefixUriMap.put("b", "http://example.com/b");
 
-		MappingList mappings = new MappingList(prefixUriMap);
+		MappingList mappings = new MappingList();
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(mappings, prefixUriMap, "Name", 1, "/a:person/b:name");
-		addMapping(mappings, prefixUriMap, "Age", 1, "/a:person/b:age");
-		addMapping(mappings, prefixUriMap, "Address", 1, "/a:person/b:address");
+		addMapping(mappings, "Name", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:name"));
+		addMapping(mappings, "Age", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:age"));
+		addMapping(mappings, "Address", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:address"));
 		mappings.setName("Test");
 
 		XdmNode testDoc =
@@ -380,9 +349,9 @@ public class ExtractionContextTests {
 		mappings.setName("Test");
 		mappings.setMappingRoot(XmlUtil.createXPathValue("/personcollection/person"));
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
-		addMapping(mappings, null, "Name", 1, MultiValueBehaviour.GREEDY, "name");
-		addMapping(mappings, null, "Age", 1, MultiValueBehaviour.GREEDY, "age");
-		addMapping(mappings, null, "Address", 1, MultiValueBehaviour.GREEDY, "address");
+		addMapping(mappings, "Name", 1, MultiValueBehaviour.GREEDY, "name", 0, 0);
+		addMapping(mappings, "Age", 1, MultiValueBehaviour.GREEDY, "age", 0, 0);
+		addMapping(mappings, "Address", 1, MultiValueBehaviour.GREEDY, "address", 0, 0);
 
 		XdmNode testDoc =
 						createFromString("<personcollection><person><name>Andy</name><age>21</age><address>Home</address></person>"

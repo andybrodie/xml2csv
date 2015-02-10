@@ -11,7 +11,7 @@ import com.locima.xml2csv.ArgumentNullException;
  * <th>Parameter index</th>
  * <th>Meaning</th>
  * </tr>
- * </thead> <tbody>
+ * </thead><tbody>
  * <tr>
  * <td>1</td>
  * <td>The current mapping name for the mapping.</td>
@@ -21,16 +21,12 @@ import com.locima.xml2csv.ArgumentNullException;
  * <td>The current mapping iteration number within the parent.</td>
  * </tr>
  * <tr>
- * <td>3</td>
- * <td>The current mapping name of the parent.</td>
+ * <td>3, 5, 7, 9, ...</td>
+ * <td>the current mapping's <em>n<sup>th</sup></em> parent name.</td>
  * </tr>
  * <tr>
- * <td>4</td>
- * <td>The current mapping's parent iteration number within it's own parent.</td>
- * </tr>
- * <tr>
- * <td>5</td>
- * <td></td>
+ * <td>4, 6, 8, 10, ...</td>
+ * <td>the current mapping's <em>n<sup>th</sup></em> iteration number within it's own parent.</td>
  * </tr>
  * </tbody>
  * </table>
@@ -45,7 +41,7 @@ public class NameFormat {
 
 	public static final NameFormat WITH_PARENT_COUNT = new NameFormat("%1$s_%4$d");
 
-/**
+	/**
 	 * Parse the predefined format name or bespoke format specification in to an {@link NameFormat} instance.
 	 *
 	 * @param predefinedFormatName the name of a specific style.

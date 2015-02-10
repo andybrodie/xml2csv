@@ -12,23 +12,22 @@ import org.slf4j.LoggerFactory;
  */
 public class PivotMapping extends AbstractMappingContainer implements IMappingContainer {
 
-	public PivotMapping(IMappingContainer parent, String baseName, NameFormat format, int groupNumber, MultiValueBehaviour multiValueBehaviour,
-					int minValueCount, int maxValueCount) {
-		super(parent, baseName, format, groupNumber, multiValueBehaviour, minValueCount, maxValueCount);
-		this.children = new ArrayList<Mapping>();
-	}
-	
-	public PivotMapping() {
-		this.children = new ArrayList<Mapping>();
-	}
-
 	private static final Logger LOG = LoggerFactory.getLogger(PivotMapping.class);
+
+	private List<Mapping> children;
 
 	private XPathValue keyXPath;
 
 	private XPathValue kvPairRoot;
 
 	private XPathValue valueXPath;
+
+	/**
+	 * Initialises the child collection.
+	 */
+	public PivotMapping() {
+		this.children = new ArrayList<Mapping>();
+	}
 
 	/**
 	 * Finds a named child {@link PivotKeyMapping} based on the <code>keyName</code> passed.
@@ -45,16 +44,9 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 		return null;
 	}
 
-	@Override
-	public int size() {
-		return this.children.size();
-	}
-
-	private List<Mapping> children;
-
 	/**
 	 * Return the XPath expression that will return a set of key values when executed.
-	 * 
+	 *
 	 * @return the XPath expression that will return a set of key values when executed. Will never be null.
 	 */
 	public XPathValue getKeyXPath() {
@@ -64,7 +56,7 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	/**
 	 * Return the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
 	 * expressions. May be null.
-	 * 
+	 *
 	 * @return the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
 	 *         expressions. May be null.
 	 */
@@ -87,9 +79,16 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 			}
 		} else {
 			// TODO I'm probably going to want separately configurable values for MVB, minValueCount and maxValueCount later, but ok for now.
-			pkm =
-							new Mapping(this, keyName, getNameFormat(), getGroupNumber() + 1, getMultiValueBehaviour(), getValueXPath(),
-											getMinValueCount(), getMaxValueCount());
+			pkm = new Mapping();
+			pkm.setParent(this);
+			pkm.setName(keyName);
+			pkm.setNameFormat(getNameFormat());
+			pkm.setGroupNumber(getGroupNumber() + 1);
+			pkm.setMultiValueBehaviour(getMultiValueBehaviour());
+			pkm.setValueXPath(getValueXPath());
+			pkm.setMinValueCount(getMinValueCount());
+			pkm.setMaxValueCount(getMaxValueCount());
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Created new PVM: {}", pkm);
 			}
@@ -127,7 +126,7 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	 */
 	@Override
 	public int hashCode() {
-		return this.getName().hashCode();
+		return getName().hashCode();
 	}
 
 	@Override
@@ -152,9 +151,9 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	/**
 	 * Sets the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
 	 * expressions. May be null.
-	 * 
-	 * @param newKVPairRoot the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and {@link #getValueXPath()}
-	 *         expressions. May be null.
+	 *
+	 * @param newKVPairRoot the XPath expression that will return a set of root nodes from which to execute {@link #getKeyXPath()} and
+	 *            {@link #getValueXPath()} expressions. May be null.
 	 */
 	public void setKVPairRoot(XPathValue newKVPairRoot) {
 		this.kvPairRoot = newKVPairRoot;
@@ -170,9 +169,14 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	}
 
 	@Override
+	public int size() {
+		return this.children.size();
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("PivotMapping(");
-		sb.append(this.getName());
+		sb.append(getName());
 		final String separator = ", ";
 		sb.append(separator);
 		sb.append(getNameFormat());
@@ -182,7 +186,7 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 		sb.append(getMultiValueBehaviour());
 		sb.append(separator);
 		sb.append("Root(");
-		sb.append(this.getMappingRoot());
+		sb.append(getMappingRoot());
 		sb.append("), KVPairRoot(");
 		sb.append(this.kvPairRoot);
 		sb.append("), Key(");
