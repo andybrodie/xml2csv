@@ -13,6 +13,7 @@ import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
+import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.OutputManagerException;
 
@@ -102,7 +103,7 @@ public class CsiInputStream extends ObjectInputStream {
 			IExtractionResultsContainer container;
 			LOG.info("Read context {} successfully from CSI", this.readCount);
 			container = (IExtractionResultsContainer) ctxObject;
-			ContainerExtractionContext.logResults(container, 0, 0);
+			XmlDataExtractor.logResults(container, 0, 0);
 			return container;
 		} else {
 			throw new OutputManagerException("Unexpected object in CSI %s, only expecting IExtractionResultsContainer instances.",

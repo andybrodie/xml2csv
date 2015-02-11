@@ -21,7 +21,6 @@ import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.inline.CsiInputStream;
-import com.locima.xml2csv.util.StringUtil;
 
 /**
  * Used to manage the evaluation and storage of results of an {@link MappingList} instance.
@@ -31,40 +30,6 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	private static final Logger LOG = LoggerFactory.getLogger(ContainerExtractionContext.class);
 
 	private static final long serialVersionUID = 1L;
-
-	/**
-	 * Recursive debugging method to log all the results when an {@link #evaluate(XdmNode)} call has completed.
-	 *
-	 * @param ctx the results to output (recursively)
-	 * @param offset the offset that we're starting at for ctx, relative to sibling results. Used on recursion only, set to 0.
-	 * @param indentCount the amount to indent the output. Used on recusion only, set to 0.
-	 */
-	public static void logResults(IExtractionResults ctx, int offset, int indentCount) {
-		StringBuilder indentSb = new StringBuilder();
-		for (int i = 0; i < indentCount; i++) {
-			indentSb.append("  ");
-		}
-		String indent = indentSb.toString();
-		if (ctx instanceof IExtractionResultsContainer) {
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("{}{}:{}", indent, offset, ctx);
-			}
-			int childResultsSetCount = 0;
-			int childCount = 0;
-			for (List<IExtractionResults> children : ((IExtractionResultsContainer) ctx).getChildren()) {
-				LOG.trace("{}  MappingRoot[{}]", indent, childResultsSetCount++);
-				for (IExtractionResults child : children) {
-					logResults(child, childCount++, indentCount + 2);
-				}
-				childCount = 0;
-			}
-		} else {
-			MappingExtractionContext mCtx = (MappingExtractionContext) ctx;
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("{}[{}]:{} = {}", indent, offset, mCtx, StringUtil.collectionToString(mCtx.getResults(), ",", null));
-			}
-		}
-	}
 
 	/**
 	 * A list of all the child contexts (also a list) found as a result of evaluating the {@link ContainerExtractionContext#mapping}'s
@@ -109,7 +74,7 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	 * @param positionRelativeToIMappingSiblings The position of this extraction context with respect to its sibling {@link IMapping} instances
 	 *            beneath the parent.
 	 */
-	public ContainerExtractionContext(IMappingContainer mapping, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
+	public ContainerExtractionContext(MappingList mapping, int positionRelativeToOtherRootNodes, int positionRelativeToIMappingSiblings) {
 		this(null, mapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
 	}
 

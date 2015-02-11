@@ -48,7 +48,7 @@ public class PivotExtractorTests {
 										MultiValueBehaviour.LAZY);
 
 		MappingConfiguration config = new MappingConfiguration();
-		config.addMappings(pivot);
+		config.addContainer(pivot);
 
 		File outputDir = getTemporaryOutputFolder();
 		IOutputManager om = new OutputManager();

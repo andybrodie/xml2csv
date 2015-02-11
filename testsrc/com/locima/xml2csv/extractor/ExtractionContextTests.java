@@ -214,8 +214,8 @@ public class ExtractionContextTests {
 		familyMembers.setMappingRoot(XmlUtil.createXPathValue("/families/family/member"));
 
 		MappingConfiguration config = new MappingConfiguration();
-		config.addMappings(families);
-		config.addMappings(familyMembers);
+		config.addContainer(families);
+		config.addContainer(familyMembers);
 
 		XdmNode testDoc =
 						createFromString("<families><family>" + "<name>Brodie</name>"

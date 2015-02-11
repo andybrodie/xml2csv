@@ -1,5 +1,9 @@
 package com.locima.xml2csv.output;
 
+// CHECKSTYLE:OFF Checkstyle bug, this is used in javadoc.
+import com.locima.xml2csv.configuration.IMapping;
+
+// CHECKSTYLE:ON
 
 /**
  * Specialisation of {@link GroupState} used specifically for greedy mappings.
@@ -9,20 +13,15 @@ package com.locima.xml2csv.output;
  */
 public class GreedyGroupState extends GroupState {
 
-	/**
-	 * The greedy group state (there is only one) always takes the value -1, so it's the first group state in the list.
-	 */
-	private static final int GREEDY_GROUP_NUMBER = -1;
-
 	private boolean exhausted;
 
 	/**
-	 * Initialises a new instance. No need to specify inline group number as it's always a constant (enforced by this class).
+	 * Create a new instance.
 	 *
-	 * @param record the extraction context that the greedy group state is responsible for.
+	 * @param groupNumber the greedy group number. This is typically forced to -1 by {@link IMapping#getGroupNumber()}, but we don't enforce it here.
 	 */
-	public GreedyGroupState(IExtractionResults record) {
-		super(GREEDY_GROUP_NUMBER, record);
+	public GreedyGroupState(int groupNumber) {
+		super(groupNumber);
 	}
 
 	/**

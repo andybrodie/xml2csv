@@ -30,7 +30,7 @@ public class SimpleXmlExtractorTests {
 		MappingList mappings = createMappingList("group", 0, MultiValueBehaviour.GREEDY);
 		createLazyMapping(mappings, "subgroup/a1", 1);
 		createLazyMapping(mappings, "subgroup/a2", 2);
-		config.addMappings(mappings);
+		config.addContainer(mappings);
 
 		IOutputManager lom = new LoggingOutputManager();
 		lom.initialise(null, config, false);
@@ -48,7 +48,7 @@ public class SimpleXmlExtractorTests {
 		createLazyMapping(mappings, "subgroup/@sgName", 1);
 		createLazyMapping(mappings, "subgroup/a1", 1);
 		createLazyMapping(mappings, "subgroup/a2", 1);
-		config.addMappings(mappings);
+		config.addContainer(mappings);
 
 		IOutputManager lom = new LoggingOutputManager();
 		lom.initialise(null, config, false);
@@ -66,7 +66,7 @@ public class SimpleXmlExtractorTests {
 		createLazyMapping(mappings, "@sgName", 1);
 		createLazyMapping(mappings, "a1", 1);
 		createLazyMapping(mappings, "a2", 1);
-		config.addMappings(mappings);
+		config.addContainer(mappings);
 
 		IOutputManager lom = new LoggingOutputManager();
 		lom.initialise(null, config, false);
@@ -84,7 +84,7 @@ public class SimpleXmlExtractorTests {
 		createLazyMapping(mappings, "@sgName", 1);
 		createLazyMapping(mappings, "a1", 1);
 		createLazyMapping(mappings, "a2", 1);
-		config.addMappings(mappings);
+		config.addContainer(mappings);
 
 		IOutputManager lom = new LoggingOutputManager();
 		lom.initialise(null, config, false);

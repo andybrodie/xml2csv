@@ -15,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.BugException;
+// CHECKSTYLE:OFF Checkstyle bug, this is referenced in Javadoc.
 import com.locima.xml2csv.configuration.IMapping;
+// CHECKSTYLE:ON
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.PivotMapping;

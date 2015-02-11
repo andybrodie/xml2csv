@@ -49,7 +49,7 @@ public class OutputManagerTests {
 			String outputName = entry.getKey();
 			List<String> fieldNames = entry.getValue();
 			IMappingContainer container = createMappingList(outputName, fieldNames.toArray(new String[0]));
-			mappingConfig.addMappings(container);
+			mappingConfig.addContainer(container);
 		}
 		return mappingConfig;
 	}

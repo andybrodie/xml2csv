@@ -32,6 +32,9 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	private MultiValueBehaviour defaultMultiValueBehaviour;
 
+	/**
+	 * The default name format to apply to all child container mappings.
+	 */
 	private NameFormat defaultNameFormat;
 
 	/**
@@ -68,7 +71,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 * @param container a set of mappings, must not be null and must have a unique {@link MappingList#getOutputName()} value.
 	 * @return the passed <code>container</code>.
 	 */
-	public IMappingContainer addMappings(IMappingContainer container) {
+	public IMappingContainer addContainer(IMappingContainer container) {
 		if (container == null) {
 			throw new ArgumentNullException("maps");
 		}
@@ -125,7 +128,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 		return false;
 	}
 
-	/**
+/**
 	 * Retrieve a top level mapping container ({@link MappingList by name, or null if it doesn't exist.
 	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getName()}).
 	 * @return a mapping container instance with the matching name, or null if one doesn't exist.
@@ -252,6 +255,15 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	 */
 	public void setDefaultNameFormat(NameFormat format) {
 		this.defaultNameFormat = format;
+	}
+
+	/**
+	 * Gets the default name format for all child value mappings of this configuration.
+	 *
+	 * @return format the format to use.  May be null.
+	 */
+	public NameFormat setDefaultNameFormat() {
+		return this.defaultNameFormat;
 	}
 
 	/**

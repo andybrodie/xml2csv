@@ -24,7 +24,8 @@ public interface IMapping {
 	int getFieldCountForSingleRecord();
 
 	/**
-	 * The group number of this mapping. Each mapping in the same group is incremented at the same time.
+	 * The group number of this mapping. Each mapping in the same group is incremented at the same time.<p>
+	 * Greedy groups (where {@link #getMultiValueBehaviour()}=={@link MultiValueBehaviour#GREEDY}) always return -1.
 	 *
 	 * @return the group number.
 	 */

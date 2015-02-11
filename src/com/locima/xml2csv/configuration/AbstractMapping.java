@@ -66,7 +66,7 @@ public abstract class AbstractMapping implements IMapping {
 
 	@Override
 	public int getGroupNumber() {
-		return this.groupNumber;
+		return getMultiValueBehaviour() == MultiValueBehaviour.GREEDY ? -1 : this.groupNumber;
 	}
 
 	@Override

@@ -1,13 +1,15 @@
 package com.locima.xml2csv.output;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.locima.xml2csv.BugException;
 import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
@@ -18,11 +20,32 @@ import com.locima.xml2csv.output.direct.DirectOutputRecordIterator;
  * has got to in outputting its results across multiple records. This is only required when dealing with {@link MultiValueBehaviour#LAZY} mappings, as
  * {@link MultiValueBehaviour#GREEDY} mappings always output all their values for every record.
  * <p>
- * TODO Refactor this as a Map, I can't actually see any need for this to be a linked list. It's just more code for virtually no gain.
  */
 public class GroupState {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GroupState.class);
+
+	/**
+	 * Sets in the {@link #prev} and {@link #next} attributes of an ordered list of {@link GroupState} instances appropriately.
+	 *
+	 * @param groupStates an ordered collection of {@link GroupState}.
+	 * @return the first {@link GroupState} in the linked list (i.e. {@link #prev}==<code>null</code>).
+	 */
+	private static GroupState buildLinkedList(Collection<GroupState> groupStates) {
+		GroupState[] gsArray = groupStates.toArray(new GroupState[0]);
+		for (int i = 0; i < gsArray.length; i++) {
+			if (i > 0) {
+				gsArray[i].prev = gsArray[i - 1];
+			}
+			if (i < (gsArray.length - 1)) {
+				gsArray[i].next = gsArray[i + 1];
+			}
+		}
+		if (LOG.isTraceEnabled()) {
+			logStates(gsArray[0]);
+		}
+		return gsArray[0];
+	}
 
 	/**
 	 * Factory method to create a linked list of {@link GroupState} instances based on a root mapping.
@@ -33,11 +56,9 @@ public class GroupState {
 	 * @return the head ofa linked list of {@link GroupState} objects.
 	 */
 	public static GroupState createGroupStateList(IExtractionResults rootContext) {
-
-		LOG.info("Creating group state list from {}", rootContext);
-
-		GroupState inlineGroup = null;
-		GroupState initialState = null;
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Creating group state list from {}", rootContext);
+		}
 
 		/*
 		 * Iterate over all the contexts (traverse the entire tree) mapping each context to its group. Using a stack to allow us to traverse the tree
@@ -47,37 +68,22 @@ public class GroupState {
 		Stack<IExtractionResults> remainingContexts = new Stack<IExtractionResults>();
 		remainingContexts.push(rootContext);
 
+		SortedMap<Integer, GroupState> groupStates = new TreeMap<Integer, GroupState>();
+
 		while (remainingContexts.size() > 0) {
 			IExtractionResults current = remainingContexts.pop();
-			switch (current.getMultiValueBehaviour()) {
-				case GREEDY:
-					if (inlineGroup == null) {
-						inlineGroup = new GreedyGroupState(current);
-					}
-					inlineGroup.addContext(current);
-					break;
-				case LAZY:
-					int groupNum = current.getGroupNumber();
-
-					// Either add to an existing group managing that group number, or create a new one
-					if (initialState == null) {
-						initialState = new GroupState(groupNum, current);
-					} else {
-						GroupState existingGroup = GroupState.searchByGroup(initialState, groupNum);
-
-						if (existingGroup == null) {
-							GroupState newState = new GroupState(groupNum, current);
-							initialState.insert(newState);
-						} else {
-							existingGroup.addContext(current);
-						}
-					}
-					break;
-				case DEFAULT:
-				default:
-					throw new BugException("Found unexpected MultiValueBehaviour %s in %s", current.getMultiValueBehaviour().toString(), current);
+			int groupNumber = current.getGroupNumber();
+			GroupState state = groupStates.get(groupNumber);
+			if (state == null) {
+				if (current.getMultiValueBehaviour() == MultiValueBehaviour.GREEDY) {
+					state = new GreedyGroupState(groupNumber);
+				} else {
+					state = new GroupState(groupNumber);
+				}
+				groupStates.put(groupNumber, state);
 			}
-			
+			state.addContext(current);
+
 			// Now push all the children to our "to do" stack to ensure that we deal with every results container.
 			if (current instanceof IExtractionResultsContainer) {
 				IExtractionResultsContainer cec = (IExtractionResultsContainer) current;
@@ -87,26 +93,7 @@ public class GroupState {
 			}
 		}
 
-		// Return the first state in the linked list, as the list is ordered by group
-		GroupState firstState = initialState;
-		if (firstState != null) {
-			while (firstState.prev != null) {
-				firstState = firstState.prev;
-			}
-		}
-
-		// If we have any inline mappings, then put that first
-		if (inlineGroup != null) {
-			if (firstState != null) {
-				firstState.insert(inlineGroup);
-			}
-			firstState = inlineGroup;
-		}
-
-		if (LOG.isTraceEnabled()) {
-			logStates(firstState);
-		}
-		return firstState;
+		return buildLinkedList(groupStates.values());
 	}
 
 	/**
@@ -184,16 +171,12 @@ public class GroupState {
 	 * Creates a new instance with a specific group number and initial associated set of results.
 	 *
 	 * @param groupNumber the group number that this instance will track. Must be unique.
-	 * @param record an initial set of results associated with this object. Further results may be added with {@link #addContext(IExtractionResults)}.
 	 */
-	public GroupState(int groupNumber, IExtractionResults record) {
+	public GroupState(int groupNumber) {
 		this.groupNumber = groupNumber;
-		int calculatedGroupSize = Math.max(record.size(), record.getMinCount());
-		this.groupSize = calculatedGroupSize;
 		this.records = new ArrayList<IExtractionResults>(1);
-		this.records.add(record);
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Creating new group state (Num: {}, Size: {}) for {}", groupNumber, calculatedGroupSize, record);
+			LOG.debug("Creating new group state {}", groupNumber);
 		}
 
 	}
@@ -208,7 +191,7 @@ public class GroupState {
 			LOG.debug("Adding {} ({} elements) to existing group state {}", record, record.size(), this);
 		}
 		this.records.add(record);
-		this.groupSize = Math.max(this.groupSize, record.size());
+		this.groupSize = Math.max(this.groupSize, Math.max(record.size(), record.getMinCount()));
 	}
 
 	/**
@@ -273,63 +256,6 @@ public class GroupState {
 			LOG.debug("Cannot increment group {} as currentIndex={} and groupSize={}", this.groupNumber, this.currentIndex, this.groupSize);
 			if (this.next != null) {
 				this.next.increment();
-			}
-		}
-	}
-
-	/**
-	 * Inserts the new passed <code>newState</code> in to the list that this is a member of, in the right place.
-	 *
-	 * @param newState the new state to insert.
-	 */
-	private void insert(GroupState newState) {
-		int newGroupNum = newState.groupNumber;
-
-		LOG.debug("Attempting  to insert {} at state {}", newState, this);
-
-		if (newGroupNum == this.groupNumber) {
-			throw new BugException("Created two group states for the same group number.  New: %s and Existing: %S", this, newState);
-		}
-
-		if (newGroupNum > this.groupNumber) {
-			if (this.next == null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Adding {} to the end, after {}", newState, this);
-				}
-				this.next = newState;
-				newState.prev = this;
-			} else {
-				if (this.next.groupNumber > this.groupNumber) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Inserting {} between {} and {}", newState, this, this.next);
-					}
-					this.next.prev = newState;
-					newState.next = this.next;
-					newState.prev = this;
-					this.next = newState;
-				} else {
-					this.next.insert(newState);
-				}
-			}
-		} else {
-			if (this.prev == null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Adding {} to the beginning, before {}", newState, this);
-				}
-				this.prev = newState;
-				newState.next = this;
-			} else {
-				if (this.prev.groupNumber < this.groupNumber) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Inserting {} between {} and {}", newState, this, this.prev);
-					}
-					this.prev.next = newState;
-					newState.prev = this.prev;
-					newState.next = this;
-					this.prev = newState;
-				} else {
-					this.prev.insert(newState);
-				}
 			}
 		}
 	}

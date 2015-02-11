@@ -33,7 +33,9 @@ import com.locima.xml2csv.util.XmlUtil;
 /**
  * The SAX Content Handler for input XML files.
  */
+// CHECKSTYLE:OFF Class fan-out complexity is a concern here, as is the size of the source, but I can't think of a better way right now.
 public class ConfigContentHandler extends DefaultHandler {
+	// CHECKSTYLE:ON
 
 	/**
 	 * All of the valid element names that will be processed. This is used to make the {@link #startElement(String, String, String, Attributes)} code
@@ -44,7 +46,6 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	private static final String CUSTOM_NAME_FORMAT_ATTR = "customNameFormat";
-
 	private static final String GROUP_NUMBER_ATTR = "group";
 	private static final String KEY_XPATH_ATTR = "keyXPath";
 	private static final String KVPAIR_ROOT_XPATH_ATTR = "kvPairRoot";
@@ -57,7 +58,6 @@ public class ConfigContentHandler extends DefaultHandler {
 	private static final String NAME_ATTR = "name";
 	private static final String NAME_FORMAT_ATTR = "nameFormat";
 	private static final String VALUE_XPATH_ATTR = "valueXPath";
-
 	private static final String XPATH_ATTR = "xPath";
 
 	private int currentGroupNumber;
@@ -158,18 +158,19 @@ public class ConfigContentHandler extends DefaultHandler {
 	 */
 	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int minValueCount,
 					int maxValueCount) throws SAXException {
-		// IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
-		MappingList newMapping = new MappingList();
+		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
+		MappingList container = new MappingList();
 		try {
-			newMapping.setMappingRoot(XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), mappingRoot));
+			container.setMappingRoot(XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), mappingRoot));
 		} catch (XMLException e) {
 			throw getException(e, "Invalid XPath \"%s\" found in mapping root for mapping list", mappingRoot);
 		}
-		newMapping.setName(outputName);
-		newMapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
-		newMapping.setMinValueCount(minValueCount);
-		newMapping.setMaxValueCount(maxValueCount);
-		this.mappingListStack.push(newMapping);
+		container.setParent(parent);
+		container.setName(outputName);
+		container.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
+		container.setMinValueCount(minValueCount);
+		container.setMaxValueCount(maxValueCount);
+		this.mappingListStack.push(container);
 
 		/*
 		 * Increment the current group number so that all the children of this container have a default group that doesn't match any other child of
@@ -193,8 +194,10 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
+	// CHECKSTYLE:OFF Number of parameters is appropriate here, I'm not going to create separate methods or add complexity in to caller.
 	private void addPivotMapping(String name, String mappingRootSource, String kvPairRootSource, String keyXPathSource, String valueXPathSource,
 					String templateNameFormatName, String customTemplateNameFormat, int groupNumber, String multiValueBehaviour) throws SAXException {
+		// CHECKSTYLE:ON
 		MappingList parent = this.mappingListStack.peek();
 		try {
 			String mappingName;
@@ -301,7 +304,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (this.mappingListStack.size() > 0) {
 			this.mappingListStack.peek().add(current);
 		} else {
-			this.mappingConfiguration.addMappings(current);
+			this.mappingConfiguration.addContainer(current);
 		}
 	}
 

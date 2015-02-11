@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.BugException;
+//CHECKSTYLE:OFF Checkstyle bug, this import is used in javadoc
 import com.locima.xml2csv.configuration.IMapping;
+//CHECKSTYLE:ON
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
