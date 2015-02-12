@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.ArgumentNullException;
 
 /**
- * Models an ordered list of mappings of column containerName to XPath expression.
+ * Maintains an ordered list of {@link IMapping} instances. 
+ * <p>
+ * Each child may be an {@link IValueMapping} that returns values to insert in the CSV, or be another {@link IMappingContainer}.  This allows
+ * hierarchies of mappings to be created.<p>
  */
 public class MappingList extends AbstractMappingContainer implements IMappingContainer {
 

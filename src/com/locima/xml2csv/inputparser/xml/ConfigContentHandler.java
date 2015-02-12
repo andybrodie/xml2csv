@@ -88,10 +88,10 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Adds a column mapping to the current MappingList instance being defined.
+	 * Adds a field mapping to the current MappingList instance being defined.
 	 *
-	 * @param name the name of the column.
-	 * @param xPath the XPath that should be executed to get the value of the column.
+	 * @param name the name of the field.
+	 * @param xPath the XPath that should be executed to get the value of the field.
 	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param groupNumber the group number that applies to this mapping.
 	 * @param bespokeNameFormatFormat a bespoke style to use for this mapping.
@@ -180,9 +180,9 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Adds a column mapping to the current MappingList instance being defined.
+	 * Adds a field mapping to the current MappingList instance being defined.
 	 *
-	 * @param name the name of the column.
+	 * @param name the name of the field.
 	 * @param kvPairRootSource the XPath that, when executed, will return the roots from which <code>keyXPathSource</code> and
 	 *            <code>valueXPathSource</code> will be executed.
 	 * @param keyXPathSource the XPath that should be executed to each key.

@@ -92,13 +92,13 @@ public class NameFormat {
 	}
 
 	/**
-	 * Applies this inline format to the parameters passed to give a full column name.
+	 * Applies this inline format to the parameters passed to give a full field name.
 	 *
-	 * @param baseFieldName the base column name of the mapping; e.g. <code>Name</code>, <code>Age</code> or <code>Address Line</code>
+	 * @param baseFieldName the base field name of the mapping; e.g. <code>Name</code>, <code>Age</code> or <code>Address Line</code>
 	 * @param iterationNumber a number, starting at 0, that indicates the index of the value we've found, then encountering multiple values for a
 	 *            single mapping.
 	 * @param ancestorContext names and indices of ancestors of the current mapping.
-	 * @return a formatted string, used as a column name.
+	 * @return a formatted string which can be used as a unique field name.
 	 */
 	public String format(String baseFieldName, int iterationNumber, MappingIndexAncestors ancestorContext) {
 		return String.format(this.format, ancestorContext.getFormatArgs(baseFieldName, iterationNumber));

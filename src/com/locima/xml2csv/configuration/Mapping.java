@@ -3,7 +3,7 @@ package com.locima.xml2csv.configuration;
 import com.locima.xml2csv.util.EqualsUtil;
 
 /**
- * Represents a single column to XPath mapping.
+ * Represents a single XPath expression to field value mapping.
  */
 public class Mapping extends AbstractMapping implements IValueMapping {
 

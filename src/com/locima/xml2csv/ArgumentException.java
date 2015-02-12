@@ -5,7 +5,7 @@ package com.locima.xml2csv;
  */
 public class ArgumentException extends IllegalArgumentException {
 
-	private static final long serialVersionUID = 1739962004704462299L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Throws if an argument to a method was invalid with a default message.

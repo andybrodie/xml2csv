@@ -5,7 +5,7 @@ package com.locima.xml2csv;
  */
 public class ArgumentNullException extends ArgumentException {
 
-	private static final long serialVersionUID = 3495119751302269911L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Thrown when an argument or parameter to a method was null when this is not allowed.

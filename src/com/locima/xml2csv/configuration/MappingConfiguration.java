@@ -21,7 +21,8 @@ import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.util.StringUtil;
 
 /**
- * Abstracts a list of mappings between XPath statements and Column Names with methods only relevant to this application.
+ * A hierarchy of mappings between XPath expressions and fields.<p>
+ * This is the top-level configuration object created by a single configuration file. 
  */
 public class MappingConfiguration implements Iterable<IMappingContainer> {
 

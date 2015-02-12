@@ -122,7 +122,7 @@
 	<complexType name="PivotMapping">
 		<annotation>
 			<documentation>Specifies a pivot mapping where the name must be an XPath expression that is used to
-				derive column names.
+				derive field names.
 			</documentation>
 		</annotation>
 		<complexContent>

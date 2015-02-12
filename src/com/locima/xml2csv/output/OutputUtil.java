@@ -138,10 +138,10 @@ public class OutputUtil {
 	/**
 	 * Recursive implementation of {@link #getFieldNames}. This ensures that the parent iteration count is available.
 	 *
-	 * @param fieldNames the list of column names that is being built up.
+	 * @param fieldNames the list of field names that is being built up.
 	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
 	 * @param container the container from which to generate the field names.
-	 * @return the number of columns added by this invocation.
+	 * @return the number of fields added to <code>fieldNames</code>.
 	 */
 	private static int getFieldNames(List<String> fieldNames, MappingIndexAncestors parentContext, IMappingContainer container) {
 		/*
@@ -172,10 +172,10 @@ public class OutputUtil {
 	/**
 	 * Adds the field names for the given {@link IValueMapping} instance to the list of <code>fieldNames</code> passed.
 	 *
-	 * @param fieldNames the list of column names that is being built up.
+	 * @param fieldNames the list of field names that is being built up.
 	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
 	 * @param mapping the mapping from which to generate field names.
-	 * @return the number of columns added by this invocation.
+	 * @return the number of fields added by this invocation.
 	 */
 	private static int getFieldNames(List<String> fieldNames, MappingIndexAncestors parentContext, IValueMapping mapping) {
 		/*

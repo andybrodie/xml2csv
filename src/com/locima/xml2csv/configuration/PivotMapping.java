@@ -107,7 +107,7 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	}
 
 	/**
-	 * Because pivot mapping columns depend on the documents passed to them, pivot mappings cannot predict how many fields they will return, so always
+	 * Because pivot mapping fields depend on the documents passed to them, pivot mappings cannot predict how many fields they will return, so always
 	 * returns <code>false</code>.
 	 *
 	 * @return false.

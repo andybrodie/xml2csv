@@ -35,7 +35,8 @@ public class Program {
 	// CHECKSTYLE:ON
 
 	public static final int CONSOLE_WIDTH = 80;
-	private static final String HEADER = "xml2csv v0.1.  Converts XML files in to CSV files according to a set of specified rules.";
+	private static final String HEADER =
+					"xml2csv v0.1.  Converts XML files in to CSV files using a user-defined set of rules.  See http://github.com/andybrodie/xml2csv.";
 	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 	public static final String OPT_APPEND_OUTPUT = "a";
 	public static final String OPT_CONFIG_FILE = "c";
