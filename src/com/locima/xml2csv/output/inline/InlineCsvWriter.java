@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,7 +160,7 @@ public class InlineCsvWriter implements IOutputWriter {
 		File file = this.csiOutputFile;
 		LOG.info("Creating csiWriter for {}", file.getAbsolutePath());
 		try {
-			ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, this.appendOutput));
+			ObjectOutputStream outputStream = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(file, this.appendOutput)));
 			LOG.info("Successfully opened output file for csiWriter {}", file.getAbsolutePath());
 			return outputStream;
 		} catch (IOException ioe) {
@@ -212,7 +214,7 @@ public class InlineCsvWriter implements IOutputWriter {
 		try {
 
 			LOG.info("Re-opening {} to read intermediate file", this.csiOutputFile.getAbsolutePath());
-			return new CsiInputStream(this.nameToMapping, new FileInputStream(this.csiOutputFile));
+			return new CsiInputStream(this.nameToMapping, new GZIPInputStream(new FileInputStream(this.csiOutputFile)));
 		} catch (IOException e) {
 			throw new OutputManagerException(e, "Unable to open CSI file {} for reading.", this.csiOutputFile.getAbsolutePath());
 		}

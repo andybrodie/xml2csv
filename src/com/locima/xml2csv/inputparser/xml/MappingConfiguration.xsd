@@ -16,9 +16,10 @@
 			<sequence minOccurs="0" maxOccurs="1">
 				<element name="Filters" type="tns:Filters" />
 			</sequence>
-			<sequence minOccurs="1" maxOccurs="unbounded">
+			<choice minOccurs="1" maxOccurs="unbounded">
 				<element name="MappingList" type="tns:MappingList" />
-			</sequence>
+				<element name="PivotMapping" type="tns:PivotMapping" />
+			</choice>
 		</sequence>
 		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional">
 			<annotation>

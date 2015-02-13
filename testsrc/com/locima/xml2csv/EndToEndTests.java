@@ -46,7 +46,7 @@ public class EndToEndTests {
 		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
 		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
 	}
-	
+
 	@Test
 	public void testGroups() throws Exception {
 		TemporaryFolder outputFolder = processFiles("GroupDemoConfig.xml", "GroupDemo.xml");
@@ -54,10 +54,28 @@ public class EndToEndTests {
 		assertCsvEquals("GroupDemo2.csv", outputFolder.getRoot(), "GroupDemo2.csv");
 		assertCsvEquals("GroupDemo3.csv", outputFolder.getRoot(), "GroupDemo3.csv");
 	}
-	
+
 	@Test
 	public void testFruitBaskets() throws Exception {
 		TemporaryFolder outputFolder = processFiles("FruitBasketConfig.xml", "FruitBasket.xml");
 		assertCsvEquals("FruitBasket.csv", outputFolder.getRoot(), "FruitBasket.csv");
+	}
+
+	@Test
+	public void testPivot() throws Exception {
+		TemporaryFolder outputFolder = processFiles("SimplePivotConfig.xml", "SimplePivotInput.xml");
+		assertCsvEquals("SimplePivotOutput.csv", outputFolder.getRoot(), "SimplePivotOutput.csv");
+	}
+
+	@Test
+	public void testPivotInContainer() throws Exception {
+		TemporaryFolder outputFolder = processFiles("SimplePivotInContainerConfig.xml", "SimplePivotInput.xml");
+		assertCsvEquals("SimplePivotOutput.csv", outputFolder.getRoot(), "SimplePivotOutput.csv");
+	}
+
+	@Test
+	public void testPivotInputWithNormalMapping() throws Exception {
+		TemporaryFolder outputFolder = processFiles("SimplePivotFlatConfig.xml", "SimplePivotInput.xml");
+		assertCsvEquals("SimplePivotOutput.csv", outputFolder.getRoot(), "SimplePivotOutput.csv");
 	}
 }

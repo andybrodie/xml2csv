@@ -200,7 +200,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	private void addPivotMapping(String name, String mappingRootSource, String kvPairRootSource, String keyXPathSource, String valueXPathSource,
 					String templateNameFormatName, String customTemplateNameFormat, int groupNumber, String multiValueBehaviour) throws SAXException {
 		// CHECKSTYLE:ON
-		MappingList parent = this.mappingListStack.peek();
+		MappingList parent = this.mappingListStack.isEmpty() ? null : this.mappingListStack.peek();
 		try {
 			String mappingName;
 			if (StringUtil.isNullOrEmpty(name)) {
@@ -217,7 +217,6 @@ public class ConfigContentHandler extends DefaultHandler {
 			XPathValue kvPairRoot = XmlUtil.createXPathValue(namespaceMap, kvPairRootSource);
 			NameFormat templateNameFormat = NameFormat.parse(templateNameFormatName, customTemplateNameFormat, NameFormat.NO_COUNTS);
 			PivotMapping mapping = new PivotMapping();
-			mapping.setParent(parent);
 			mapping.setMappingRoot(rootXPath);
 			mapping.setMappingName(mappingName);
 			mapping.setKVPairRoot(kvPairRoot);
@@ -227,7 +226,12 @@ public class ConfigContentHandler extends DefaultHandler {
 			mapping.setGroupNumber(groupNumber);
 			MultiValueBehaviour mvb = MultiValueBehaviour.parse(multiValueBehaviour, MultiValueBehaviour.LAZY);
 			mapping.setMultiValueBehaviour(mvb);
-			parent.add(mapping);
+			if (parent != null) {
+				mapping.setParent(parent);
+				parent.add(mapping);
+			} else {
+				this.mappingConfiguration.addContainer(mapping);
+			}
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add pivot mapping definition to configuration due to a problem in the XML configuration.");
 		}
@@ -423,10 +427,8 @@ public class ConfigContentHandler extends DefaultHandler {
 					break;
 				case MappingList:
 					addMappingList(atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(NAME_ATTR), atts.getValue(NAME_FORMAT_ATTR),
-									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR),
-									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0),
-									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
-									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0),
+									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0), getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case MappingConfiguration:
 					addMappingConfiguration(atts.getValue(NAME_FORMAT_ATTR), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));

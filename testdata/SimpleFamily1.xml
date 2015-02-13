@@ -3,14 +3,10 @@
 	<address>10 Church Road</address>
 	<name>Smith</name>
 	<person age="32">
-		<name>
-			Robert
-		</name>
+		<name>Robert</name>
 	</person>
 	<person age="34">
-		<name>
-			John
-		</name>
+		<name>John</name>
 	</person>
 	<person age="2">
 		<name>Charlotte</name>

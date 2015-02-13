@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- How to do pivots without doing pivots -->
+<m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<m:MappingList name="SimplePivotOutput" mappingRoot="family/record">
+		<m:Mapping name="name" xPath="field[@name='name']/@value" />
+		<m:Mapping name="age" xPath="field[@name='age']/@value" />
+		<m:Mapping name="address" xPath="field[@name='address']/@value" />
+		<m:Mapping name="title" xPath="field[@name='title']/@value" />
+		<m:Mapping name="suffix" xPath="field[@name='suffix']/@value" />
+	</m:MappingList>
+</m:MappingConfiguration>
