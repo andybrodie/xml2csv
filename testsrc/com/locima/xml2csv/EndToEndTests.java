@@ -46,4 +46,18 @@ public class EndToEndTests {
 		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
 		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
 	}
+	
+	@Test
+	public void testGroups() throws Exception {
+		TemporaryFolder outputFolder = processFiles("GroupDemoConfig.xml", "GroupDemo.xml");
+		assertCsvEquals("GroupDemo1.csv", outputFolder.getRoot(), "GroupDemo1.csv");
+		assertCsvEquals("GroupDemo2.csv", outputFolder.getRoot(), "GroupDemo2.csv");
+		assertCsvEquals("GroupDemo3.csv", outputFolder.getRoot(), "GroupDemo3.csv");
+	}
+	
+	@Test
+	public void testFruitBaskets() throws Exception {
+		TemporaryFolder outputFolder = processFiles("FruitBasketConfig.xml", "FruitBasket.xml");
+		assertCsvEquals("FruitBasket.csv", outputFolder.getRoot(), "FruitBasket.csv");
+	}
 }

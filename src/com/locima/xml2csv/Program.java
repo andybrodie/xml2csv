@@ -125,12 +125,8 @@ public class Program {
 	 */
 	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean appendOutput, boolean trimWhitespace)
 					throws ProgramException {
-		File xmlInputDirectory;
-		try {
-			xmlInputDirectory = FileUtility.getDirectory(xmlInputDirectoryName, FileUtility.CAN_READ, false);
-		} catch (IOException ioe) {
-			throw new ProgramException(ioe, "Problem with XML input directory: %s", ioe.getMessage());
-		}
+		List<File> xmlInputFiles;
+		xmlInputFiles = FileUtility.getFiles(new File(xmlInputDirectoryName), false);
 		File outputDirectory;
 		try {
 			outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
@@ -144,7 +140,6 @@ public class Program {
 		} catch (IOException ioe) {
 			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
 		}
-		List<File> xmlInputFiles = FileUtility.getFiles(xmlInputDirectory, false);
 		execute(configFiles, xmlInputFiles, outputDirectory, appendOutput, trimWhitespace);
 	}
 

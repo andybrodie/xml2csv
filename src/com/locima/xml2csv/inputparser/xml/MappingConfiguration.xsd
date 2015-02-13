@@ -36,16 +36,12 @@
 
 	<complexType name="MappingList">
 		<annotation>
-			<documentation>A group of mappings.</documentation>
+			<documentation>A list of mappings.</documentation>
 		</annotation>
 		<choice minOccurs="1" maxOccurs="unbounded">
 			<element name="Mapping" type="tns:Mapping" />
 			<element name="PivotMapping" type="tns:PivotMapping" />
-			<element name="MappingList" type="tns:MappingList">
-				<annotation>
-					<documentation>I'm not sure I need this any more with group numbers and multi-value behaviour, but keeping it just in case.</documentation>
-				</annotation>
-			</element>
+			<element name="MappingList" type="tns:MappingList" />
 		</choice>
 		<attribute name="mappingRoot" type="string">
 			<annotation>
@@ -70,6 +66,7 @@
 		</attribute>
 		<attribute name="behaviour" type="tns:MultiValueBehaviour" use="optional" />
 		<attribute name="nameFormat" type="tns:NameFormat" use="optional" />
+		<attribute name="group" type="tns:MappingGroup" use="optional" />
 		<attributeGroup ref="tns:cardinalityAttributes" />
 	</complexType>
 

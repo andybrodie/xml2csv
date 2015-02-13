@@ -152,12 +152,13 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param outputName The name of the output that this set of mappings should be written to.
 	 * @param predefinedNameFormat the name of one of the built-in styles (see {@link NameFormat} public members.
 	 * @param multiValueBehaviour defines what should happen when multiple values are found for a single evaluation for this mapping.
+	 * @param groupNumber the group number that applies to this mapping.
 	 * @param minValueCount the minimum number of values that this mapping should output for a single evaluation on an element.
 	 * @param maxValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int minValueCount,
-					int maxValueCount) throws SAXException {
+	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int groupNumber,
+					int minValueCount, int maxValueCount) throws SAXException {
 		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
 		MappingList container = new MappingList();
 		try {
@@ -167,6 +168,7 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		container.setParent(parent);
 		container.setName(outputName);
+		container.setGroupNumber(groupNumber);
 		container.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
 		container.setMinValueCount(minValueCount);
 		container.setMaxValueCount(maxValueCount);
@@ -421,7 +423,9 @@ public class ConfigContentHandler extends DefaultHandler {
 					break;
 				case MappingList:
 					addMappingList(atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(NAME_ATTR), atts.getValue(NAME_FORMAT_ATTR),
-									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR),
+									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0),
+									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
 									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
 					break;
 				case MappingConfiguration:

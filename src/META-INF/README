@@ -2,8 +2,7 @@ xml2csv
 Copyright 2014 Locima Ltd. (e-mail: enquiries@locima.com or website: www.locima.com)
 Licensed under the Microsoft Public License (http://www.microsoft.com/en-us/openness/licenses.aspx)
 
-
-This is a command line utility and library to convert XML files to CSV files, according to a configuration provided by the user).
+This is a command line utility and library to convert XML files to CSV files, according to a configuration provided by the user.
 
 This software is maintained on Github at http://www.github.com/andybrodie/xml2csv. 
 

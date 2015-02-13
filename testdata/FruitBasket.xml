@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<basket>
+		<fruit>Apple</fruit>
+		<fruit>Pear</fruit>
+		<fruit>Banana</fruit>
+	</basket>
+	<basket>
+		<fruit>Strawberry</fruit>
+		<fruit>Raspberry</fruit>
+		<fruit>Gooseberry</fruit>
+	</basket>
+	<basket>
+		<fruit>Kumquat</fruit>
+		<fruit>Tomato</fruit>
+		<fruit>Ackee</fruit>
+	</basket>
+</root>

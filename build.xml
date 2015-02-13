@@ -80,8 +80,8 @@
 		<javac debug="true" debuglevel="${debuglevel}" destdir="testbin" includeantruntime="false" source="${source}" target="${target}">
 			<src path="testsrc" />
 			<classpath>
-				<path refid="xml2csv.build.classpath"/>
-				<pathelement location="bin"/>
+				<path refid="xml2csv.build.classpath" />
+				<pathelement location="bin" />
 			</classpath>
 		</javac>
 	</target>
@@ -95,9 +95,9 @@
 				</fileset>
 			</batchtest>
 			<classpath>
-				<path refid="xml2csv.execute.classpath"/>
-				<pathelement location="bin"/>
-				<pathelement location="testbin"/>
+				<path refid="xml2csv.execute.classpath" />
+				<pathelement location="bin" />
+				<pathelement location="testbin" />
 			</classpath>
 		</junit>
 	</target>
@@ -125,7 +125,7 @@
 			<manifest>
 				<attribute name="Class-Path" value="${mf.classpath}" />
 			</manifest>
-			<fileset dir="bin" />
+			<fileset dir="bin" excludes="**/logback-test.xml"/>
 		</jar>
 	</target>
 	<target name="build-standalone-jar" description="Create standalone runnable jar" depends="build">
@@ -137,7 +137,7 @@
 				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar" />
 			</manifest>
 			<zipfileset src="jar-in-jar-loader.zip" />
-			<fileset dir="bin" />
+			<fileset dir="bin" excludes="logback-test.xml"/>
 			<zipfileset dir="lib" includes="commons-cli-1.2.jar" />
 			<zipfileset dir="lib" includes="logback-classic-1.1.2.jar" />
 			<zipfileset dir="lib" includes="logback-core-1.1.2.jar" />

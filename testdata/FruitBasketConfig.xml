@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Show what happens when you set contains and mappings to the same group number -->
+<m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<m:MappingList name="FruitBasket" group="1" mappingRoot="root/basket">
+		<m:Mapping xPath="fruit" />
+	</m:MappingList>
+</m:MappingConfiguration>

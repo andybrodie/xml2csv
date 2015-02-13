@@ -73,10 +73,12 @@ public class TestHelpers {
 		String[] actual = loadFile(actualFile);
 
 		int lineNo = 1;
+		StringBuilder actualDump = new StringBuilder("Actual output as follows:\n");
 		for (String actualLine : actual) {
-			LOG.trace("Actual {}: {}", lineNo, actualLine);
+			actualDump.append(String.format("%d: %s\n", lineNo, actualLine));
 			lineNo++;
 		}
+		LOG.trace(actualDump.toString());
 
 		for (int i = 0; i < expected.length; i++) {
 			if (i >= actual.length) {

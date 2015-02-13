@@ -99,6 +99,24 @@ public class FileUtility {
 	}
 
 	/**
+	 * Deletes the file from the file system, logging intention and result.
+	 *
+	 * @param fileToDelete the file to be deleted.
+	 * @return <code>true</code> if and only if the file or directory is successfully deleted; <code>false</code> otherwise
+	 */
+	public static boolean delete(File fileToDelete) {
+		String path = fileToDelete.getAbsolutePath();
+		LOG.debug("Deleting file {}", path);
+		boolean deleteResult = fileToDelete.delete();
+		if (deleteResult) {
+			LOG.info("Deleted file successfully: {}", path);
+		} else {
+			LOG.error("Unable to delete {}", path);
+		}
+		return deleteResult;
+	}
+
+	/**
 	 * Turns a directory name in to a {@link File} instance, creating the directory if necessary and ensuring that required permissions are granted to
 	 * the current user.
 	 *

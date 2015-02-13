@@ -144,6 +144,7 @@ public class InlineCsvWriter implements IOutputWriter {
 			if (csvWriter != null) {
 				csvWriter.close();
 			}
+			FileUtility.delete(this.csiOutputFile);
 		}
 	}
 
@@ -225,7 +226,7 @@ public class InlineCsvWriter implements IOutputWriter {
 		this.outputDirectory = outputDirectory;
 
 		String csiFileNameBasis = this.outputName;
-		this.csiOutputFile = new File(this.outputDirectory, FileUtility.convertToPOSIXCompliantFileName(csiFileNameBasis, "CSI", true));
+		this.csiOutputFile = new File(this.outputDirectory, FileUtility.convertToPOSIXCompliantFileName(csiFileNameBasis, ".csi", true));
 		this.container = container;
 		this.csiWriter = createCsiOutput();
 
