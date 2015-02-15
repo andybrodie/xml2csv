@@ -1,12 +1,10 @@
 # xml2csv
-Copyright 2014-2015 Locima Ltd. (e-mail: `enquiries (at) locima.com` or website: www.locima.com)
-Licensed under the Microsoft Public License (http://www.microsoft.com/en-us/openness/licenses.aspx)
 
 This is a command line utility and library to convert XML files to CSV files, according to a configuration provided by the user.
 
 This software is maintained on Github at http://www.github.com/andybrodie/xml2csv.
 
-xml2csv relies on the following third party software, each with it's own separate license.
+xml2csv relies on the following third party software, each with it's own separate license:
 
 Apache Commons CLI (http://commons.apache.org/proper/commons-cli/)
         Licensed under the Apache License Version 2.0 (http://www.apache.org/licenses/)
@@ -28,3 +26,6 @@ Qos SLF4J (http://slf4j.org/)
 
 Saxonica Saxon 9 HE (http://saxon.sourceforge.net/)
         Licensed under Mozilla Public License 1.0 (https://www.mozilla.org/MPL/1.0/)
+
+Copyright 2014-2015 Locima Ltd. (e-mail: `enquiries (at) locima.com` or website: www.locima.com)
+Licensed under the Microsoft Public License (http://www.microsoft.com/en-us/openness/licenses.aspx)
