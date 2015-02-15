@@ -36,7 +36,7 @@ public class Program {
 	// CHECKSTYLE:ON
 
 	/**
-	 * The console width to wrap the command line help and errors to. Hardcoded to {@value}
+	 * The console width to wrap the command line help and errors to, hardcoded to {@value}.
 	 * <p>
 	 * There doesn't appear to be a portable way in Java to find this out.
 	 */
