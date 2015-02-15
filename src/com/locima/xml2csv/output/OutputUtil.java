@@ -20,7 +20,6 @@ import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.MappingIndexAncestors;
 import com.locima.xml2csv.util.StringUtil;
-import com.locima.xml2csv.util.Tuple;
 
 /**
  * Utility methods required by both the direct and inline CSV writers.
@@ -140,7 +139,7 @@ public class OutputUtil {
 	 * Recursive implementation of {@link #getFieldNames}. This ensures that the parent iteration count is available.
 	 *
 	 * @param fieldNames the list of field names that is being built up.
-	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
+	 * @param parentContext a stack of parent name/iteration pairs that form the ancestor chain of this mapping.
 	 * @param container the container from which to generate the field names.
 	 * @return the number of fields added to <code>fieldNames</code>.
 	 */
@@ -174,7 +173,7 @@ public class OutputUtil {
 	 * Adds the field names for the given {@link IValueMapping} instance to the list of <code>fieldNames</code> passed.
 	 *
 	 * @param fieldNames the list of field names that is being built up.
-	 * @param parentContext a stack of parent name/iteration pairs ({@link Tuple}) that form the ancestor chain of this mapping.
+	 * @param parentContext a stack of parent name/iteration pairs that form the ancestor chain of this mapping.
 	 * @param mapping the mapping from which to generate field names.
 	 * @return the number of fields added by this invocation.
 	 */

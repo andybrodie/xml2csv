@@ -21,7 +21,9 @@ import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.extractor.AbstractExtractionContext;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.MappingExtractionContext;
+//CHECKSTYLE:OFF Checkstyle bug, this import is used in javadoc comments.
 import com.locima.xml2csv.output.IExtractionResults;
+//CHECKSTYLE:ON
 import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.IOutputWriter;
