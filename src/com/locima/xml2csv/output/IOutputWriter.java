@@ -27,7 +27,7 @@ public interface IOutputWriter {
 	void close() throws OutputManagerException;
 
 	/**
-	 * Initialises this output manager so that it's ready to receive outputs via {@link #writeRecords(String, ExtractedRecordList)}.
+	 * Initialises this output manager so that it's ready to receive outputs via {@link #writeRecords(IExtractionResultsContainer)}.
 	 *
 	 * @param configuration the mapping configuration that determines what fields will be written to the CSV file.
 	 * @param appendOutput true if output should be appended to an existing files (if present), false if we should overwrite an existing file.

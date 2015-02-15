@@ -3,6 +3,7 @@ package com.locima.xml2csv.configuration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +31,10 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	}
 
 	/**
-	 * Finds a named child {@link PivotKeyMapping} based on the <code>keyName</code> passed.
+	 * Finds a named child {@link Mapping} based on the <code>keyName</code> passed.
 	 *
 	 * @param keyName the name mapping to find.
-	 * @return either a {@link PivotKeyMapping} instance, or null if one could not be found with the passed <code>keyName</code>.
+	 * @return either a {@link Mapping} instance, or null if one could not be found with the passed <code>keyName</code>.
 	 */
 	private Mapping findChild(String keyName) {
 		for (Mapping pkm : this.children) {
@@ -65,9 +66,9 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 	}
 
 	/**
-	 * Either finds an existing child {@link PivotKeyMapping} or creates a new one if one does not already exist.
+	 * Either finds an existing child {@link Mapping} or creates a new one if one does not already exist.
 	 *
-	 * @param keyName the name of the {@link PivotKeyMapping} that we need to retrieve or create.
+	 * @param keyName the name of the {@link Mapping} that we need to retrieve or create.
 	 * @return a {@link Mapping} instance, never returns null.
 	 * @see #findChild(String)
 	 */

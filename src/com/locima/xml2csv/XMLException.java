@@ -1,11 +1,11 @@
 package com.locima.xml2csv;
 
 /**
- * Throws if any unmanageable conditions occur whilst processing XML or XPath.
+ * Throws if any unmanageable conditions occur whilst processing XML or XPath expressions.
  */
 public class XMLException extends ProgramException {
 
-	private static final long serialVersionUID = 3146273025929566845L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs an instance using the details provided.

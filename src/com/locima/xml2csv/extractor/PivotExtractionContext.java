@@ -68,7 +68,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	}
 
 	/**
-	 * Creates or re-uses an existing {@link MappingExtractionContext} that is dynamically created, along with its child {@link PivotKeyMapping} to
+	 * Creates or re-uses an existing {@link MappingExtractionContext} that is dynamically created, along with its child {@link Mapping} to
 	 * hold the values extracted form the XML.
 	 *
 	 * @param baseName the name of the key. All values found for keys with the same name are added to the same MEC.

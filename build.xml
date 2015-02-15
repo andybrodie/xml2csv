@@ -125,19 +125,19 @@
 			<manifest>
 				<attribute name="Class-Path" value="${mf.classpath}" />
 			</manifest>
-			<fileset dir="bin" excludes="**/logback-test.xml"/>
+			<fileset dir="bin" excludes="**/logback-test.xml" />
 		</jar>
 	</target>
 	<target name="build-standalone-jar" description="Create standalone runnable jar" depends="build">
 		<jar destfile="xml2csv-standalone.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
-				<attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.Program" />
+				<attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.cmdline.Program" />
 				<attribute name="Class-Path" value="." />
 				<attribute name="Rsrc-Class-Path" value="./ commons-cli-1.2.jar logback-classic-1.1.2.jar logback-core-1.1.2.jar Saxon-HE-9.5.1-6.jar slf4j-api-1.7.6.jar xercesImpl-2.11.0.jar xml-apis-1.4.01.jar" />
 			</manifest>
 			<zipfileset src="jar-in-jar-loader.zip" />
-			<fileset dir="bin" excludes="**/logback-test.xml"/>
+			<fileset dir="bin" excludes="**/logback-test.xml" />
 			<zipfileset dir="lib" includes="commons-cli-1.2.jar" />
 			<zipfileset dir="lib" includes="logback-classic-1.1.2.jar" />
 			<zipfileset dir="lib" includes="logback-core-1.1.2.jar" />
@@ -147,5 +147,12 @@
 			<zipfileset dir="lib" includes="xml-apis-1.4.01.jar" />
 		</jar>
 	</target>
+	<target name="build-javadoc" depends="resolve">
+		<javadoc sourcepath="src" access="private" destdir="javadoc" packagenames="com.locima.xml2csv.*" author="true" version="true" use="true">
+			<classpath refid="xml2csv.execute.classpath" />
+			<bottom>
+				<![CDATA[<i>Copyright &#169; 2014-2015 Locima Ltd.  All Rights Reserved.  This code and documentation are licensed under the Microsoft Public License <a href="http://www.microsoft.com/en-us/openness/licenses.aspx">MS-PL<a>.</i>]]></bottom>
+			</javadoc>
+		</target>
 
-</project>
+	</project>

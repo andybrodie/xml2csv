@@ -25,7 +25,7 @@ public interface IOutputManager {
 	void close() throws OutputManagerException;
 
 	/**
-	 * Initialises this output manager so that it's ready to receive outputs via {@link #writeRecords(String, ExtractedRecordList)}.
+	 * Initialises this output manager so that it's ready to receive extracted via {@link #writeRecords(String, IExtractionResultsContainer)}.
 	 *
 	 * @param config the mapping configuration that determines what fields will be written to the CSV file.
 	 * @param outputDirectory the directory that all outputs will be written to.

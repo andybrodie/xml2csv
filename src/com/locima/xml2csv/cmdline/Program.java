@@ -1,4 +1,4 @@
-package com.locima.xml2csv;
+package com.locima.xml2csv.cmdline;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +18,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.ProgramException;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.extractor.XmlDataExtractor;
 import com.locima.xml2csv.inputparser.IConfigParser;
@@ -28,21 +29,52 @@ import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.XmlUtil;
 
 /**
- * Main entry point and logic for the program.
+ * Main entry point and logic for the command line application.
  */
 // CHECKSTYLE:OFF Class Data Abstraction Coupling. This is the entry point where all program logic is brought together.
 public class Program {
 	// CHECKSTYLE:ON
 
+	/**
+	 * The console width to wrap the command line help and errors to. Hardcoded to {@value}
+	 * <p>
+	 * There doesn't appear to be a portable way in Java to find this out.
+	 */
 	public static final int CONSOLE_WIDTH = 80;
+
+	/**
+	 * Text header shown on every invocation of xml2csv.
+	 */
 	private static final String HEADER =
 					"xml2csv v0.1.  Converts XML files in to CSV files using a user-defined set of rules.  See http://github.com/andybrodie/xml2csv.";
 	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
+
+	/**
+	 * Command line option for specifying that existing output files should be appended to: {@value} .
+	 */
 	public static final String OPT_APPEND_OUTPUT = "a";
+
+	/**
+	 * Command line option for specifying a configuration file: {@value} .
+	 */
 	public static final String OPT_CONFIG_FILE = "c";
+
+	/**
+	 * Command line option for display help: {@value} .
+	 */
 	public static final String OPT_HELP = "h";
+	/**
+	 * Command line option for specifying an output directory for CSV files: {@value} .
+	 */
 	public static final String OPT_OUT_DIR = "o";
+	/**
+	 * Command line option for specifying that whitespace should be preserved: {@value} .
+	 */
 	public static final String OPT_TRIM_WHITESPACE = "w";
+
+	/**
+	 * Command line option for specifying the input directory or filenames to convert: {@value} .
+	 */
 	public static final String OPT_XML_DIR = "i";
 
 	/**
@@ -51,18 +83,7 @@ public class Program {
 	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
-		shutLogbackUp();
 		new Program().execute(args);
-	}
-
-	/**
-	 * Logback unfortunately starts logging debugging information to the console if you don't configure it.
-	 * <p>
-	 * This sucks for the user (who shouldn't need to have to learn how to configure logback). Also I don't want to tightly-couple my code to logback,
-	 * so if the user isn't hasn't tried to get logging working, then let's get it to quietly STFU.
-	 */
-	private static void shutLogbackUp() {
-		// TODO Not implemented yet
 	}
 
 	/**

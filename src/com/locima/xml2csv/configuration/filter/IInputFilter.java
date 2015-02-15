@@ -9,7 +9,7 @@ import com.locima.xml2csv.extractor.DataExtractorException;
 /**
  * Implements a filter that decides whether to process an input document.
  * <p>
- * Each filter is invoked twice: {@link #include(String)} is invoked before the XML file is loaded; {@link #include(XdmNode)} afterwards.
+ * Each filter is invoked twice: {@link #include(File)} is invoked before the XML file is loaded; {@link #include(XdmNode)} afterwards.
  */
 public interface IInputFilter {
 	/**

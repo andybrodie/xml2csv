@@ -12,6 +12,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.locima.xml2csv.cmdline.Program;
+
 public class ProgramTests {
 
 	@BeforeClass

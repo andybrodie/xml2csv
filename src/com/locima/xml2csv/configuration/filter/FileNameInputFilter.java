@@ -31,7 +31,7 @@ public class FileNameInputFilter extends FilterContainer {
 	}
 
 	/**
-	 * Filters out files that do not match the regular expression passed by {@link #setMachingRegex}.
+	 * Filters out files that do not match the regular expression passed by {@link FileNameInputFilter#FileNameInputFilter(String)}.
 	 *
 	 * @param xmlInputFile the XML file to match. This method uses the results of {@link File#getAbsolutePath()} to do the maching.
 	 * @return true if the file will be processed, false otherwise.

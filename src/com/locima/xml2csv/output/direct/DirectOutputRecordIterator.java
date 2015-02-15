@@ -32,7 +32,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	private static final Logger LOG = LoggerFactory.getLogger(DirectOutputRecordIterator.class);
 
 	/**
-	 * The group state with the lowest group number. Set up by {@link GroupState#createGroupStateList(java.util.Collection)} in {{@link #iterator()}.
+	 * The group state with the lowest group number. Set up by {@link GroupState#createGroupStateList(IExtractionResults)}.
 	 * <p>
 	 * {@link GroupState} is a linked list, so we only need to keep a reference to the head.
 	 */
@@ -55,7 +55,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	private IExtractionResultsContainer rootContainer;
 
 	/**
-	 * Initalises a new iterator. Usually called by {@link ExtractedRecordList#iterator()}.
+	 * Initalises a new iterator. Called by {@link DirectCsvWriter#writeRecords(IExtractionResultsContainer)}.
 	 *
 	 * @param rootContainer the set of rootContainer that we're going to iterate;
 	 */
@@ -162,7 +162,7 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 	}
 
 	/**
-	 * Adds to the passed <code>csvFields</code> list the relevant {@link ExtractedField} values found by this container.
+	 * Adds to the passed <code>csvFields</code> list the relevant values found by this container.
 	 *
 	 * @param csvFields a list of fields being built up for a single output record.
 	 * @param context the {@link AbstractExtractionContext} the relevant (contained) values of which should be added to <code>csvFields</code>.

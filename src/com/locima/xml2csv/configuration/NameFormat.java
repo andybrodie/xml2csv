@@ -45,7 +45,7 @@ public class NameFormat {
 	 * Parse the predefined format name or bespoke format specification in to an {@link NameFormat} instance.
 	 *
 	 * @param predefinedFormatName the name of a specific style.
-	 * @param formatSpec if <code>predefinedFormatName</code> is {@link , this allows a custom style to be defined.
+	 * @param formatSpec if <code>predefinedFormatName</code> is <code>null</code>, this allows a custom style to be defined.
 	 * @param defaultValue a default value to return if neither of the other parameters yield a usable format.
 	 * @return a name format.
 	 */

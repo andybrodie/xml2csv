@@ -22,6 +22,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.locima.xml2csv.cmdline.Program;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;

@@ -145,7 +145,7 @@ public abstract class AbstractMapping implements IMapping {
 	}
 
 	/**
-	 * Sets the maximum number of results that will be processed when executing the {@link #mappingRoot}. Any results over and above this value will
+	 * Sets the maximum number of results that will be processed when executing the mapping. Any results over and above this value will
 	 * be discarded.
 	 *
 	 * @param maxValueCount either 0 for no maximum, or a natural number greater than zero to apply a limit.
@@ -156,8 +156,8 @@ public abstract class AbstractMapping implements IMapping {
 	}
 
 	/**
-	 * Sets the minimum number of results that should be processed when executing the {@link #mappingRoot}. If not enough nodes are found by executing
-	 * the {@link #mappingRoot} then blank fields will be inserted in to the output.
+	 * Sets the minimum number of results that should be processed when executing the mapping. If not enough nodes are found by executing
+	 * the {@link IMappingContainer#getMappingRoot()} then blank fields will be inserted in to the output.
 	 *
 	 * @param minValueCount either 0 for no minimum, or a natural number greater than zero to apply a minimum.
 	 */

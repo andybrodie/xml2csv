@@ -21,6 +21,7 @@ import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.extractor.AbstractExtractionContext;
 import com.locima.xml2csv.extractor.ContainerExtractionContext;
 import com.locima.xml2csv.extractor.MappingExtractionContext;
+import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
 import com.locima.xml2csv.output.IOutputManager;
 import com.locima.xml2csv.output.IOutputWriter;
@@ -153,7 +154,7 @@ public class InlineCsvWriter implements IOutputWriter {
 	/**
 	 * Creates the output stream for the CSI file.
 	 *
-	 * @return an output stream to write {@link ExtractionContext} instances to.
+	 * @return an output stream to write {@link IExtractionResults} instances to.
 	 * @throws OutputManagerException if anything goes wrong creating the output stream.
 	 */
 	private ObjectOutputStream createCsiOutput() throws OutputManagerException {

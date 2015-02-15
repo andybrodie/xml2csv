@@ -18,7 +18,7 @@ import com.locima.xml2csv.extractor.DataExtractorException;
 import com.locima.xml2csv.util.XmlUtil;
 
 /**
- * An input matcher that only accepts files (i.e. returns <code>true</code> from {@link #include(XdmNode)) if they match the XPath expression passed
+ * An input matcher that only accepts files (i.e. returns <code>true</code> from {@link #include(XdmNode)}) if they match the XPath expression passed
  * in the constructor.
  */
 public class XPathInputFilter extends FilterContainer {

@@ -263,7 +263,7 @@ public class GroupState {
 	/**
 	 * Determines whether this group has any more values to yield.
 	 *
-	 * @return true if any of the {@link ExtractedRecord}s that use this group have another value that can be returned.
+	 * @return true if any of the {@link IExtractionResults}s that use this group have another value that can be returned.
 	 */
 	private boolean isExhausted() {
 		boolean exhausted = this.currentIndex >= this.groupSize;

@@ -20,6 +20,7 @@ import com.locima.xml2csv.configuration.IMappingContainer;
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.MappingIndexAncestors;
 import com.locima.xml2csv.util.StringUtil;
+import com.locima.xml2csv.util.Tuple;
 
 /**
  * Utility methods required by both the direct and inline CSV writers.

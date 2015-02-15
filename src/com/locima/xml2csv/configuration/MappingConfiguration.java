@@ -69,7 +69,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	/**
 	 * Adds a child set of mappings to this mappings set.
 	 *
-	 * @param container a set of mappings, must not be null and must have a unique {@link MappingList#getOutputName()} value.
+	 * @param container a set of mappings, must not be null and must have a unique {@link IMapping#getName()} value.
 	 * @return the passed <code>container</code>.
 	 */
 	public IMappingContainer addContainer(IMappingContainer container) {
@@ -130,8 +130,8 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 /**
-	 * Retrieve a top level mapping container ({@link MappingList by name, or null if it doesn't exist.
-	 * @param containerName the name of the mapping container (needs to match {@link IMappingContainer#getName()}).
+	 * Retrieve a top level mapping container ({@link MappingList} by name, or null if it doesn't exist.
+	 * @param containerName the name of the mapping container (needs to match {@link IMapping#getName()}).
 	 * @return a mapping container instance with the matching name, or null if one doesn't exist.
 	 */
 	public IMappingContainer getContainerByName(String containerName) {
@@ -239,8 +239,7 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 	/**
-	 * Sets the default inline behaviour for all child mappings of this configuration. If {@link MultiValueTolerance#INHERIT} is specified then it
-	 * will be substitued for {@link MultiValueTolerance#IGNORE} as there is nowhere to inherit from.
+	 * Sets the default inline behaviour for all child mappings of this configuration.
 	 *
 	 * @param defaultMultiValueBehaviour the default inline behaviour for child mappings.
 	 */

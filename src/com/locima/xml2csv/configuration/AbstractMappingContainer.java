@@ -15,9 +15,9 @@ public abstract class AbstractMappingContainer extends AbstractMapping implement
 	}
 
 	/**
-	 * Gets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
+	 * Gets the XPath expression that returns the root nodes for this mapping.
 	 *
-	 * @return the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
+	 * @return the XPath expression that returns the root nodes for this mapping.
 	 */
 	@Override
 	public XPathValue getMappingRoot() {
@@ -25,9 +25,9 @@ public abstract class AbstractMappingContainer extends AbstractMapping implement
 	}
 
 	/**
-	 * Sets the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
+	 * Sets the XPath expression that returns the root nodes for this mapping.
 	 *
-	 * @param mappingRoot the XPath expression that returns the root nodes from which {@link #keyXPath} and {@link #valueXPath} will be evaluated.
+	 * @param mappingRoot sets the XPath expression that returns the root nodes for this mapping.
 	 */
 	public void setMappingRoot(XPathValue mappingRoot) {
 		this.mappingRoot = mappingRoot;
