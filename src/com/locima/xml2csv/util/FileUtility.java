@@ -188,7 +188,21 @@ public class FileUtility {
 	}
 
 	/**
-	 * Recursively add all files wtihin <code>directory</code> to <code>files</code>.
+	 * Given a specification of a set of files, find all the matching files and return them.
+	 *
+	 * @param fileSpec a specification string that will match files.
+	 * @return A (possibly empty) list of files.
+	 */
+	public static List<File> getFiles(String fileSpec) {
+		LOG.debug("Searching for files that match {}", fileSpec);
+		
+		List<File> files = new ArrayList<File>();
+		files.add(new File(fileSpec));
+		return files;
+	}
+
+	/**
+	 * Recursively add all files within <code>directory</code> to <code>files</code>.
 	 * <p>
 	 * <code>directory</code> MUST be a directory and non-null.
 	 *
@@ -214,5 +228,6 @@ public class FileUtility {
 	 */
 	private FileUtility() {
 	}
-
+	
+	
 }

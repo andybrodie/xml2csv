@@ -2,11 +2,18 @@ package com.locima.xml2csv;
 
 import static com.locima.xml2csv.TestHelpers.assertCsvEquals;
 import static com.locima.xml2csv.TestHelpers.processFiles;
+import static com.locima.xml2csv.TestHelpers.processFilesAsCmdLine;
 
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class EndToEndTests {
+
+	@Test
+	public void testCmdLineEntryPoint() throws Exception {
+		TemporaryFolder outputFolder = processFilesAsCmdLine("FruitBasketConfig.xml", "FruitBasket.xml");
+		assertCsvEquals("FruitBasket.csv", outputFolder.getRoot(), "FruitBasket.csv");
+	}
 
 	@Test
 	public void testEndToEnd() throws Exception {
@@ -35,16 +42,9 @@ public class EndToEndTests {
 	}
 
 	@Test
-	public void testNamespaces() throws Exception {
-		TemporaryFolder outputFolder = processFiles("FamilyConfigWithNamespaces.xml", "FamilyWithNamespaces.xml");
-		assertCsvEquals("FamilyWithNamespaces.csv", outputFolder.getRoot(), "FamilyWithNamespaces.csv");
-		assertCsvEquals("FamilyMembersWithNamespaces.csv", outputFolder.getRoot(), "FamilyMembersWithNamespaces.csv");
-	}
-
-	@Test
-	public void testPeople() throws Exception {
-		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
-		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
+	public void testFruitBaskets() throws Exception {
+		TemporaryFolder outputFolder = processFiles("FruitBasketConfig.xml", "FruitBasket.xml");
+		assertCsvEquals("FruitBasket.csv", outputFolder.getRoot(), "FruitBasket.csv");
 	}
 
 	@Test
@@ -56,9 +56,16 @@ public class EndToEndTests {
 	}
 
 	@Test
-	public void testFruitBaskets() throws Exception {
-		TemporaryFolder outputFolder = processFiles("FruitBasketConfig.xml", "FruitBasket.xml");
-		assertCsvEquals("FruitBasket.csv", outputFolder.getRoot(), "FruitBasket.csv");
+	public void testNamespaces() throws Exception {
+		TemporaryFolder outputFolder = processFiles("FamilyConfigWithNamespaces.xml", "FamilyWithNamespaces.xml");
+		assertCsvEquals("FamilyWithNamespaces.csv", outputFolder.getRoot(), "FamilyWithNamespaces.csv");
+		assertCsvEquals("FamilyMembersWithNamespaces.csv", outputFolder.getRoot(), "FamilyMembersWithNamespaces.csv");
+	}
+
+	@Test
+	public void testPeople() throws Exception {
+		TemporaryFolder outputFolder = processFiles("PeopleConfig.xml", "People.xml");
+		assertCsvEquals("People.csv", outputFolder.getRoot(), "People.csv");
 	}
 
 	@Test

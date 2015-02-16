@@ -31,6 +31,7 @@ import com.locima.xml2csv.configuration.NameFormat;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.inputparser.FileParserException;
 import com.locima.xml2csv.inputparser.xml.XmlFileParser;
+import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.XmlUtil;
 
 public class TestHelpers {
@@ -146,6 +147,41 @@ public class TestHelpers {
 
 		return outputFolder;
 
+	}
+
+	public static TemporaryFolder processFilesAsCmdLine(String configurationFile, String... inputFileNames) throws IOException, ProgramException {
+		Program p = new Program();
+
+		List<String> params = new ArrayList<String>();
+
+		params.add("-" + Program.OPT_APPEND_OUTPUT);
+		
+		params.add("-" + Program.OPT_CONFIG_FILE);
+		params.add(createFile(configurationFile).getAbsolutePath());
+
+		List<File> xmlInputFiles = new ArrayList<File>();
+		for (String inputFile : inputFileNames) {
+			xmlInputFiles.add(createFile(inputFile));
+		}
+
+		TemporaryFolder outputFolder = new TemporaryFolder();
+		outputFolder.create();
+		File outputDirectory = outputFolder.getRoot();
+		params.add("-" + Program.OPT_OUT_DIR);
+		params.add(outputDirectory.getAbsolutePath());
+
+		params.add("-" + Program.OPT_XML_DIR);
+		params.add("REPLACE");
+		
+		String[] paramsArray = params.toArray(new String[0]);
+		int inputParamIndex = paramsArray.length-1;
+		for (int i = 0; i < inputFileNames.length; i++) {
+			paramsArray[inputParamIndex] = TestHelpers.RES_DIR + File.separatorChar + inputFileNames[i];
+			LOG.info("Executing xml2csv with parameters: {} ", StringUtil.toStringList(paramsArray));
+			p.execute(paramsArray);
+		}
+
+		return outputFolder;
 	}
 
 	public static String toFlatString(Collection<? extends Object> second) {

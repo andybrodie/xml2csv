@@ -36,7 +36,7 @@ public class Program {
 	// CHECKSTYLE:ON
 
 	/**
-	 * The console width to wrap the command line help and errors to, hardcoded to {@value}.
+	 * The console width to wrap the command line help and errors to, hardcoded to {@value} .
 	 * <p>
 	 * There doesn't appear to be a portable way in Java to find this out.
 	 */
@@ -47,6 +47,7 @@ public class Program {
 	 */
 	private static final String HEADER =
 					"xml2csv v0.1.  Converts XML files in to CSV files using a user-defined set of rules.  See http://github.com/andybrodie/xml2csv.";
+
 	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 
 	/**
@@ -138,16 +139,16 @@ public class Program {
 	 * Entry point for code-based execution that just has directory names for configuration and input.
 	 *
 	 * @param configFileName the configuration file name.
-	 * @param xmlInputDirectoryName The directory from which XML files should be read.
+	 * @param xmlInputSpecification a pattern that when expanded will contain a list of files.
 	 * @param outputDirectoryName The directory to which output CSV files should be written.
 	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
 	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configFileName, String xmlInputDirectoryName, String outputDirectoryName, boolean appendOutput, boolean trimWhitespace)
+	public void execute(String configFileName, String xmlInputSpecification, String outputDirectoryName, boolean appendOutput, boolean trimWhitespace)
 					throws ProgramException {
 		List<File> xmlInputFiles;
-		xmlInputFiles = FileUtility.getFiles(new File(xmlInputDirectoryName), false);
+		xmlInputFiles = FileUtility.getFiles(xmlInputSpecification);
 		File outputDirectory;
 		try {
 			outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
@@ -190,7 +191,6 @@ public class Program {
 			String outputDirName = cmdLine.getOptionValue(OPT_OUT_DIR);
 			String configFileName = cmdLine.getOptionValue(OPT_CONFIG_FILE);
 			execute(configFileName, xmlDirName, outputDirName, appendOutput, trimWhitespace);
-			System.out.println("Completed succesfully.");
 		} catch (ProgramException pe) {
 			// All we can do is print out the error and terminate the program
 			System.err.println(pe.getMessage());
@@ -232,6 +232,7 @@ public class Program {
 		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
 		options.addOption(option);
 		option = new Option(OPT_APPEND_OUTPUT, "append-output", false, "If specified, all output will be appended to any existing output files.");
+		options.addOption(option);
 		return options;
 	}
 }

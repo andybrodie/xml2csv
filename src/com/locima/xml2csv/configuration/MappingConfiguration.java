@@ -230,15 +230,6 @@ public class MappingConfiguration implements Iterable<IMappingContainer> {
 	}
 
 	/**
-	 * Gets all the mappings contained within this set as an array.
-	 *
-	 * @return an array of mappings, possibly empty but never null.
-	 */
-	public MappingList[] mappingsToArray() {
-		return this.mappings.toArray(new MappingList[0]);
-	}
-
-	/**
 	 * Sets the default inline behaviour for all child mappings of this configuration.
 	 *
 	 * @param defaultMultiValueBehaviour the default inline behaviour for child mappings.

@@ -42,6 +42,7 @@
 	<!-- Cleaning targets -->
 	<target name="clean" description="Deletes all the built artifacts">
 		<delete dir="bin" />
+		<delete dir="javadoc" />
 	</target>
 	<target name="clean-ivy" description="Deletes the dependencies downloaded by Ivy">
 		<delete dir="${LIB}" />
@@ -85,7 +86,7 @@
 			</classpath>
 		</javac>
 	</target>
-	<target name="test" depends="build, build-tests">
+	<target name="test" depends="build, build-tests" description="Run all the unit tests">
 		<mkdir dir="${junit.output.dir}" />
 		<junit fork="yes" printsummary="withOutAndErr">
 			<formatter type="xml" />
@@ -101,7 +102,7 @@
 			</classpath>
 		</junit>
 	</target>
-	<target name="junit-report" depends="test">
+	<target name="junit-report" depends="test" description="Creates a Junit execution report">
 		<junitreport todir="${junit.output.dir}">
 			<fileset dir="${junit.output.dir}">
 				<include name="TEST-*.xml" />
@@ -147,12 +148,14 @@
 			<zipfileset dir="lib" includes="xml-apis-1.4.01.jar" />
 		</jar>
 	</target>
-	<target name="build-javadoc" depends="resolve">
+	<target name="build-javadoc" depends="resolve" description="Build project javadoc">
 		<javadoc sourcepath="src" access="private" destdir="javadoc" packagenames="com.locima.xml2csv.*" author="true" version="true" use="true">
 			<classpath refid="xml2csv.execute.classpath" />
 			<bottom>
-				<![CDATA[<i>Copyright &#169; 2014-2015 Locima Ltd.  All Rights Reserved.  This code and documentation are licensed under the Microsoft Public License <a target="_blank" href="http://www.microsoft.com/en-us/openness/licenses.aspx">MS-PL<a>.</i>]]></bottom>
-			</javadoc>
-		</target>
-
-	</project>
+				<![CDATA[<i>Copyright &#169; 2014-2015 Locima Ltd.  All Rights Reserved.  This code and documentation are licensed under the Microsoft Public License <a target="_blank" href="http://www.microsoft.com/en-us/openness/licenses.aspx">MS-PL<a>.</i>]]>
+			</bottom>
+		</javadoc>
+	</target>
+	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc"
+	description="Build the regular jar, standalone jar and javadoc (all delivered targets)"/>
+</project>
