@@ -160,9 +160,9 @@
 	<target name="update-version-properties">
 		<!-- Get the short commit hash from Git -->
 		<exec executable="git.exe" outputproperty="commitHash">
-			<arg value="--short"/>
 			<arg value="rev-parse"/>
 			<arg value="HEAD"/>
+			<arg value="--short"/>
 		</exec>
 		
 		<!-- Get the tag name -->
@@ -172,8 +172,17 @@
 		</exec>
 		
 		<!-- Get the build date -->
+		<tstamp>
+		    <format property="buildTStamp" pattern="yyyy-MM-dd HH:mm:ss" />
+		 </tstamp>
 		
-		<echo message="Commit Hash: ${commitHash}"/>
+		<property name="propsFile" value="build.properties"/>
+		<echo message="CommitHash=${commitHash}" file="${propsFile}" append="false"/>
+		<echo message="Version=${version}" file="${propsFile}" append="true"/>
+		<echo message="Tag=${tag}" file="${propsFile}" append="true"/>
+		<echo message="BuildDate=${buildTStamp}" file="${propsFile}" append="true"/>
+		
+		<echo file="${propsFile}"/> 
 	</target>
 	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc" description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
 

@@ -1,4 +1,5 @@
 # Directories #
+build.properties
 /javadoc/
 /build/
 /bin/
