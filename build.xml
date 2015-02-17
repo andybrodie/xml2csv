@@ -122,9 +122,10 @@
 			</mapper>
 		</pathconvert>
 		<tstamp />
-		<jar destfile="xml2csv.jar" manifest="bin/META-INF/MANIFEST.MF">
+		<jar destfile="xml2csv.jar">
 			<manifest>
 				<attribute name="Class-Path" value="${mf.classpath}" />
+				<attribute name="Main-Class" value="com.locima.xml2csv.cmdline.Program" />
 			</manifest>
 			<fileset dir="bin" excludes="**/logback-test.xml" />
 		</jar>
@@ -152,10 +153,28 @@
 		<javadoc sourcepath="src" access="private" destdir="javadoc" packagenames="com.locima.xml2csv.*" author="true" version="true" use="true">
 			<classpath refid="xml2csv.execute.classpath" />
 			<bottom>
-				<![CDATA[<i>Copyright &#169; 2014-2015 Locima Ltd.  All Rights Reserved.  This code and documentation are licensed under the Microsoft Public License <a target="_blank" href="http://www.microsoft.com/en-us/openness/licenses.aspx">MS-PL<a>.</i>]]>
+				&lt;i&gt;Copyright &#169; 2014-2015 Locima Ltd.  All Rights Reserved.  This code and documentation are licensed under the Microsoft Public License &lt;a target="_blank" href="http://www.microsoft.com/en-us/openness/licenses.aspx"&gt;MS-PL&lt;a&gt;.&lt;/i&gt;
 			</bottom>
 		</javadoc>
 	</target>
-	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc"
-	description="Build the regular jar, standalone jar and javadoc (all delivered targets)"/>
+	<target name="update-version-properties">
+		<!-- Get the short commit hash from Git -->
+		<exec executable="git.exe" outputproperty="commitHash">
+			<arg value="--short"/>
+			<arg value="rev-parse"/>
+			<arg value="HEAD"/>
+		</exec>
+		
+		<!-- Get the tag name -->
+		<exec executable="git.exe" outputproperty="version">
+			<arg value="tag"/>
+			<arg value="HEAD"/>
+		</exec>
+		
+		<!-- Get the build date -->
+		
+		<echo message="Commit Hash: ${commitHash}"/>
+	</target>
+	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc" description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
+
 </project>

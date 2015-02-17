@@ -3,6 +3,8 @@ package com.locima.xml2csv.cmdline;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,6 +86,7 @@ public class Program {
 	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
+		System.out.println(new Program().getExecutableName());
 		new Program().execute(args);
 	}
 
@@ -203,8 +206,38 @@ public class Program {
 			LOG.debug("Invalid arguments specified: {}", pe.getMessage());
 			System.err.println("Invalid arguments specified: " + pe.getMessage());
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
+			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar " + getExecutableName(), HEADER, options, 0, 0,
+							null, true);
 		}
+	}
+
+	/**
+	 * Retrieves the container that's being executed. If this is a Jar file then the jar file name will be returned. If we're not in a jar file then
+	 * the name of this class (the application entry point) is returned.
+	 *
+	 * @return a string (never null or zero length) containing the jar or class name to execute this app.
+	 */
+	private String getExecutableName() {
+		final String defaultPath = "com.locima.xml2cv.cmdline.Program";
+		String path;
+		try {
+			URI sourceUri = this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
+			if ("rsrc:./".equals(sourceUri.toString())) {
+				path = "xml2csv-standalone.jar";
+			} else if (sourceUri.toString().endsWith(".jar")) {
+				path = new File(sourceUri).getName();
+			} else {
+				path = defaultPath;
+			}
+			// CHECKSTYLE:OFF I don't want this code to EVER cause a problem in the application
+		} catch (RuntimeException e) {
+			// CHECKSTYLE:ON
+			// A problem occurred whilst getting the name of the executing container, so return "xml2csv.jar"
+			path = defaultPath;
+		} catch (URISyntaxException e) {
+			path = defaultPath;
+		}
+		return path;
 	}
 
 	/**
