@@ -2,11 +2,13 @@ package com.locima.xml2csv.cmdline;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import net.sf.saxon.s9api.XdmNode;
 
@@ -42,13 +44,12 @@ public class Program {
 	 * <p>
 	 * There doesn't appear to be a portable way in Java to find this out.
 	 */
-	public static final int CONSOLE_WIDTH = 80;
+	public static final int CONSOLE_WIDTH = 140;
 
 	/**
 	 * Text header shown on every invocation of xml2csv.
 	 */
-	private static final String HEADER =
-					"xml2csv v0.1.  Converts XML files in to CSV files using a user-defined set of rules.  See http://github.com/andybrodie/xml2csv.";
+	private static final String HEADER = "Converts XML files in to CSV files using a user-defined set of rules.";
 
 	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 
@@ -81,13 +82,46 @@ public class Program {
 	public static final String OPT_XML_DIR = "i";
 
 	/**
+	 * The name of the property within META-INF/build.properties that contains the timestamp of this build: {@value} .
+	 */
+	private static final String PROPERTY_BUILD_TSTAMP = "BuildTimeStamp";
+
+	/**
+	 * The name of the property within META-INF/build.properties that contains the commit hash of this build: {@value} .
+	 */
+	private static final String PROPERTY_COMMITHASH = "Commit";
+
+	/**
+	 * The name of the property within META-INF/build.properties that contains the version number of this build: {@value} .
+	 */
+	private static final String PROPERTY_VERSION = "Version";
+
+	/**
 	 * Entry point for the command line execution.
 	 *
 	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
-		System.out.println(new Program().getExecutableName());
 		new Program().execute(args);
+	}
+
+	/**
+	 * Creates a header string for all usage and help messages.
+	 *
+	 * @return a header string for all usage and help messages.
+	 */
+	private String createHeader() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("xml2csv v");
+		Properties props = getBuildProperties();
+		sb.append(props.getProperty(PROPERTY_VERSION));
+		sb.append("  ");
+		sb.append(HEADER);
+		sb.append("  ");
+		sb.append("Built: ");
+		sb.append(props.getProperty(PROPERTY_BUILD_TSTAMP));
+		sb.append(".");
+		return sb.toString();
 	}
 
 	/**
@@ -185,7 +219,8 @@ public class Program {
 			if (cmdLine.hasOption(OPT_HELP)) {
 				HelpFormatter formatter = new HelpFormatter();
 				LOG.debug("User asked for help, so outputting usage message and terminating");
-				formatter.printHelp(new PrintWriter(System.out, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", HEADER, options, 0, 0, null, true);
+				formatter.printHelp(new PrintWriter(System.out, true), CONSOLE_WIDTH, "java.exe -jar xml2csv.jar", createHeader(), options, 0, 0,
+								null, true);
 			}
 			LOG.trace("Arguments verified.");
 			boolean trimWhitespace = Boolean.parseBoolean(cmdLine.getOptionValue(OPT_TRIM_WHITESPACE));
@@ -206,9 +241,38 @@ public class Program {
 			LOG.debug("Invalid arguments specified: {}", pe.getMessage());
 			System.err.println("Invalid arguments specified: " + pe.getMessage());
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar " + getExecutableName(), HEADER, options, 0, 0,
-							null, true);
+			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar " + getExecutableName(), createHeader(), options, 0,
+							0, null, true);
 		}
+	}
+
+	/**
+	 * Retrieve the build properties from a locally available file <code>META-INF/build.properties</code> or provide default values if not available.
+	 *
+	 * @return a set of properties about the build currently in use.
+	 */
+	private Properties getBuildProperties() {
+		Properties props = new Properties();
+		final String propFilename = "META-INF/build.properties";
+		InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(propFilename);
+		if (inputStream != null) {
+			try {
+				props.load(inputStream);
+			} catch (IOException e) {
+				LOG.error("Unable to load " + propFilename, e);
+			}
+			return props;
+		}
+		if (!props.containsKey(PROPERTY_VERSION)) {
+			props.setProperty(PROPERTY_VERSION, "<No version>");
+		}
+		if (!props.containsKey(PROPERTY_COMMITHASH)) {
+			props.setProperty(PROPERTY_COMMITHASH, "<None>");
+		}
+		if (!props.containsKey(PROPERTY_BUILD_TSTAMP)) {
+			props.setProperty(PROPERTY_BUILD_TSTAMP, "<N/A>");
+		}
+		return props;
 	}
 
 	/**
@@ -243,7 +307,7 @@ public class Program {
 	/**
 	 * Generates the options that define the command line arguments to this program.
 	 *
-	 * @return parsed command line arguments
+	 * @return parsed command line arguments.
 	 */
 	public Options getOptions() {
 		Options options = new Options();
@@ -264,7 +328,10 @@ public class Program {
 		options.addOption(option);
 		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
 		options.addOption(option);
-		option = new Option(OPT_APPEND_OUTPUT, "append-output", false, "If specified, all output will be appended to any existing output files.");
+		option =
+						new Option(OPT_APPEND_OUTPUT, "append-output", false,
+										"If specified, all output will be appended to any existing output files.  If an existing file is"
+														+ " appended to then field names will not be output.");
 		options.addOption(option);
 		return options;
 	}

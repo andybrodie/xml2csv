@@ -157,32 +157,32 @@
 			</bottom>
 		</javadoc>
 	</target>
-	<target name="update-version-properties">
+	<target name="update-build.properties">
 		<!-- Get the short commit hash from Git -->
 		<exec executable="git.exe" outputproperty="commitHash">
-			<arg value="rev-parse"/>
-			<arg value="HEAD"/>
-			<arg value="--short"/>
+			<arg value="log" />
+			<arg value="-1" />
+			<arg value="--pretty=format:%h"/>
 		</exec>
-		
+
 		<!-- Get the tag name -->
 		<exec executable="git.exe" outputproperty="version">
-			<arg value="tag"/>
-			<arg value="HEAD"/>
+			<arg value="describe" />
+			<arg value="--abbrev=0" />
+			<arg value="--tags" />
 		</exec>
-		
+
 		<!-- Get the build date -->
 		<tstamp>
-		    <format property="buildTStamp" pattern="yyyy-MM-dd HH:mm:ss" />
-		 </tstamp>
-		
-		<property name="propsFile" value="build.properties"/>
-		<echo message="CommitHash=${commitHash}" file="${propsFile}" append="false"/>
-		<echo message="Version=${version}" file="${propsFile}" append="true"/>
-		<echo message="Tag=${tag}" file="${propsFile}" append="true"/>
-		<echo message="BuildDate=${buildTStamp}" file="${propsFile}" append="true"/>
-		
-		<echo file="${propsFile}"/> 
+			<format property="buildTimeStamp" pattern="yyyy-MM-dd HH:mm:ss" />
+		</tstamp>
+
+		<property name="propsFile" value="src/META-INF/build.properties" />
+		<propertyfile file="${propsFile}" comment="Created dynamically by Ant in build.xml update-version-properties task">
+			<entry key="CommitHash" value="${commitHash}" />
+			<entry key="Version" value="${version}" />
+			<entry key="BuildTimeStamp" value="${buildTimeStamp}" />
+		</propertyfile>
 	</target>
 	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc" description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
 
