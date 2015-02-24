@@ -72,9 +72,9 @@ public class ConfigBuilders {
 	 */
 	public static PivotMapping createPivotMapping(IMappingContainer parent, String pivotMappingName, String rootXPath, String kvPairXPath, String keyXPath,
 					String valueXPath, NameFormat nameFormat, int groupNumber, MultiValueBehaviour multiValueBehaviour) throws XMLException {
-		return createPivotMapping(parent, pivotMappingName, XmlUtil.createXPathValue(null, rootXPath), 
-						XmlUtil.createXPathValue(null, kvPairXPath), XmlUtil.createXPathValue(null, keyXPath),
-						XmlUtil.createXPathValue(null, valueXPath), nameFormat, groupNumber, multiValueBehaviour);
+		return createPivotMapping(parent, pivotMappingName, XmlUtil.createXPathValue(rootXPath), 
+						XmlUtil.createXPathValue(kvPairXPath), XmlUtil.createXPathValue(keyXPath),
+						XmlUtil.createXPathValue(valueXPath), nameFormat, groupNumber, multiValueBehaviour);
 	}
 
 }

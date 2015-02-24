@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<m:MappingConfiguration
-	xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<m:MappingList mappingRoot="/family" name="Family">
 		<m:Mapping name="Family" xPath="name" />
 		<m:Mapping name="Address" xPath="address" />
 	</m:MappingList>
-	
-	<!-- Create a separate file containing all the members of the family. This 
-		represents a 1..n mapping between families and family members. In this case, 
-		the column name will be formed by concatenating: 1) The outputName ("People" 
-		in this case) 2) The field name ("Name" and "Age") 3) A sequence number, starting 
+
+	<!-- Create a separate file containing all the members of the family. This represents a 1..n mapping between families and family members. In this case, 
+		the column name will be formed by concatenating: 1) The outputName ("People" in this case) 2) The field name ("Name" and "Age") 3) A sequence number, starting 
 		at 1. -->
 	<m:MappingList mappingRoot="/family/person" name="People">
 
@@ -20,7 +17,7 @@
 		<!-- Include the properties of the family members -->
 		<!-- Name comes from the child element "name" under person -->
 		<m:Mapping name="Name" xPath="name" />
-		
+
 		<!-- Age comes from the age attribute of the mappingRoot -->
 		<m:Mapping name="Age" xPath="@age" />
 	</m:MappingList>

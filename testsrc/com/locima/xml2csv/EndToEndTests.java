@@ -81,6 +81,12 @@ public class EndToEndTests {
 	}
 
 	@Test
+	public void testPivotWithOtherSiblings() throws Exception {
+		TemporaryFolder outputFolder = processFiles("PivotWithSiblingsConfig.xml", "PivotWithSiblingsInput.xml");
+		assertCsvEquals("PivotWithSiblingsOutput.csv", outputFolder.getRoot(), "PivotWithSiblingsOutput.csv");
+	}
+
+	@Test
 	public void testPivotInputWithNormalMapping() throws Exception {
 		TemporaryFolder outputFolder = processFiles("SimplePivotFlatConfig.xml", "SimplePivotInput.xml");
 		assertCsvEquals("SimplePivotOutput.csv", outputFolder.getRoot(), "SimplePivotOutput.csv");

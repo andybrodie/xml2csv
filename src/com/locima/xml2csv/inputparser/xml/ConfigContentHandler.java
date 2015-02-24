@@ -46,6 +46,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	private static final String CUSTOM_NAME_FORMAT_ATTR = "customNameFormat";
+
 	private static final String GROUP_NUMBER_ATTR = "group";
 	private static final String KEY_XPATH_ATTR = "keyXPath";
 	private static final String KVPAIR_ROOT_XPATH_ATTR = "kvPairRoot";
@@ -101,8 +102,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
 	// CHECKSTYLE:OFF
-	private void addMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, int groupNumber,
-					String multiValueBehaviour, int minValueCount, int maxValueCount) throws SAXException {
+	private void addMapping(String name, String xPath, String predefinedNameFormat, String bespokeNameFormatFormat, Integer groupNumber,
+					String multiValueBehaviour, Integer minValueCount, Integer maxValueCount) throws SAXException {
 		// CHECKSTYLE:ON
 		MappingList current = this.mappingListStack.peek();
 		NameFormat nameFormat = NameFormat.parse(predefinedNameFormat, bespokeNameFormatFormat, NameFormat.NO_COUNTS);
@@ -120,16 +121,15 @@ public class ConfigContentHandler extends DefaultHandler {
 			throw getException(e, "Unable to add field %s as there was a problem with the XPath value \"%s\"", name, xPath);
 		}
 
-		int finalGroupNumber = groupNumber < 0 ? this.currentGroupNumber : groupNumber;
 		Mapping mapping = new Mapping();
 		mapping.setParent(current);
 		mapping.setName(fieldName);
 		mapping.setNameFormat(nameFormat);
-		mapping.setGroupNumber(finalGroupNumber);
+		mapping.setGroupNumber(groupNumber == null ? this.currentGroupNumber : groupNumber);
 		mapping.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
 		mapping.setValueXPath(compiledXPath);
-		mapping.setMinValueCount(minValueCount);
-		mapping.setMaxValueCount(maxValueCount);
+		mapping.setMinValueCount(minValueCount == null ? 0 : minValueCount);
+		mapping.setMaxValueCount(maxValueCount == null ? 0 : maxValueCount);
 		current.add(mapping);
 	}
 
@@ -157,8 +157,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * @param maxValueCount the maximum number of values that this mapping should output for a single evaluation on an element.
 	 * @throws SAXException if an error occurs while parsing the XPath expression found (will wrap {@link XMLException}.
 	 */
-	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, int groupNumber,
-					int minValueCount, int maxValueCount) throws SAXException {
+	private void addMappingList(String mappingRoot, String outputName, String predefinedNameFormat, String multiValueBehaviour, Integer groupNumber,
+					Integer minValueCount, Integer maxValueCount) throws SAXException {
 		IMappingContainer parent = (this.mappingListStack.size() > 0) ? this.mappingListStack.peek() : null;
 		MappingList container = new MappingList();
 		try {
@@ -168,10 +168,10 @@ public class ConfigContentHandler extends DefaultHandler {
 		}
 		container.setParent(parent);
 		container.setName(outputName);
-		container.setGroupNumber(groupNumber);
+		container.setGroupNumber(groupNumber == null ? this.currentGroupNumber : groupNumber);
 		container.setMultiValueBehaviour(MultiValueBehaviour.parse(multiValueBehaviour, this.mappingConfiguration.getDefaultMultiValueBehaviour()));
-		container.setMinValueCount(minValueCount);
-		container.setMaxValueCount(maxValueCount);
+		container.setMinValueCount(minValueCount == null ? 0 : minValueCount);
+		container.setMaxValueCount(maxValueCount == null ? 0 : maxValueCount);
 		this.mappingListStack.push(container);
 
 		/*
@@ -198,7 +198,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 */
 	// CHECKSTYLE:OFF Number of parameters is appropriate here, I'm not going to create separate methods or add complexity in to caller.
 	private void addPivotMapping(String name, String mappingRootSource, String kvPairRootSource, String keyXPathSource, String valueXPathSource,
-					String templateNameFormatName, String customTemplateNameFormat, int groupNumber, String multiValueBehaviour) throws SAXException {
+					String templateNameFormatName, String customTemplateNameFormat, Integer groupNumber, String multiValueBehaviour)
+					throws SAXException {
 		// CHECKSTYLE:ON
 		MappingList parent = this.mappingListStack.isEmpty() ? null : this.mappingListStack.peek();
 		try {
@@ -223,7 +224,7 @@ public class ConfigContentHandler extends DefaultHandler {
 			mapping.setKeyXPath(keyXPath);
 			mapping.setValueXPath(valueXPath);
 			mapping.setNameFormat(templateNameFormat);
-			mapping.setGroupNumber(groupNumber);
+			mapping.setGroupNumber(groupNumber == null ? this.currentGroupNumber : groupNumber);
 			MultiValueBehaviour mvb = MultiValueBehaviour.parse(multiValueBehaviour, MultiValueBehaviour.LAZY);
 			mapping.setMultiValueBehaviour(mvb);
 			if (parent != null) {
@@ -235,6 +236,8 @@ public class ConfigContentHandler extends DefaultHandler {
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add pivot mapping definition to configuration due to a problem in the XML configuration.");
 		}
+
+		this.currentGroupNumber++;
 	}
 
 	/**
@@ -315,19 +318,18 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
-	 * Retrieve an attribute value cast as an int, or throw an exception.
+	 * Retrieve an attribute value cast as an Integer, null if one wasn't specified, or throw an exception if malformed.
 	 *
 	 * @param atts the set of of attributes to retrieve from.
 	 * @param attrName the name of the attribute to retrieve.
-	 * @param defaultValue a default value to use if no value has been specified.
 	 * @return the value retrieved, or value in <code>defaultValue</code> if a value could not be found.
 	 * @throws SAXException thrown if the value found in the attribute is an integer.
 	 */
-	private int getAttributeValueAsInt(Attributes atts, String attrName, int defaultValue) throws SAXException {
+	private Integer getAttributeValueAsInteger(Attributes atts, String attrName) throws SAXException {
 		String attrValueAsString = atts.getValue(attrName);
 		if (StringUtil.isNullOrEmpty(attrValueAsString)) {
-			LOG.debug("No value specified for {}, returning default value of {}", attrName, defaultValue);
-			return defaultValue;
+			LOG.debug("No value specified for {}, returning null", attrName);
+			return null;
 		}
 		try {
 			return Integer.parseInt(attrValueAsString);
@@ -413,22 +415,20 @@ public class ConfigContentHandler extends DefaultHandler {
 		if (MAPPING_NAMESPACE.equals(uri)) {
 			switch (elementName) {
 				case Mapping:
-					final int defaultInlineGroupNumber = -2;
 					addMapping(atts.getValue(NAME_ATTR), atts.getValue(XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR),
-									atts.getValue(CUSTOM_NAME_FORMAT_ATTR),
-									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, defaultInlineGroupNumber),
-									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0),
-									getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
+									atts.getValue(CUSTOM_NAME_FORMAT_ATTR), getAttributeValueAsInteger(atts, GROUP_NUMBER_ATTR),
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInteger(atts, MIN_VALUES_ATTR),
+									getAttributeValueAsInteger(atts, MAX_VALUES_ATTR));
 					break;
 				case PivotMapping:
 					addPivotMapping(atts.getValue(NAME_ATTR), atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(KVPAIR_ROOT_XPATH_ATTR),
 									atts.getValue(KEY_XPATH_ATTR), atts.getValue(VALUE_XPATH_ATTR), atts.getValue(NAME_FORMAT_ATTR), null,
-									getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
+									getAttributeValueAsInteger(atts, GROUP_NUMBER_ATTR), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));
 					break;
 				case MappingList:
 					addMappingList(atts.getValue(MAPPING_ROOT_ATTR), atts.getValue(NAME_ATTR), atts.getValue(NAME_FORMAT_ATTR),
-									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInt(atts, GROUP_NUMBER_ATTR, 0),
-									getAttributeValueAsInt(atts, MIN_VALUES_ATTR, 0), getAttributeValueAsInt(atts, MAX_VALUES_ATTR, 0));
+									atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR), getAttributeValueAsInteger(atts, GROUP_NUMBER_ATTR),
+									getAttributeValueAsInteger(atts, MIN_VALUES_ATTR), getAttributeValueAsInteger(atts, MAX_VALUES_ATTR));
 					break;
 				case MappingConfiguration:
 					addMappingConfiguration(atts.getValue(NAME_FORMAT_ATTR), atts.getValue(MULTI_VALUE_BEHAVIOUR_ATTR));

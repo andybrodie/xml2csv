@@ -49,7 +49,7 @@ public class XmlDataExtractor {
 		}
 		String indent = indentSb.toString();
 		if (results instanceof IExtractionResultsContainer) {
-			LOG.trace("{}{}:{}", indent, offset, results);
+			LOG.trace("{}[{}]:{}", indent, offset, results);
 			int childResultsSetCount = 0;
 			int childCount = 0;
 			for (List<IExtractionResults> children : ((IExtractionResultsContainer) results).getChildren()) {

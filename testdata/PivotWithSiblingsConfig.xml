@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<m:MappingConfiguration xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<m:MappingList name="PivotWithSiblingsOutput" mappingRoot="families/family/record">
+		<m:Mapping name="surname" xPath="../surname" />
+		<m:Mapping name="members" xPath="count(../record)" />
+		<m:PivotMapping name="MemberPivot" kvPairRoot="field" keyXPath="@name" valueXPath="@value" behaviour="Lazy" />
+	</m:MappingList>
+</m:MappingConfiguration>

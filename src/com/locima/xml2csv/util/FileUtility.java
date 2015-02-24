@@ -195,9 +195,19 @@ public class FileUtility {
 	 */
 	public static List<File> getFiles(String fileSpec) {
 		LOG.debug("Searching for files that match {}", fileSpec);
-		
 		List<File> files = new ArrayList<File>();
-		files.add(new File(fileSpec));
+
+		File file = new File(fileSpec);
+		if (!file.exists()) {
+			System.err.println("No files exist that match: {}" + fileSpec);
+		}
+		if (file.isDirectory()) {
+			LOG.info("Adding contents of directory: {}", fileSpec);
+			getFiles(files, file, true);
+		} else {
+			LOG.info("Adding single file: {}", fileSpec);
+			files.add(file);
+		}
 		return files;
 	}
 
@@ -228,6 +238,5 @@ public class FileUtility {
 	 */
 	private FileUtility() {
 	}
-	
-	
+
 }

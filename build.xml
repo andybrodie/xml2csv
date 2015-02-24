@@ -157,12 +157,12 @@
 			</bottom>
 		</javadoc>
 	</target>
-	<target name="update-build.properties">
+	<target name="update-build.properties" description="Updates or creates the file src/META-INF/build.properties which contains information used by the packaged program to track version.">
 		<!-- Get the short commit hash from Git -->
 		<exec executable="git.exe" outputproperty="commitHash">
 			<arg value="log" />
 			<arg value="-1" />
-			<arg value="--pretty=format:%h"/>
+			<arg value="--pretty=format:%h" />
 		</exec>
 
 		<!-- Get the tag name -->
@@ -184,7 +184,7 @@
 			<entry key="BuildTimeStamp" value="${buildTimeStamp}" />
 		</propertyfile>
 	</target>
-	
+
 	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc" description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
 
 </project>

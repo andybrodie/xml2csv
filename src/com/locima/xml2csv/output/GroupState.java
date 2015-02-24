@@ -108,6 +108,7 @@ public class GroupState {
 		while (state != null) {
 			LOG.trace("{}: {}", count, state);
 			state = state.next;
+			count++;
 		}
 		LOG.trace("GroupStates END");
 	}

@@ -75,7 +75,7 @@ public class TestHelpers {
 		String[] actual = loadFile(actualFile);
 
 		int lineNo = 1;
-		StringBuilder actualDump = new StringBuilder("Actual output as follows:\n");
+		StringBuilder actualDump = new StringBuilder("Actual output of " + actualFile.getName() + " as follows:\n");
 		for (String actualLine : actual) {
 			actualDump.append(String.format("%d: %s\n", lineNo, actualLine));
 			lineNo++;

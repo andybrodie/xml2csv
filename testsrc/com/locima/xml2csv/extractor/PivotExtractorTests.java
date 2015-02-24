@@ -62,5 +62,5 @@ public class PivotExtractorTests {
 		om.close();
 		assertCsvEquals("SimplePivotOutput.csv", outputDir, "pivot.csv");
 	}
-
+	
 }

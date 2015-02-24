@@ -84,7 +84,7 @@ public class PivotMapping extends AbstractMappingContainer implements IMappingCo
 			pkm.setName(keyName);
 			pkm.setNameFormat(getNameFormat());
 			pkm.setGroupNumber(getGroupNumber() + 1);
-			pkm.setMultiValueBehaviour(getMultiValueBehaviour());
+			pkm.setMultiValueBehaviour(MultiValueBehaviour.GREEDY);
 			pkm.setValueXPath(getValueXPath());
 			pkm.setMinValueCount(getMinValueCount());
 			pkm.setMaxValueCount(getMaxValueCount());

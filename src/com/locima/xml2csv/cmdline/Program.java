@@ -211,6 +211,7 @@ public class Program {
 		if (LOG.isInfoEnabled()) {
 			LOG.info("xml2csv execute invoked {}", StringUtil.toString(args));
 		}
+
 		Options options = getOptions();
 
 		try {
@@ -230,12 +231,9 @@ public class Program {
 			String configFileName = cmdLine.getOptionValue(OPT_CONFIG_FILE);
 			execute(configFileName, xmlDirName, outputDirName, appendOutput, trimWhitespace);
 		} catch (ProgramException pe) {
+			LOG.error("A fatal error caused xml2csv to abort", pe);
 			// All we can do is print out the error and terminate the program
-			System.err.println(pe.getMessage());
-			Throwable cause = pe.getCause();
-			if (cause != null) {
-				System.err.println(cause.getMessage());
-			}
+			System.err.print(getAllCauses(pe));
 		} catch (ParseException pe) {
 			// Thrown when the command line arguments are invalid
 			LOG.debug("Invalid arguments specified: {}", pe.getMessage());
@@ -244,6 +242,41 @@ public class Program {
 			formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe -jar " + getExecutableName(), createHeader(), options, 0,
 							0, null, true);
 		}
+	}
+
+	/**
+	 * Prints all the causes of the exception passed, regardless of how many there are nested within it.
+	 *
+	 * @param t the exception to print the causes of.
+	 * @return a string, usually sent to {@link System#err}.
+	 */
+	public String getAllCauses(Throwable t) {
+		if (t == null) {
+			return null;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		List<Throwable> seen = new ArrayList<Throwable>();
+		List<String> messages = new ArrayList<String>();
+		String message = t.getMessage();
+		sb.append(String.format("%s%n", message));
+		messages.add(message);
+		Throwable cause = t.getCause();
+		while (cause != null) {
+			message = cause.getMessage();
+			if (!messages.contains(message)) {
+				messages.add(message);
+				sb.append(String.format("Because: %s%n", message));
+			}
+			cause = cause.getCause();
+			// Stop infinite loops
+			if (seen.contains(cause)) {
+				cause = null;
+			} else {
+				seen.add(cause);
+			}
+		}
+		return sb.toString();
 	}
 
 	/**

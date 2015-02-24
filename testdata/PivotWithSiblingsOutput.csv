@@ -1,0 +1,8 @@
+surname,members,name,age,address,title,suffix
+Smith,4,Tom,32,Home,,
+Smith,4,Dick,20,Home,Dr,
+Smith,4,Harry,44,Away,Mr,
+Smith,4,John,10,,,Jr
+Jones,3,Jane,11,Home,,
+Jones,3,Jenny,44,Home,Miss,
+Jones,3,Harriet,24,Away,Mrs,

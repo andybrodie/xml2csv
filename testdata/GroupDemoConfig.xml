@@ -8,19 +8,19 @@
 		<m:Mapping xPath="interests/interest"/>
 	</m:MappingList>
 
-	<m:MappingList name="GroupDemo2" mappingRoot="root">
-		<m:Mapping xPath="names/name" group="1"/>
-		<m:Mapping xPath="interests/interest" group="2"/>
+	<m:MappingList name="GroupDemo2" mappingRoot="root" group="10" >
+		<m:Mapping xPath="names/name" group="11"/>
+		<m:Mapping xPath="interests/interest" group="12"/>
 	</m:MappingList>
 
-	<m:MappingList name="GroupDemo3" mappingRoot="root">
-		<m:Mapping xPath="names/name" group="2" />
-		<m:Mapping xPath="interests/interest" group="1"/>
+	<m:MappingList name="GroupDemo3" mappingRoot="root" group="20">
+		<m:Mapping xPath="names/name" group="22" />
+		<m:Mapping xPath="interests/interest" group="21"/>
 	</m:MappingList>
 
-	<m:MappingList name="GroupDemo4" mappingRoot="root">
-		<m:Mapping xPath="names/name" group="1" behaviour="Greedy"/>
-		<m:Mapping xPath="interests/interest" group="2"/>
+	<m:MappingList name="GroupDemo4" mappingRoot="root" group="30">
+		<m:Mapping xPath="names/name" group="31" behaviour="Greedy"/> <!-- Group 31 will be ignored as behaviour is Greedy -->
+		<m:Mapping xPath="interests/interest" group="32"/>
 	</m:MappingList>
 
 </m:MappingConfiguration>

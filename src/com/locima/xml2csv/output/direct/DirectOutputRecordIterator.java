@@ -148,12 +148,12 @@ public class DirectOutputRecordIterator implements Iterator<List<String>> {
 			// If there's no results for this mapping config, add empty fields, otherwise add real fields
 			if (childResults == null) {
 				if (LOG.isInfoEnabled()) {
-					LOG.info("There are no results for greedy mapping[{}]({}), so adding empty fields", mappingIndex, childMapping);
+					LOG.info("There are no results for mapping[{}]({}), so adding empty fields", mappingIndex, childMapping);
 				}
 				addEmptyCsvFields(csvFields, childMapping, 0);
 			} else {
 				if (LOG.isInfoEnabled()) {
-					LOG.info("Adding fields for greedy mapping[{}]({})", mappingIndex, childMapping);
+					LOG.info("Adding fields for mapping[{}]({})", mappingIndex, childMapping);
 				}
 				createCsvValues(csvFields, childResults);
 			}
