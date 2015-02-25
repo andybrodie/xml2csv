@@ -30,7 +30,9 @@ import com.locima.xml2csv.util.StringUtil;
 /**
  * Used to manage the evaluation and storage of results of an {@link PivotMapping} instance.
  */
+// CHECKSTYLE:OFF Class fan-out complexity (number of referenced classes) is high, but reducing would make overall program more complex.
 public class PivotExtractionContext extends AbstractExtractionContext implements IExtractionResultsContainer {
+	// CHECKSTYLE:ON
 
 	private static final Logger LOG = LoggerFactory.getLogger(PivotExtractionContext.class);
 
@@ -68,8 +70,8 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	}
 
 	/**
-	 * Creates or re-uses an existing {@link MappingExtractionContext} that is dynamically created, along with its child {@link Mapping} to
-	 * hold the values extracted form the XML.
+	 * Creates or re-uses an existing {@link MappingExtractionContext} that is dynamically created, along with its child {@link Mapping} to hold the
+	 * values extracted form the XML.
 	 *
 	 * @param baseName the name of the key. All values found for keys with the same name are added to the same MEC.
 	 * @param positionRelativeToOtherRootNodes the index of the new context, with respect to its siblings (first child of the parent has index 0,
@@ -90,10 +92,12 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	 * Evaluate this pivot mapping but executing the value extracting XPath for every key found by executing the base name XPath.
 	 *
 	 * @param rootNode the context node from which to execute the key-finding XPath expression.
+	 * @param eCtx the evaluation context from the container that can be used to make more information available to the evaluation of this mapping.
+	 *            May be null.
 	 * @throws DataExtractorException if anything goes wrong finding the field definitions.
 	 */
 	@Override
-	public void evaluate(XdmNode rootNode, EvaluationContext ctx) throws DataExtractorException {
+	public void evaluate(XdmNode rootNode, EvaluationContext eCtx) throws DataExtractorException {
 		this.children = new ArrayList<List<IExtractionResults>>();
 		XPathValue mappingRoot = this.mapping.getMappingRoot();
 		// If there's no mapping root expression, use the passed node as a single root

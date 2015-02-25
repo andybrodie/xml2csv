@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
-import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.util.XmlUtil;
 

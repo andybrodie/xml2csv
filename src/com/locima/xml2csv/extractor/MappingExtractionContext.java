@@ -79,6 +79,8 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	 * Evaluates this mapping, using the passed XML node as a root for all XPath statements.
 	 *
 	 * @param mappingRoot the XML node from which to execute all XPath statements contained within mappings. Must not be null.
+	 * @param eCtx the evaluation context from the container that can be used to make more information available to the evaluation of this mapping.
+	 *            May be null.
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>mappingRoot</code> specified).
 	 */

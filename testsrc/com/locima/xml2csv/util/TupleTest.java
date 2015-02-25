@@ -4,12 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-
 import org.junit.Test;
-
-import com.locima.xml2csv.XMLException;
-import com.locima.xml2csv.output.OutputManagerException;
 
 public class TupleTest {
 
@@ -26,8 +21,8 @@ public class TupleTest {
 		Tuple<String, String> t3 = new Tuple<String, String>("S2", "S1");
 		assertFalse(t1.equals(t3));
 		assertFalse(t3.equals(t1));
-		
-		assertEquals(new Tuple<Integer,Integer>(null,null), new Tuple<String,String>(null, null));
+
+		assertEquals(new Tuple<Integer, Integer>(null, null), new Tuple<String, String>(null, null));
 	}
 
 	@Test
@@ -39,10 +34,10 @@ public class TupleTest {
 		Tuple<String, String> t3 = new Tuple<String, String>(null, null);
 		t3.hashCode();
 	}
-	
+
 	@Test
 	public void testTupleToString() {
-		
+
 	}
-	
+
 }

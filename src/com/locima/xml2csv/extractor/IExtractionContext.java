@@ -32,9 +32,11 @@ public interface IExtractionContext extends IExtractionResults, Serializable {
 	 * Evaluates this context against the passed XML node to generate results.
 	 *
 	 * @param rootNode the node to execute the mapping against.
+	 * @param eCtx the evaluation context from a parent container that can be used to make more information available to the evaluation of this mapping.
+	 *            May be null.
 	 * @throws DataExtractorException if any errors occur during data extraction.
 	 */
-	void evaluate(XdmNode rootNode, EvaluationContext context) throws DataExtractorException;
+	void evaluate(XdmNode rootNode, EvaluationContext eCtx) throws DataExtractorException;
 
 	/**
 	 * Retrieves the name of the mapping (either {@link IMappingContainer#getName()} or {@link IValueMapping#getName()}.

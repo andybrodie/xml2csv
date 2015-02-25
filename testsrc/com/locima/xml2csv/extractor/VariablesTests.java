@@ -1,6 +1,7 @@
 package com.locima.xml2csv.extractor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.StringReader;
 import java.security.CodeSource;
@@ -22,8 +23,6 @@ import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmEmptySequence;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 
@@ -83,15 +82,15 @@ public class VariablesTests {
 		String xml = "<root><child attr=\"attr1\">value1</child><child attr=\"attr2\">value2</child></root>";
 		Processor processor = this.saxonProcessor;
 		XdmNode document = createFromString(xml);
-		
+
 		XPathCompiler xPathCompiler = processor.newXPathCompiler();
 		xPathCompiler.declareVariable(new QName("var1"), ItemType.STRING, OccurrenceIndicator.ZERO_OR_MORE);
 		XPathExecutable xPathExpr = xPathCompiler.compile("root/child[@attr=$var1]/text()");
 		XPathSelector xpathSelector = xPathExpr.load();
-		
+
 		XdmValue varValues = new XdmValue(new XdmAtomicValue("attr1"));
 		varValues = varValues.append(new XdmAtomicValue("attr2"));
-		
+
 		xpathSelector.setContextItem(document);
 
 		xpathSelector.setVariable(new QName("var1"), varValues);
@@ -99,7 +98,7 @@ public class VariablesTests {
 		assertEquals("value1", result.itemAt(0).getStringValue());
 		assertEquals("value2", result.itemAt(1).getStringValue());
 	}
-	
+
 	/**
 	 * Used for validate Saxon behaviour, not a real unit test of xml2csv.
 	 */
@@ -109,21 +108,21 @@ public class VariablesTests {
 		String xml = "<root><child attr=\"attr1\">value1</child><child attr=\"attr2\">value2</child></root>";
 		Processor processor = this.saxonProcessor;
 		XdmNode document = createFromString(xml);
-		
+
 		XPathCompiler xPathCompiler = processor.newXPathCompiler();
 		xPathCompiler.setAllowUndeclaredVariables(true);
-//		xPathCompiler.declareVariable(new QName("var1"), ItemType.STRING, OccurrenceIndicator.ZERO_OR_MORE);
+		// xPathCompiler.declareVariable(new QName("var1"), ItemType.STRING, OccurrenceIndicator.ZERO_OR_MORE);
 		XPathExecutable xPathExpr = xPathCompiler.compile("root/child[@attr=$var1]/text()");
 		XPathSelector xpathSelector = xPathExpr.load();
-		
+
 		XdmValue varValues = new XdmValue(new XdmAtomicValue("attr1"));
 		varValues = varValues.append(new XdmAtomicValue("attr2"));
-		
+
 		xpathSelector.setContextItem(document);
 		xpathSelector.setVariable(new QName("var1"), varValues);
 		XdmValue result = xpathSelector.evaluate();
 		assertEquals("value1", result.itemAt(0).getStringValue());
 		assertEquals("value2", result.itemAt(1).getStringValue());
 	}
-	
+
 }
