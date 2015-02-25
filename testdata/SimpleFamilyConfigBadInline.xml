@@ -2,7 +2,7 @@
 <m:MappingConfiguration
 	xmlns:m="http://locima.com/xml2csv/MappingConfiguration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<m:MappingList mappingRoot="/family" name="family" behaviour="Inline">
+	<m:MappingList mappingRoot="/family" name="family" behaviour="BadValue">
 		<m:Mapping name="Family" xPath="name" />
 		<m:Mapping name="Address" xPath="address" />
 	</m:MappingList>
