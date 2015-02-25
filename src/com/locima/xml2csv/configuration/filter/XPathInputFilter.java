@@ -57,4 +57,9 @@ public class XPathInputFilter extends FilterContainer {
 		return match;
 	}
 
+	@Override
+	public String toString() {
+		return "XPathInputFilter(\"" + this.xPath.getSource() + "\")";
+	}
+
 }

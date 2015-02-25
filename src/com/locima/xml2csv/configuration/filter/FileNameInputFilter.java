@@ -56,6 +56,6 @@ public class FileNameInputFilter extends FilterContainer {
 
 	@Override
 	public String toString() {
-		return String.format("FileNameInputFilter(%s)", this.pattern);
+		return "FileNameInputFilter(\"" + this.pattern + "\")";
 	}
 }

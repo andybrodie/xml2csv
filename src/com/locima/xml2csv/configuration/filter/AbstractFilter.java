@@ -76,4 +76,17 @@ public abstract class AbstractFilter implements IInputFilter {
 		this.alwaysExecute = alwaysExecute;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("AlwaysExecute(");
+		sb.append(this.alwaysExecute);
+		sb.append(")");
+		for (IInputFilter nestedFilter : this.nestedFilters) {
+			sb.append(", ");
+			sb.append(nestedFilter.toString());
+		}
+		return sb.toString();
+	}
+
 }

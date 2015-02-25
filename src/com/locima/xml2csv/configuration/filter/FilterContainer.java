@@ -22,5 +22,14 @@ public class FilterContainer extends AbstractFilter {
 	public boolean include(XdmNode inputXmlFileDocumentNode) throws DataExtractorException {
 		return executeNestedFilters(inputXmlFileDocumentNode);
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("FilterContainer(");
+		sb.append(super.toString());
+		sb.append(")");
+		return sb.toString();
+	}
+
 
 }
