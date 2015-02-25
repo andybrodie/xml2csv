@@ -1,16 +1,15 @@
 package com.locima.xml2csv.configuration;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmNode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.locima.xml2csv.extractor.DataExtractorException;
+import com.locima.xml2csv.extractor.XPathVariableBindings;
 import com.locima.xml2csv.util.EqualsUtil;
 
 /**
@@ -20,6 +19,7 @@ import com.locima.xml2csv.util.EqualsUtil;
  */
 public class XPathValue {
 
+	private static final Logger LOG = LoggerFactory.getLogger(XPathValue.class);
 	/**
 	 * A Saxon-compiled XPath statement.
 	 */
@@ -39,23 +39,6 @@ public class XPathValue {
 	public XPathValue(String xPathExpr, XPathExecutable xPath) {
 		this.xPathExpr = xPathExpr;
 		this.compiledXPath = xPath;
-	}
-
-	/**
-	 * Binds a set of variables in to the passed selector.
-	 * 
-	 * @param selector the selector to bind the variable values to. Must not be null.
-	 * @param variableBindings the variables to bind, may be null or empty.
-	 * @throws SaxonApiException if any errors occur during binding (for example, attempting to bind an undeclared variable.
-	 */
-	private void bindVariables(XPathSelector selector, Map<QName, String> variableBindings) throws SaxonApiException {
-		if (variableBindings == null) {
-			return;
-		}
-		for (Entry<QName, String> binding : variableBindings.entrySet()) {
-			selector.setVariable(binding.getKey(), new XdmAtomicValue(binding.getValue()));
-		}
-
 	}
 
 	@Override
@@ -87,14 +70,17 @@ public class XPathValue {
 	 * Generates an XPathSelector (for evaluation) based on this instance, within the context of the passed element (must not be null).
 	 *
 	 * @param element the current node. Must not be null.
-	 * @param variableBindings a set of variable bindings to apply to this XPath evaluation. May be null or empty.
+	 * @param bindings a set of variable bindings to apply to this XPath evaluation. May be null or empty.
 	 * @return an XPathSelector which can be evaluated.
 	 * @throws DataExtractorException if an error occurs executing the XPath or creating the XPathSelector.
 	 */
-	public XPathSelector evaluate(XdmNode element, Map<QName, String> variableBindings) throws DataExtractorException {
+	public XPathSelector evaluate(XdmNode element, XPathVariableBindings bindings) throws DataExtractorException {
 		XPathSelector selector = this.compiledXPath.load();
 		try {
-			bindVariables(selector, variableBindings);
+			if (bindings != null) {
+				LOG.debug("Binding variables to \"{}\" evaluation", this.xPathExpr);
+				bindings.bindTo(selector);
+			}
 			selector.setContextItem(element);
 		} catch (SaxonApiException e) {
 			throw new DataExtractorException(e, "Error evaluating XPath %s", this.xPathExpr);

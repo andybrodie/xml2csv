@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.BugException;
-//CHECKSTYLE:OFF Checkstyle bug, this import is used in javadoc
+// CHECKSTYLE:OFF Checkstyle bug, this import is used in javadoc
 import com.locima.xml2csv.configuration.IMapping;
-//CHECKSTYLE:ON
+// CHECKSTYLE:ON
 import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResultsContainer;
@@ -85,7 +85,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 	// CHECKSTYLE:OFF Cyclomatic complexity limit up to 11, would be less but I need logging here and splitting would make more complex.
 	@Override
 	// CHECKSTYLE:ON
-	public void evaluate(XdmNode mappingRoot) throws DataExtractorException {
+	public void evaluate(XdmNode mappingRoot, EvaluationContext eCtx) throws DataExtractorException {
 		if (mappingRoot == null) {
 			throw new ArgumentNullException("mappingRoot");
 		}
@@ -104,7 +104,7 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 		// CHECKSTYLE:ON
 		int maxValueCount = thisMapping.getMaxValueCount();
 
-		XPathSelector selector = xPath.evaluate(mappingRoot);
+		XPathSelector selector = xPath.evaluate(mappingRoot, eCtx == null ? null : eCtx.getVariableBindings());
 		Iterator<XdmItem> resultIter = selector.iterator();
 		while (resultIter.hasNext()) {
 			// Add the next result to the list of values found, trimming whitespace if configured to do so.
@@ -113,6 +113,11 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 				value = value.trim();
 			}
 			values.add(value);
+
+			// Add the found value to the list of variable bindings, so this value can be used by other sibling mappings evaluated after this one.
+			if (eCtx != null) {
+				eCtx.getVariableBindings().addVariable(fieldName, value);
+			}
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Field \"{}\" found value({}) \"{}\" found after executing XPath \"{}\" (max: {})", fieldName, values.size(), value,
@@ -133,6 +138,11 @@ public class MappingExtractionContext extends AbstractExtractionContext implemen
 
 		// Keep track of the most number of results we've found for a single invocation
 		thisMapping.setHighestFoundValueCount(values.size());
+
+		// If no values were found by this mapping then I still need to add the variable with an empty value, or Saxon crashes.
+		if (values.isEmpty() && (eCtx != null)) {
+			eCtx.getVariableBindings().addVariable(fieldName);
+		}
 
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Adding values to {}: {}", thisMapping, StringUtil.collectionToString(values, ",", "\""));

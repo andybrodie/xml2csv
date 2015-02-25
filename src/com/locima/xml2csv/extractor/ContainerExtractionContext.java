@@ -88,11 +88,12 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 	 * </ol>
 	 *
 	 * @param rootNode the XML node against which to evaluate the mapping.
+	 * @param eCtx passed down evaluation context.  May be null.  Currently unused in {@link ContainerExtractionContext}s.
 	 * @throws DataExtractorException if an error occurred whilst extracting data (typically this would be caused by bad XPath, or XPath invalid from
 	 *             the <code>rootNode</code> specified).
 	 */
 	@Override
-	public void evaluate(XdmNode rootNode) throws DataExtractorException {
+	public void evaluate(XdmNode rootNode, EvaluationContext eCtx) throws DataExtractorException {
 		XPathValue mappingRoot = this.mapping.getMappingRoot();
 		// If there's no mapping root expression, use the passed node as a single root
 		int rootCount = 0;
@@ -136,10 +137,13 @@ public class ContainerExtractionContext extends AbstractExtractionContext implem
 		}
 		int positionRelativeToIMappingSiblings = 0;
 		List<IExtractionResults> iterationECs = new ArrayList<IExtractionResults>(size());
+		
+		EvaluationContext childECtx = new EvaluationContext();
+		
 		for (IMapping childMapping : this.mapping) {
 			IExtractionContext childCtx =
 							AbstractExtractionContext.create(this, childMapping, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
-			childCtx.evaluate(node);
+			childCtx.evaluate(node, childECtx);
 
 			// Only add a CEC or MEC to the collection if it's not empty.
 			if (childCtx.size() > 0) {

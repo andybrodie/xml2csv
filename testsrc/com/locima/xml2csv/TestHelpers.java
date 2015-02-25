@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.cmdline.Program;
+import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
@@ -40,11 +41,6 @@ public class TestHelpers {
 
 	public static final String RES_DIR = "testdata";
 
-	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, String valueXPath,
-					int minValueCount, int maxValueCount) throws XMLException {
-		return addMapping(mappings, name, groupNumber, mvb, XmlUtil.createXPathValue(valueXPath), minValueCount, maxValueCount);
-	}
-
 	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, XPathValue valueXPath,
 					int minValueCount, int maxValueCount) throws XMLException {
 		Mapping mapping = new Mapping();
@@ -53,21 +49,39 @@ public class TestHelpers {
 		mapping.setNameFormat(NameFormat.NO_COUNTS);
 		mapping.setGroupNumber(groupNumber);
 		mapping.setMultiValueBehaviour(mvb);
-		mapping.setValueXPath(valueXPath);
 		mapping.setMinValueCount(minValueCount);
 		mapping.setMaxValueCount(maxValueCount);
+		mapping.setValueXPath(valueXPath);
+
 		if (mappings != null) {
 			mappings.add(mapping);
 		}
+
 		return mapping;
 	}
 
-	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, String valueXPathExpressionValue) throws XMLException {
-		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, XmlUtil.createXPathValue(valueXPathExpressionValue), 0, 0);
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, String valueXPathExpression) throws XMLException {
+
+		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY,
+						valueXPathExpression, 0, 0);
 	}
 
-	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, XPathValue valueXPathExpression) throws XMLException {
-		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, valueXPathExpression, 0, 0);
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, String valueXPath,
+					int minValueCount, int maxValueCount) throws XMLException {
+		List<String> params = new ArrayList<String>();
+		if (mappings != null) {
+			for (IMapping siblingMapping : mappings) {
+				params.add(siblingMapping.getName());
+			}
+		
+		}
+		XPathValue xpv = XmlUtil.createXPathValue(null, valueXPath, params.toArray(new String[0]));
+		return addMapping(mappings, name, groupNumber, mvb, xpv, minValueCount, maxValueCount);
+		
+	}
+	
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, XPathValue valueXPath) throws XMLException {
+		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, valueXPath, 0, 0);
 	}
 
 	public static void assertCsvEquals(File expectedFile, File actualFile) throws Exception {
@@ -155,7 +169,7 @@ public class TestHelpers {
 		List<String> params = new ArrayList<String>();
 
 		params.add("-" + Program.OPT_APPEND_OUTPUT);
-		
+
 		params.add("-" + Program.OPT_CONFIG_FILE);
 		params.add(createFile(configurationFile).getAbsolutePath());
 
@@ -172,9 +186,9 @@ public class TestHelpers {
 
 		params.add("-" + Program.OPT_XML_DIR);
 		params.add("REPLACE");
-		
+
 		String[] paramsArray = params.toArray(new String[0]);
-		int inputParamIndex = paramsArray.length-1;
+		int inputParamIndex = paramsArray.length - 1;
 		for (int i = 0; i < inputFileNames.length; i++) {
 			paramsArray[inputParamIndex] = TestHelpers.RES_DIR + File.separatorChar + inputFileNames[i];
 			LOG.info("Executing xml2csv with parameters: {} ", StringUtil.toStringList(paramsArray));

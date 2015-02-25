@@ -34,7 +34,7 @@ public interface IExtractionContext extends IExtractionResults, Serializable {
 	 * @param rootNode the node to execute the mapping against.
 	 * @throws DataExtractorException if any errors occur during data extraction.
 	 */
-	void evaluate(XdmNode rootNode) throws DataExtractorException;
+	void evaluate(XdmNode rootNode, EvaluationContext context) throws DataExtractorException;
 
 	/**
 	 * Retrieves the name of the mapping (either {@link IMappingContainer#getName()} or {@link IValueMapping#getName()}.

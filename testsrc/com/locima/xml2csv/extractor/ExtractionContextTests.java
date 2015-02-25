@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
+import com.locima.xml2csv.configuration.XPathValue;
 import com.locima.xml2csv.output.IExtractionResults;
 import com.locima.xml2csv.util.XmlUtil;
 
@@ -111,7 +112,8 @@ public class ExtractionContextTests {
 
 	private ContainerExtractionContext evaluate(MappingList mappings, XdmNode testDoc) throws DataExtractorException {
 		ContainerExtractionContext ctx = new ContainerExtractionContext(mappings, 0, 0);
-		ctx.evaluate(testDoc);
+		EvaluationContext eCtx = new EvaluationContext();
+		ctx.evaluate(testDoc, eCtx);
 		return ctx;
 	}
 
@@ -328,8 +330,8 @@ public class ExtractionContextTests {
 		MappingList mappings = new MappingList();
 		mappings.setMultiValueBehaviour(MultiValueBehaviour.LAZY);
 		addMapping(mappings, "Name", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:name"));
-		addMapping(mappings, "Age", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:age"));
-		addMapping(mappings, "Address", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:address"));
+		addMapping(mappings, "Age", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:age", "Name"));
+		addMapping(mappings, "Address", 1, XmlUtil.createXPathValue(prefixUriMap, "/a:person/b:address", "Name", "Age"));
 		mappings.setName("Test");
 
 		XdmNode testDoc =

@@ -93,7 +93,7 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 	 * @throws DataExtractorException if anything goes wrong finding the field definitions.
 	 */
 	@Override
-	public void evaluate(XdmNode rootNode) throws DataExtractorException {
+	public void evaluate(XdmNode rootNode, EvaluationContext ctx) throws DataExtractorException {
 		this.children = new ArrayList<List<IExtractionResults>>();
 		XPathValue mappingRoot = this.mapping.getMappingRoot();
 		// If there's no mapping root expression, use the passed node as a single root
@@ -159,7 +159,8 @@ public class PivotExtractionContext extends AbstractExtractionContext implements
 			} else {
 				LOG.debug("Found pivot mapping key {}", keyName);
 				MappingExtractionContext childCtx = ensureMec(keyName, positionRelativeToOtherRootNodes, positionRelativeToIMappingSiblings);
-				childCtx.evaluate(kvNode);
+				// TODO Decide whether there is a case for passing a context through to KVNode
+				childCtx.evaluate(kvNode, null);
 				positionRelativeToIMappingSiblings++;
 				iterationECs.add(childCtx);
 			}

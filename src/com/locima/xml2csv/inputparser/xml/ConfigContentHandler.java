@@ -1,5 +1,7 @@
 package com.locima.xml2csv.inputparser.xml;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.regex.PatternSyntaxException;
@@ -15,7 +17,9 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.locima.xml2csv.ArgumentNullException;
 import com.locima.xml2csv.XMLException;
+import com.locima.xml2csv.configuration.IMapping;
 import com.locima.xml2csv.configuration.IMappingContainer;
+import com.locima.xml2csv.configuration.IValueMapping;
 import com.locima.xml2csv.configuration.Mapping;
 import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
@@ -115,8 +119,9 @@ public class ConfigContentHandler extends DefaultHandler {
 			fieldName = name;
 		}
 		XPathValue compiledXPath;
+		String[] availableVariables = getPreviousSiblingNames();
 		try {
-			compiledXPath = XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), xPath);
+			compiledXPath = XmlUtil.createXPathValue(this.mappingConfiguration.getNamespaceMap(), xPath, availableVariables);
 		} catch (XMLException e) {
 			throw getException(e, "Unable to add field %s as there was a problem with the XPath value \"%s\"", name, xPath);
 		}
@@ -199,7 +204,7 @@ public class ConfigContentHandler extends DefaultHandler {
 	// CHECKSTYLE:OFF Number of parameters is appropriate here, I'm not going to create separate methods or add complexity in to caller.
 	private void addPivotMapping(String name, String mappingRootSource, String kvPairRootSource, String keyXPathSource, String valueXPathSource,
 					String templateNameFormatName, String customTemplateNameFormat, Integer groupNumber, String multiValueBehaviour)
-					throws SAXException {
+									throws SAXException {
 		// CHECKSTYLE:ON
 		MappingList parent = this.mappingListStack.isEmpty() ? null : this.mappingListStack.peek();
 		try {
@@ -336,6 +341,27 @@ public class ConfigContentHandler extends DefaultHandler {
 		} catch (NumberFormatException nfe) {
 			throw getException(nfe, "Invalid value for %s found: %s", attrName, attrValueAsString);
 		}
+	}
+
+	/**
+	 * Gets a list of the known child names of the parent container.  These are used as variable names, available in the XPath evaluation of subsequent
+	 * mappings with the same parent.
+	 * @return an array, possibly empty, of known siblings of the current mapping (as determined by the top of {@link #mappingListStack}.
+	 */
+	private String[] getPreviousSiblingNames() {
+		List<String> variables = new ArrayList<String>();
+		MappingList currentContainer = this.mappingListStack.peek();
+		for (IMapping m : currentContainer) {
+			if (m instanceof IValueMapping) {
+				IValueMapping vm = (IValueMapping) m;
+				variables.add(vm.getName());
+			}
+		}
+		String[] varArray = variables.toArray(new String[0]);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Created variable set for {}: {}", currentContainer.getName(), StringUtil.toStringList(varArray));
+		}
+		return varArray;
 	}
 
 	/**

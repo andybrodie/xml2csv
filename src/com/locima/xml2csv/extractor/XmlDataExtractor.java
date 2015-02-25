@@ -94,7 +94,7 @@ public class XmlDataExtractor {
 			} else {
 				ctx = new PivotExtractionContext((PivotMapping) mapping, 0, mappingSiblingIndex);
 			}
-			ctx.evaluate(xmlDoc);
+			ctx.evaluate(xmlDoc, null);
 			IExtractionResultsContainer results = (IExtractionResultsContainer) ctx;
 			outputManager.writeRecords(mapping.getName(), results);
 			if (LOG.isTraceEnabled()) {

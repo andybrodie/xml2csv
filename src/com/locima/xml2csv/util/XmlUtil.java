@@ -50,7 +50,7 @@ public class XmlUtil {
 					throws XMLException {
 		// Need to construct a new compiler because the set of namespaces is (potentially) unique to the expression.
 		// We could cache a set of compilers, but I doubt it's worth it.
-		XPathCompiler xPathCompiler = XmlUtil.getProcessor().newXPathCompiler();
+		XPathCompiler xPathCompiler = getProcessor().newXPathCompiler();
 		for (String parameter : parameters) {
 			try {
 				xPathCompiler.declareVariable(new QName(parameter), ItemType.STRING, OccurrenceIndicator.ZERO_OR_MORE);
@@ -85,8 +85,8 @@ public class XmlUtil {
 	 */
 	public static XPathValue createXPathValue(Map<String, String> namespaceMappings, String xPathExpression, String... variableNames)
 					throws XMLException {
-		return xPathExpression == null ? null
-						: new XPathValue(xPathExpression, createXPathExecutable(namespaceMappings, xPathExpression, variableNames));
+		return xPathExpression == null ? null : new XPathValue(xPathExpression, createXPathExecutable(namespaceMappings, xPathExpression,
+						variableNames));
 	}
 
 	/**
