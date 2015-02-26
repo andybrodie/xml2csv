@@ -89,22 +89,22 @@ public class Program {
 	 */
 	public static Options getOptions() {
 		Options options = new Options();
-		Option option = new Option(OPT_CONFIG_FILE, "configurationFile", true, "A single file containing the configuration to use.");
+		Option option = new Option(OPT_CONFIG_FILE, "configuration-file", true, "A single file containing the configuration to use.");
 		option.setRequired(true);
 		options.addOption(option);
 		// Don't ask me why it's formatted like this, blame Eclipse Luna!
 		option =
-						new Option(OPT_OUT_DIR, "outputDirectory", true, "The directory to which the output CSV files will be written.  "
+						new Option(OPT_OUT_DIR, "output-directory", true, "The directory to which the output CSV files will be written.  "
 										+ "If not specified, current working directory will be used.  Directory must exist and be writeable.");
 		options.addOption(option);
 		option =
-						new Option(OPT_TRIM_WHITESPACE, "preserveWhitespace", false,
+						new Option(OPT_TRIM_WHITESPACE, "preserve-whitespace", false,
 										"If specified then whitespace will not be removed from the start and end of output fields.");
 		options.addOption(option);
 		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
 		options.addOption(option);
 		option =
-						new Option(OPT_APPEND_OUTPUT, "appendOutput", false,
+						new Option(OPT_APPEND_OUTPUT, "append-output", false,
 										"If specified, all output will be appended to any existing output files.  If an existing file is"
 														+ " appended to then field names will not be output.");
 		options.addOption(option);
