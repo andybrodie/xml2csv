@@ -12,8 +12,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.locima.xml2csv.cmdline.Program;
-
 public class ProgramTests {
 
 	@BeforeClass
@@ -30,7 +28,7 @@ public class ProgramTests {
 
 	@Test
 	public void test() throws Exception {
-		Program p = new Program();
+		Xml2Csv xml2csv = new Xml2Csv();
 		List<File> configFiles = new ArrayList<File>();
 		configFiles.add(TestHelpers.createFile("SimpleFamilyConfig.xml"));
 
@@ -41,7 +39,7 @@ public class ProgramTests {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 
-		p.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), false, true);
+		xml2csv.execute(configFiles, inputFiles, outputFolder.getRoot().getAbsoluteFile(), false, true);
 
 		assertCsvEquals("SimpleFamilyOutput1.csv", outputFolder.getRoot(), "family.csv");
 		assertCsvEquals("SimpleFamilyOutput2.csv", outputFolder.getRoot(), "people.csv");

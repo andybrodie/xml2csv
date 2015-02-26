@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import net.sf.saxon.s9api.XdmNode;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,21 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.locima.xml2csv.ProgramException;
-import com.locima.xml2csv.configuration.MappingConfiguration;
-import com.locima.xml2csv.extractor.XmlDataExtractor;
-import com.locima.xml2csv.inputparser.IConfigParser;
-import com.locima.xml2csv.inputparser.xml.XmlFileParser;
-import com.locima.xml2csv.output.OutputManager;
+import com.locima.xml2csv.Xml2Csv;
 import com.locima.xml2csv.util.FileUtility;
 import com.locima.xml2csv.util.StringUtil;
-import com.locima.xml2csv.util.XmlUtil;
 
 /**
- * Main entry point and logic for the command line application.
+ * Main entry point and parameter parsing logic for the command line application.
  */
-// CHECKSTYLE:OFF Class Data Abstraction Coupling. This is the entry point where all program logic is brought together.
 public class Program {
-	// CHECKSTYLE:ON
 
 	/**
 	 * The console width to wrap the command line help and errors to, hardcoded to {@value} .
@@ -77,11 +68,6 @@ public class Program {
 	public static final String OPT_TRIM_WHITESPACE = "w";
 
 	/**
-	 * Command line option for specifying the input directory or filenames to convert: {@value} .
-	 */
-	public static final String OPT_XML_DIR = "i";
-
-	/**
 	 * The name of the property within META-INF/build.properties that contains the timestamp of this build: {@value} .
 	 */
 	private static final String PROPERTY_BUILD_TSTAMP = "BuildTimeStamp";
@@ -95,6 +81,35 @@ public class Program {
 	 * The name of the property within META-INF/build.properties that contains the version number of this build: {@value} .
 	 */
 	private static final String PROPERTY_VERSION = "Version";
+
+	/**
+	 * Generates the options that define the command line arguments to this program.
+	 *
+	 * @return parsed command line arguments.
+	 */
+	public static Options getOptions() {
+		Options options = new Options();
+		Option option = new Option(OPT_CONFIG_FILE, "configurationFile", true, "A single file containing the configuration to use.");
+		option.setRequired(true);
+		options.addOption(option);
+		// Don't ask me why it's formatted like this, blame Eclipse Luna!
+		option =
+						new Option(OPT_OUT_DIR, "outputDirectory", true, "The directory to which the output CSV files will be written.  "
+										+ "If not specified, current working directory will be used.  Directory must exist and be writeable.");
+		options.addOption(option);
+		option =
+						new Option(OPT_TRIM_WHITESPACE, "preserveWhitespace", false,
+										"If specified then whitespace will not be removed from the start and end of output fields.");
+		options.addOption(option);
+		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
+		options.addOption(option);
+		option =
+						new Option(OPT_APPEND_OUTPUT, "appendOutput", false,
+										"If specified, all output will be appended to any existing output files.  If an existing file is"
+														+ " appended to then field names will not be output.");
+		options.addOption(option);
+		return options;
+	}
 
 	/**
 	 * Entry point for the command line execution.
@@ -125,67 +140,19 @@ public class Program {
 	}
 
 	/**
-	 * Entry point for code-based execution with all required inputs precisely defined.
-	 *
-	 * @param configFiles A ist of configuration files that define the mappings from XML to CSV. Must not be null.
-	 * @param xmlInputFiles A list of XML input files that should be processed against the <code>configFiles</code>. Must not be null.
-	 * @param outputDirectory The directory to which output CSV files should be written. Assumes to exist and be writeable.
-	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
-	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
-	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
-	 */
-	public void execute(List<File> configFiles, List<File> xmlInputFiles, File outputDirectory, boolean appendOutput, boolean trimWhitespace)
-					throws ProgramException {
-
-		LOG.info("Parsing all the input configuration files to create mapping definitions.");
-		IConfigParser configParser = new XmlFileParser();
-		configParser.load(configFiles);
-		MappingConfiguration mappingConfig = configParser.getMappings();
-
-		// Create headers for all the output files
-		OutputManager outputMgr = new OutputManager();
-		try {
-			outputMgr.initialise(outputDirectory, mappingConfig, appendOutput);
-
-			// Parse the input XML files
-			XmlDataExtractor extractor = new XmlDataExtractor();
-			extractor.setMappingConfiguration(mappingConfig);
-
-			// Iterate over all files that pass filters and write out all the records to the output, managed by the OutputManager
-			for (File xmlFile : xmlInputFiles) {
-				if (mappingConfig.include(xmlFile)) {
-					XdmNode docToConvert = XmlUtil.loadXmlFile(xmlFile);
-					if (mappingConfig.include(docToConvert)) {
-						extractor.extractTo(docToConvert, outputMgr);
-					} else {
-						LOG.debug("Excluding {} due to document content filters", xmlFile.getAbsolutePath());
-					}
-				} else {
-					LOG.debug("Excluding {} due to file filters", xmlFile.getAbsolutePath());
-				}
-			}
-		} finally {
-			/*
-			 * No matter what happens, attempt to close all the OutputManager resources so at least we won't leave resources open.
-			 */
-			outputMgr.close();
-		}
-	}
-
-	/**
 	 * Entry point for code-based execution that just has directory names for configuration and input.
 	 *
 	 * @param configFileName the configuration file name.
-	 * @param xmlInputSpecification a pattern that when expanded will contain a list of files.
+	 * @param xmlInputs a pattern that when expanded will contain a list of files.
 	 * @param outputDirectoryName The directory to which output CSV files should be written.
 	 * @param trimWhitespace If true, then whitespace at the beginning or end of a value extracted will be trimmed.
 	 * @param appendOutput If true, then all output will be appended to if an output file already exists.
 	 * @throws ProgramException if anything goes wrong that couldn't be recovered.
 	 */
-	public void execute(String configFileName, String xmlInputSpecification, String outputDirectoryName, boolean appendOutput, boolean trimWhitespace)
+	public void execute(String configFileName, String[] xmlInputs, String outputDirectoryName, boolean appendOutput, boolean trimWhitespace)
 					throws ProgramException {
 		List<File> xmlInputFiles;
-		xmlInputFiles = FileUtility.getFiles(xmlInputSpecification);
+		xmlInputFiles = FileUtility.getFiles(xmlInputs);
 		File outputDirectory;
 		try {
 			outputDirectory = FileUtility.getDirectory(outputDirectoryName, FileUtility.CAN_WRITE, true);
@@ -199,11 +166,11 @@ public class Program {
 		} catch (IOException ioe) {
 			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
 		}
-		execute(configFiles, xmlInputFiles, outputDirectory, appendOutput, trimWhitespace);
+		new Xml2Csv().execute(configFiles, xmlInputFiles, outputDirectory, appendOutput, trimWhitespace);
 	}
 
 	/**
-	 * Main logic for the utility.
+	 * Instance entry point for command line invocation.
 	 *
 	 * @param args command line arguments
 	 */
@@ -226,10 +193,10 @@ public class Program {
 			LOG.trace("Arguments verified.");
 			boolean trimWhitespace = Boolean.parseBoolean(cmdLine.getOptionValue(OPT_TRIM_WHITESPACE));
 			boolean appendOutput = Boolean.parseBoolean(cmdLine.getOptionValue(OPT_APPEND_OUTPUT));
-			String xmlDirName = cmdLine.getOptionValue(OPT_XML_DIR);
+			String[] xmlInputs = cmdLine.getArgs();
 			String outputDirName = cmdLine.getOptionValue(OPT_OUT_DIR);
 			String configFileName = cmdLine.getOptionValue(OPT_CONFIG_FILE);
-			execute(configFileName, xmlDirName, outputDirName, appendOutput, trimWhitespace);
+			execute(configFileName, xmlInputs, outputDirName, appendOutput, trimWhitespace);
 		} catch (ProgramException pe) {
 			LOG.error("A fatal error caused xml2csv to abort", pe);
 			// All we can do is print out the error and terminate the program
@@ -246,22 +213,27 @@ public class Program {
 
 	/**
 	 * Prints all the causes of the exception passed, regardless of how many there are nested within it.
+	 * <p>
+	 * This method keeps track of every exception that it has seen (to ensure we don't end up in a recursive loop). It also won't repeat any messages
+	 * that have been printed before (duplicate messages inside nested exceptions) because it's pointless for the user.
 	 *
-	 * @param t the exception to print the causes of.
+	 * @param throwable the exception to print the causes of.
 	 * @return a string, usually sent to {@link System#err}.
 	 */
-	public String getAllCauses(Throwable t) {
-		if (t == null) {
+	public String getAllCauses(Throwable throwable) {
+		if (throwable == null) {
 			return null;
 		}
 
 		StringBuilder sb = new StringBuilder();
+		// Stores exceptions we have seen already
 		List<Throwable> seen = new ArrayList<Throwable>();
+		// Stores messages that we have seen already
 		List<String> messages = new ArrayList<String>();
-		String message = t.getMessage();
+		String message = throwable.getMessage();
 		sb.append(String.format("%s%n", message));
 		messages.add(message);
-		Throwable cause = t.getCause();
+		Throwable cause = throwable.getCause();
 		while (cause != null) {
 			message = cause.getMessage();
 			if (!messages.contains(message)) {
@@ -335,37 +307,5 @@ public class Program {
 			path = defaultPath;
 		}
 		return path;
-	}
-
-	/**
-	 * Generates the options that define the command line arguments to this program.
-	 *
-	 * @return parsed command line arguments.
-	 */
-	public Options getOptions() {
-		Options options = new Options();
-		Option option = new Option(OPT_CONFIG_FILE, "configFile", true, "A single file containing the configuration to use.");
-		option.setRequired(true);
-		options.addOption(option);
-		option = new Option(OPT_XML_DIR, "inputDir", true, "The directory containing the XML files from which data will be extracted.");
-		option.setRequired(true);
-		options.addOption(option);
-		// Don't ask me why it's formatted like this, blame Eclipse Luna!
-		option =
-						new Option(OPT_OUT_DIR, "outDir", true, "The directory to which the output CSV files will be written.  "
-										+ "If not specified, current working directory will be used.");
-		options.addOption(option);
-		option =
-						new Option(OPT_TRIM_WHITESPACE, "preserveWhitespace", false,
-										"If specified then whitespace will not be removed from either end of values found.");
-		options.addOption(option);
-		option = new Option(OPT_HELP, "help", false, "If specified, prints this message and terminates immediately.");
-		options.addOption(option);
-		option =
-						new Option(OPT_APPEND_OUTPUT, "append-output", false,
-										"If specified, all output will be appended to any existing output files.  If an existing file is"
-														+ " appended to then field names will not be output.");
-		options.addOption(option);
-		return options;
 	}
 }

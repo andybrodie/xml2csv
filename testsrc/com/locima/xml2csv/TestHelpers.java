@@ -41,6 +41,20 @@ public class TestHelpers {
 
 	public static final String RES_DIR = "testdata";
 
+	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, String valueXPath,
+					int minValueCount, int maxValueCount) throws XMLException {
+		List<String> params = new ArrayList<String>();
+		if (mappings != null) {
+			for (IMapping siblingMapping : mappings) {
+				params.add(siblingMapping.getName());
+			}
+
+		}
+		XPathValue xpv = XmlUtil.createXPathValue(null, valueXPath, params.toArray(new String[0]));
+		return addMapping(mappings, name, groupNumber, mvb, xpv, minValueCount, maxValueCount);
+
+	}
+
 	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, XPathValue valueXPath,
 					int minValueCount, int maxValueCount) throws XMLException {
 		Mapping mapping = new Mapping();
@@ -62,24 +76,9 @@ public class TestHelpers {
 
 	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, String valueXPathExpression) throws XMLException {
 
-		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY,
-						valueXPathExpression, 0, 0);
+		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, valueXPathExpression, 0, 0);
 	}
 
-	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, MultiValueBehaviour mvb, String valueXPath,
-					int minValueCount, int maxValueCount) throws XMLException {
-		List<String> params = new ArrayList<String>();
-		if (mappings != null) {
-			for (IMapping siblingMapping : mappings) {
-				params.add(siblingMapping.getName());
-			}
-		
-		}
-		XPathValue xpv = XmlUtil.createXPathValue(null, valueXPath, params.toArray(new String[0]));
-		return addMapping(mappings, name, groupNumber, mvb, xpv, minValueCount, maxValueCount);
-		
-	}
-	
 	public static Mapping addMapping(MappingList mappings, String name, int groupNumber, XPathValue valueXPath) throws XMLException {
 		return addMapping(mappings, name, groupNumber, MultiValueBehaviour.LAZY, valueXPath, 0, 0);
 	}
@@ -146,7 +145,7 @@ public class TestHelpers {
 	}
 
 	public static TemporaryFolder processFiles(String configurationFile, String... inputFileNames) throws IOException, ProgramException {
-		Program p = new Program();
+		new Program();
 		List<File> configFiles = new ArrayList<File>();
 		configFiles.add(createFile(configurationFile));
 		List<File> xmlInputFiles = new ArrayList<File>();
@@ -157,7 +156,7 @@ public class TestHelpers {
 		TemporaryFolder outputFolder = new TemporaryFolder();
 		outputFolder.create();
 		File outputDirectory = outputFolder.getRoot();
-		p.execute(configFiles, xmlInputFiles, outputDirectory, false, true);
+		new Xml2Csv().execute(configFiles, xmlInputFiles, outputDirectory, false, true);
 
 		return outputFolder;
 
@@ -184,13 +183,12 @@ public class TestHelpers {
 		params.add("-" + Program.OPT_OUT_DIR);
 		params.add(outputDirectory.getAbsolutePath());
 
-		params.add("-" + Program.OPT_XML_DIR);
 		params.add("REPLACE");
 
 		String[] paramsArray = params.toArray(new String[0]);
 		int inputParamIndex = paramsArray.length - 1;
-		for (int i = 0; i < inputFileNames.length; i++) {
-			paramsArray[inputParamIndex] = TestHelpers.RES_DIR + File.separatorChar + inputFileNames[i];
+		for (String inputFileName : inputFileNames) {
+			paramsArray[inputParamIndex] = TestHelpers.RES_DIR + File.separatorChar + inputFileName;
 			LOG.info("Executing xml2csv with parameters: {} ", StringUtil.toStringList(paramsArray));
 			p.execute(paramsArray);
 		}

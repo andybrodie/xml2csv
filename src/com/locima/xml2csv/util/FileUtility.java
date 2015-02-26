@@ -190,23 +190,27 @@ public class FileUtility {
 	/**
 	 * Given a specification of a set of files, find all the matching files and return them.
 	 *
-	 * @param fileSpec a specification string that will match files.
+	 * @param inputs a specification string that will match files.
 	 * @return A (possibly empty) list of files.
 	 */
-	public static List<File> getFiles(String fileSpec) {
-		LOG.debug("Searching for files that match {}", fileSpec);
+	public static List<File> getFiles(String[] inputs) {
+		LOG.debug("Searching for files that match {}", StringUtil.toString(inputs));
 		List<File> files = new ArrayList<File>();
 
-		File file = new File(fileSpec);
-		if (!file.exists()) {
-			System.err.println("No files exist that match: {}" + fileSpec);
-		}
-		if (file.isDirectory()) {
-			LOG.info("Adding contents of directory: {}", fileSpec);
-			getFiles(files, file, true);
-		} else {
-			LOG.info("Adding single file: {}", fileSpec);
-			files.add(file);
+		for (String inputString : inputs) {
+
+			File file = new File(inputString);
+			if (!file.exists()) {
+				LOG.warn("No files exist that match: {}", inputString);
+			} else {
+				if (file.isDirectory()) {
+					LOG.info("Adding contents of directory: {}", inputString);
+					getFiles(files, file, true);
+				} else {
+					LOG.info("Adding single file: {}", inputString);
+					files.add(file);
+				}
+			}
 		}
 		return files;
 	}
