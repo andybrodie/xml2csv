@@ -129,7 +129,7 @@ public class FileUtility {
 	 */
 	public static File getDirectory(String name, int flags, boolean createIfNecessary) throws IOException {
 		File dir;
-		if (name==null) {
+		if (name == null) {
 			dir = new File(".");
 			LOG.info("No directory name specified, so assuming \".\" ({})", dir.getName());
 		} else {
@@ -194,6 +194,28 @@ public class FileUtility {
 	}
 
 	/**
+	 * Recursively add all files within <code>directory</code> to <code>files</code>.
+	 * <p>
+	 * <code>directory</code> MUST be a directory and non-null.
+	 *
+	 * @param files the list of files to add to.
+	 * @param directory the directory to search.
+	 * @param recurseDirectories if true then directories will be recursively searched for files.
+	 */
+	private static void getFiles(List<File> files, File directory, boolean recurseDirectories) {
+		File[] listOfFiles = directory.listFiles();
+		for (File fileOrDirectory : listOfFiles) {
+			if (fileOrDirectory.isFile()) {
+				files.add(fileOrDirectory);
+			} else {
+				if (recurseDirectories) {
+					getFiles(files, fileOrDirectory, recurseDirectories);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Given a specification of a set of files, find all the matching files and return them.
 	 *
 	 * @param inputs a specification string that will match files.
@@ -219,28 +241,6 @@ public class FileUtility {
 			}
 		}
 		return files;
-	}
-
-	/**
-	 * Recursively add all files within <code>directory</code> to <code>files</code>.
-	 * <p>
-	 * <code>directory</code> MUST be a directory and non-null.
-	 *
-	 * @param files the list of files to add to.
-	 * @param directory the directory to search.
-	 * @param recurseDirectories if true then directories will be recursively searched for files.
-	 */
-	private static void getFiles(List<File> files, File directory, boolean recurseDirectories) {
-		File[] listOfFiles = directory.listFiles();
-		for (File fileOrDirectory : listOfFiles) {
-			if (fileOrDirectory.isFile()) {
-				files.add(fileOrDirectory);
-			} else {
-				if (recurseDirectories) {
-					getFiles(files, fileOrDirectory, recurseDirectories);
-				}
-			}
-		}
 	}
 
 	/**
