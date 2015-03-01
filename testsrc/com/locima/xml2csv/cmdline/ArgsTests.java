@@ -22,7 +22,7 @@ public class ArgsTests {
 
 	@Before
 	public void initialise() {
-		this.options = Program.getOptions();
+		this.options = Program.MAIN_OPTIONS;
 		this.parser = new BasicParser();
 	}
 

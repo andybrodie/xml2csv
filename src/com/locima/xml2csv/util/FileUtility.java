@@ -128,7 +128,13 @@ public class FileUtility {
 	 *             available.
 	 */
 	public static File getDirectory(String name, int flags, boolean createIfNecessary) throws IOException {
-		File dir = new File(name);
+		File dir;
+		if (name==null) {
+			dir = new File(".");
+			LOG.info("No directory name specified, so assuming \".\" ({})", dir.getName());
+		} else {
+			dir = new File(name);
+		}
 		String absoluteDirName = dir.getAbsolutePath();
 		LOG.debug("getDirectory Resolved {} to {}", name, absoluteDirName);
 		if (!dir.exists()) {
