@@ -3,6 +3,9 @@ package com.locima.xml2csv;
 /**
  * Runtime exception that is used like an assert mechanism for runtime. If one of these is thrown to the user the it means that they've discovered a
  * bug in the xml2csv code.
+ * <p>
+ * This exception shouldn't be seen as anything more than a decoration of {@link RuntimeException}, providing a consistent message and contact details
+ * to the client.
  */
 public class BugException extends RuntimeException {
 
@@ -20,7 +23,7 @@ public class BugException extends RuntimeException {
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = -1665563733287516597L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Creates a new instance with the message specified by <code>fmt</code> and <code>parameters</code> (see {@link String#format(String, Object...)}

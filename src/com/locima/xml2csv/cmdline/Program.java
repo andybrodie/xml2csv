@@ -99,14 +99,14 @@ public class Program {
 	private static final String PROPERTY_VERSION = "Version";
 
 	/*
-	 * Sets up MAIN_OPTIONS, the options that define the command line arguments to this program.
+	 * Sets up MAIN_OPTIONS and HELP_OPTIONS, the options that define the command line arguments to this program.
 	 */
 	static {
+		// mainOptions contains all the options together, including help and version.
 		Options mainOptions = new Options();
 		Option option = new Option(OPT_CONFIG_FILE, "configuration-file", true, "A single file containing the configuration to use.");
 		option.setRequired(true);
 		mainOptions.addOption(option);
-		// Don't ask me why it's formatted like this, blame Eclipse Luna!
 		option =
 						new Option(OPT_OUT_DIR, "output-directory", true, "The directory to which the output CSV files will be written.  "
 										+ "If not specified, current working directory will be used.  Directory must exist and be writeable.");
@@ -121,6 +121,8 @@ public class Program {
 														+ " appended to then field names will not be output.");
 		mainOptions.addOption(option);
 
+		// helpOptions contains only the help and version options, it's important that these are both optional.
+		// Note how both mainOptions and helpOptions contains help and verbose options.
 		Options helpOptions = new Options();
 
 		option = new Option(OPT_HELP, "help", false, "Show help on using xml2csv and terminate.");
@@ -187,7 +189,7 @@ public class Program {
 		try {
 			configFiles.add(FileUtility.getFile(configFileName, FileUtility.CAN_READ));
 		} catch (IOException ioe) {
-			throw new ProgramException(ioe, "Problem with configuration file: %s", ioe.getMessage());
+			throw new ProgramException(ioe, "Unable to load configuration file \"%s\".", configFileName);
 		}
 		new Xml2Csv().execute(configFiles, xmlInputFiles, outputDirectory, appendOutput, trimWhitespace);
 	}
@@ -246,14 +248,14 @@ public class Program {
 		// Stores messages that we have seen already
 		List<String> messages = new ArrayList<String>();
 		String message = throwable.getMessage();
-		sb.append(String.format("%s%n", message));
+		sb.append(String.format("%s", message));
 		messages.add(message);
 		Throwable cause = throwable.getCause();
 		while (cause != null) {
 			message = cause.getMessage();
 			if (!messages.contains(message)) {
 				messages.add(message);
-				sb.append(String.format("Because: %s%n", message));
+				sb.append(String.format("%nReason: %s", message));
 			}
 			cause = cause.getCause();
 			// Stop infinite loops
@@ -342,8 +344,8 @@ public class Program {
 	private void printVersionInfo() {
 		System.out.println("xml2csv by Locima Ltd.  Maintained at http://github.com/andybrodie/xml2csv.");
 		Properties props = getBuildProperties();
-		System.out.println("Version: " + props.getProperty(PROPERTY_VERSION));
-		System.out.println("Build Timestamp " + props.getProperty(PROPERTY_BUILD_TSTAMP));
+		System.out.println("Version        : " + props.getProperty(PROPERTY_VERSION));
+		System.out.println("Build Timestamp: " + props.getProperty(PROPERTY_BUILD_TSTAMP));
 		System.out.println("Git Commit Hash: " + props.getProperty(PROPERTY_COMMITHASH));
 	}
 
