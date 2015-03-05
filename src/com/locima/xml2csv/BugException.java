@@ -20,9 +20,6 @@ public class BugException extends RuntimeException {
 	 */
 	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-	/**
-	 *
-	 */
 	private static final long serialVersionUID = 1L;
 
 	/**
