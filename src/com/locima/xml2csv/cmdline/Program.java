@@ -54,7 +54,7 @@ public class Program {
 	private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 
 	/**
-	 * The main command line options, used after {@value #HELP_OPTONS} has not found a match. Set up by the static constructor.
+	 * The main command line options, used after {@link #HELP_OPTIONS} has not found a match. Set up by the static constructor.
 	 */
 	public static final Options MAIN_OPTIONS;
 
@@ -153,7 +153,7 @@ public class Program {
 	 */
 	private String createHeader() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("xml2csv v");
+		sb.append("xml2csv ");
 		Properties props = getBuildProperties();
 		sb.append(props.getProperty(PROPERTY_VERSION));
 		sb.append(".  ");

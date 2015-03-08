@@ -9,16 +9,17 @@
 	<property name="debuglevel" value="source,lines,vars" />
 	<property name="target" value="1.6" />
 	<property name="source" value="1.6" />
-	<property name="LIB" value="lib" />
+	<property name="lib" value="lib" />
+	<property name="dist" value="dist" />
 	<path id="JUnit 4.libraryclasspath">
-		<fileset dir="${LIB}">
+		<fileset dir="${lib}">
 			<include name="junit-4.11.jar" />
 			<include name="hamcrest-core-1.3.jar" />
 		</fileset>
 	</path>
 	<!-- The classpath to build xml2csv against -->
 	<path id="xml2csv.build.classpath">
-		<fileset dir="${LIB}">
+		<fileset dir="${lib}">
 			<include name="Saxon-HE-9.5.1-6.jar" />
 			<include name="xercesImpl-2.11.0.jar" />
 			<include name="commons-cli-1.2.jar" />
@@ -30,7 +31,7 @@
 		<path refid="xml2csv.build.classpath" />
 		<!-- Make sure that you include ALL jar files, otherwise we're taking responsibility for knowing
 		     all the transitive dependendies of Jars we depend on. -->
-		<fileset dir="${LIB}">
+		<fileset dir="${lib}">
 			<include name="**/*.jar" />
 		</fileset>
 		<!-- Don't forget to include our own bin directory -->
@@ -43,16 +44,18 @@
 	<target name="clean" description="Deletes all the built artifacts">
 		<delete dir="bin" />
 		<delete dir="javadoc" />
+		<delete dir="${dist}" />
+		<delete dir="${lib}" />
 	</target>
 	<target name="clean-ivy" description="Deletes the dependencies downloaded by Ivy">
-		<delete dir="${LIB}" />
+		<delete dir="${lib}" />
 	</target>
 	<target name="clean-junit" description="Deletes all JUnit outputs">
 		<delete dir="${junit.output.dir}" />
 	</target>
 	<target name="clean-jar" description="Deletes all built jar artifacts">
-		<delete file="xml2csv.jar" />
-		<delete file="xml2csv-standalone.jar" />
+		<delete file="${dist}/xml2csv.jar" />
+		<delete file="${dist}/xml2csv-standalone.jar" />
 	</target>
 	<target depends="clean, clean-ivy, clean-junit,clean-jar" name="clean-all" description="Deletes all built artifacts and downloaded dependencies" />
 	<target depends="resolve" name="build" description="Compile all the sources">
@@ -122,7 +125,7 @@
 			</mapper>
 		</pathconvert>
 		<tstamp />
-		<jar destfile="xml2csv.jar">
+		<jar destfile="${dist}/xml2csv-${version}.jar">
 			<manifest>
 				<attribute name="Class-Path" value="${mf.classpath}" />
 				<attribute name="Main-Class" value="com.locima.xml2csv.cmdline.Program" />
@@ -131,7 +134,7 @@
 		</jar>
 	</target>
 	<target name="build-standalone-jar" description="Create standalone runnable jar" depends="build, update-build.properties">
-		<jar destfile="xml2csv-standalone.jar">
+		<jar destfile="${dist}/xml2csv-standalone-${version}.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
 				<attribute name="Rsrc-Main-Class" value="com.locima.xml2csv.cmdline.Program" />
@@ -149,21 +152,23 @@
 			<zipfileset dir="lib" includes="xml-apis-1.4.01.jar" />
 		</jar>
 	</target>
-	<target name="build-javadoc" depends="resolve" description="Build project javadoc">
-		<javadoc sourcepath="src" access="private" destdir="javadoc" packagenames="com.locima.xml2csv.*" author="true" version="true" use="true">
+	<target name="build-javadoc" depends="resolve, create-properties" description="Build project javadoc">
+		<javadoc sourcepath="src" access="private" destdir="javadoc" packagenames="com.locima.xml2csv.*" author="true" version="true" use="true" overview="src/overview.html" windowtitle="xml2csv ${version}">
 			<classpath refid="xml2csv.execute.classpath" />
 			<bottom>
 				&lt;i&gt;Copyright &#169; 2014-2015 Locima Ltd.  All Rights Reserved.  This code and documentation are licensed under the Microsoft Public License &lt;a target="_blank" href="http://www.microsoft.com/en-us/openness/licenses.aspx"&gt;MS-PL&lt;a&gt;.&lt;/i&gt;
 			</bottom>
 		</javadoc>
+		<jar destfile="${dist}/xml2csv-${version}-javadoc.jar" basedir="javadoc" />
 	</target>
-	<target name="update-build.properties" description="Updates or creates the file src/META-INF/build.properties which contains information used by the packaged program to track version.">
+	<target name="create-properties" description="Creates properties used in the build (current timestamp and Git information (latest tag is version number and latest commit hash)">
 		<!-- Get the short commit hash from Git -->
 		<exec executable="git.exe" outputproperty="commitHash">
 			<arg value="log" />
 			<arg value="-1" />
 			<arg value="--pretty=format:%h" />
 		</exec>
+		<echo message="Latest commit hash: ${commitHash}" />
 
 		<!-- Get the tag name -->
 		<exec executable="git.exe" outputproperty="version">
@@ -171,12 +176,16 @@
 			<arg value="--abbrev=0" />
 			<arg value="--tags" />
 		</exec>
+		<echo message="Version: ${version}" />
 
 		<!-- Get the build date -->
 		<tstamp>
 			<format property="buildTimeStamp" pattern="yyyy-MM-dd HH:mm:ss" />
 		</tstamp>
+		<echo message="Build Timestamp ${buildTimeStamp}" />
 
+	</target>
+	<target name="update-build.properties" description="Updates or creates the file src/META-INF/build.properties which contains information used by the packaged program to track version." depends="create-properties">
 		<property name="propsFile" value="src/META-INF/build.properties" />
 		<propertyfile file="${propsFile}" comment="Created dynamically by Ant in build.xml update-version-properties task">
 			<entry key="CommitHash" value="${commitHash}" />
@@ -184,7 +193,13 @@
 			<entry key="BuildTimeStamp" value="${buildTimeStamp}" />
 		</propertyfile>
 	</target>
+	
+	<target name="build-src-jar" depends="update-build.properties" description="Builds the distributable source jar">
+		<jar destfile="${dist}/xml2csv-${version}-sources.jar" basedir="src"/>
+		<jar destfile="${dist}/xml2csv-${version}-test-sources.jar" basedir="src"/>
+	</target>
 
-	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc" description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
+	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc, build-src-jar"
+		description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
 
 </project>
