@@ -23,12 +23,12 @@
 			<include name="Saxon-HE-9.5.1-6.jar" />
 			<include name="xercesImpl-2.11.0.jar" />
 			<include name="commons-cli-1.2.jar" />
+			<include name="slf4j-api-1.7.6.jar" />
 		</fileset>
 		<path refid="JUnit 4.libraryclasspath" />
 	</path>
 	<!-- The classpath required to execute xml2csv -->
 	<path id="xml2csv.execute.classpath">
-		<path refid="xml2csv.build.classpath" />
 		<!-- Make sure that you include ALL jar files, otherwise we're taking responsibility for knowing
 		     all the transitive dependendies of Jars we depend on. -->
 		<fileset dir="${lib}">
@@ -43,6 +43,7 @@
 	<!-- Cleaning targets -->
 	<target name="clean" description="Deletes all the built artifacts">
 		<delete dir="bin" />
+		<delete dir="testbin" />
 		<delete dir="javadoc" />
 		<delete dir="${dist}" />
 		<delete dir="${lib}" />
@@ -199,7 +200,7 @@
 		<jar destfile="${dist}/xml2csv-${version}-test-sources.jar" basedir="src"/>
 	</target>
 
-	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc, build-src-jar"
+	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc, build-src-jar, test, junit-report"
 		description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
 
 </project>
