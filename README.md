@@ -2,7 +2,7 @@
 
 This is a command line utility and library to convert XML files to CSV files, according to a configuration provided by the user.
 
-This software is maintained on Github at http://www.github.com/andybrodie/xml2csv.
+This software is maintained on Github at http://www.github.com/andybrodie/xml2csv.  See the [Github project wiki](https://github.com/andybrodie/xml2csv/wiki) to get started, specifically the [Tutorial](https://github.com/andybrodie/xml2csv/wiki/Tutorial).
 
 xml2csv relies on the following third party software, each with it's own separate license:
 
