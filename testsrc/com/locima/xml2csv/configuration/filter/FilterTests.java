@@ -1,4 +1,4 @@
-package com.locima.xml2csv.model.filter;
+package com.locima.xml2csv.configuration.filter;
 
 import static org.junit.Assert.assertEquals;
 
