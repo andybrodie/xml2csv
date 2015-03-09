@@ -5,7 +5,7 @@ package com.locima.xml2csv;
  */
 public class ProgramException extends Exception {
 
-	private static final long serialVersionUID = -6607136356786928990L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs an instance using the details provided.

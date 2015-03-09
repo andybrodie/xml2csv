@@ -7,7 +7,7 @@ import com.locima.xml2csv.ProgramException;
  */
 public class OutputManagerException extends ProgramException {
 
-	private static final long serialVersionUID = 901737490561622597L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs an instance using the details provided.
