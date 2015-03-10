@@ -67,7 +67,7 @@ public class FileUtility {
 	 * @return a string that only contains POSIX-compliant filename characters and length (depending on <code>ignoreLength</code>). Returns
 	 *         <code>null</code> if <code>null</code> is passed in <code>baseName</code>.
 	 */
-	// CHECKSTYLE:OFF Cyclomatic complexity caused by that big "if" statement
+	// CHECKSTYLE:OFF Cyclomatic complexity caused by that big "if" statement, but can't think of a more efficient way.
 	public static String convertToPOSIXCompliantFileName(String baseName, String extension, boolean ignoreLength) {
 		// CHECKSTYLE:ON
 		if (baseName == null) {

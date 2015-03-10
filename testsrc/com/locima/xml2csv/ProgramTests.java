@@ -12,6 +12,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.locima.xml2csv.cmdline.Program;
+
 public class ProgramTests {
 
 	@BeforeClass
@@ -27,7 +29,7 @@ public class ProgramTests {
 	}
 
 	@Test
-	public void test() throws Exception {
+	public void testParsedEntryPoint() throws Exception {
 		Xml2Csv xml2csv = new Xml2Csv();
 		List<File> configFiles = new ArrayList<File>();
 		configFiles.add(TestHelpers.createFile("SimpleFamilyConfig.xml"));
@@ -43,6 +45,33 @@ public class ProgramTests {
 
 		assertCsvEquals("SimpleFamilyOutput1.csv", outputFolder.getRoot(), "family.csv");
 		assertCsvEquals("SimpleFamilyOutput2.csv", outputFolder.getRoot(), "people.csv");
+	}
+
+	@Test
+	public void testUnparsedEntryPoint() throws Exception {
+		
+		List<String> parameters = new ArrayList<String>();
+		parameters.add("-c");
+		parameters.add(TestHelpers.createFile("SimpleFamilyConfig.xml").getAbsolutePath());
+		parameters.add(TestHelpers.createFile("SimpleFamily1.xml").getAbsolutePath());
+		parameters.add(TestHelpers.createFile("SimpleFamily2.xml").getAbsolutePath());
+
+		TemporaryFolder outputFolder = new TemporaryFolder();
+		outputFolder.create();
+		File outputDir = outputFolder.getRoot();
+		parameters.add("-o");
+		parameters.add(outputDir.getAbsolutePath());
+
+		Program.main(parameters.toArray(new String[0]));
+		
+		assertCsvEquals("SimpleFamilyOutput1.csv", outputFolder.getRoot(), "family.csv");
+		assertCsvEquals("SimpleFamilyOutput2.csv", outputFolder.getRoot(), "people.csv");
+	}
+	
+	@Test
+	public void testInvalidInvocation() throws Exception {
+		Program xml2csv = new Program();
+		xml2csv.execute(new String[0]);
 	}
 
 }

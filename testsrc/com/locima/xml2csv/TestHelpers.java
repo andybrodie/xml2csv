@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.transform.stream.StreamSource;
@@ -111,6 +112,47 @@ public class TestHelpers {
 
 	public static void assertCsvEquals(String expectedFileName, String actualFileName) throws Exception {
 		assertCsvEquals(new File(RES_DIR, expectedFileName), new File(actualFileName));
+	}
+
+	public static void assertIterableEquals(Iterable<? extends Object> expectedIterable, Iterable<? extends Object> actualIterable) {
+		if (expectedIterable==null && actualIterable==null) return;
+		if (expectedIterable==null) fail("Actual specifies elements but expected was null");
+		if (actualIterable==null) fail("Expected specifies elements but actual was null");
+		Iterator<? extends Object> exIter = expectedIterable.iterator();
+		Iterator<? extends Object> acIter = actualIterable.iterator();
+		int count = 0;
+		while (exIter.hasNext() && acIter.hasNext()) {
+			Object expected = exIter.next();
+			Object actual = acIter.next();
+			LOG.debug("Comparing item {}: {} with {}", count, expected, actual);
+			assertEquals("Mismatch at position " + count, expected, actual);
+			count++;
+		}
+		if (exIter.hasNext()) {
+			fail("Actual has run out of elements at: " + count);
+		}
+		if (acIter.hasNext()) {
+			fail("More objects in actual than expected: " + count);
+			
+		}
+	}
+	
+	public static void assertSameContents(Collection<? extends Object> expectedCollection, Collection<? extends Object> actualCollection) {
+		List<? extends Object> expectedList = new ArrayList<Object>(expectedCollection);
+		List<? extends Object> actualList = new ArrayList<Object>(actualCollection);
+		int count=0;
+		for (Object expected : expectedList) {
+			if (actualList.contains(expected)) {
+				actualList.remove(expected);
+			} else {
+				fail("Expected value " + expected + " at index " + count + " was not found in actual");
+			}
+			count++;
+		}
+		if (!actualList.isEmpty()) {
+			fail("Actual has values not in expected:" + StringUtil.collectionToString(actualList, ", ", null));
+		}
+		
 	}
 
 	public static XdmNode createDocument(String xmlText) throws SaxonApiException {
