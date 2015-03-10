@@ -99,6 +99,7 @@
 					<include name="**/*Tests.class" />
 				</fileset>
 			</batchtest>
+			<jvmarg value="-Dlogback.configurationFile=&quot;src/logback.xml&quot;"/>
 			<classpath>
 				<path refid="xml2csv.execute.classpath" />
 				<pathelement location="bin" />
