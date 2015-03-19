@@ -1,6 +1,5 @@
 package com.locima.xml2csv.util;
 
-import static com.locima.xml2csv.TestHelpers.assertIterableEquals;
 import static com.locima.xml2csv.TestHelpers.assertSameContents;
 import static org.junit.Assert.fail;
 

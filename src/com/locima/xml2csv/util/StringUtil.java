@@ -85,28 +85,47 @@ public class StringUtil {
 	}
 
 	/**
-	 * Escapes any string so that it can be added to a CSV. Specifically, if the value contains a double-quote, CR or LF then the entire value is
-	 * wrapped in double-quotes. Also, any instances of double-quote are replaced with 2 double-quotes.
+	 * Serialises and escapes any value so that it can be added to a CSV file. If the value contains a double-quote, CR, LF, comma or semi-colon, then
+	 * the entire value is wrapped in double-quotes. Any instances of double quotes (") are replaced with two double-quotes.
 	 *
-	 * @param value Any value that can be converted to a String. If null is passed, null is returned.
-	 * @return A string suitable to be embedded in to a CSV file that will be read by Excel.
+	 * @param value Any value that can be converted to a String using a {@link Object#toString()}.
+	 * @return A string suitable to be embedded in to a CSV file that will be read by RFC4180 compliant application or Microsoft Excel. If null is
+	 *         passed, null is returned.
 	 */
 	public static String escapeForCsv(Object value) {
-		String returnValue = value == null ? null : value.toString();
-		boolean quotesRequired = false;
-		if (value == null) {
+		// Handle either null inputs or toString() methods that return null.
+		String inputString = value == null ? null : value.toString();
+		if (inputString == null) {
 			return null;
 		}
-		final String quote = "\"";
-		if (returnValue.contains(quote)) {
-			returnValue = returnValue.replace(quote, "\"\"");
-			quotesRequired = true;
-		}
-		if (returnValue.contains("\n") || returnValue.contains(",") || returnValue.contains(";")) {
-			quotesRequired = true;
+
+		// Do we need to wrap the entire value in quotes?
+		boolean quotesRequired = false;
+
+		int inputLength = inputString.length();
+		
+		// Allocate a few extra bytes so we don't need to dynamically extend in the event of a quotes being required.
+		final int extraCharsForQuoting = 3;
+		StringBuffer retValue = new StringBuffer(inputLength + extraCharsForQuoting);
+
+		for (int i = 0; i < inputLength; i++) {
+			char ch = inputString.charAt(i);
+			retValue.append(ch);
+			if (ch == '\n' || ch == '\r' || ch == ',' || ch == ';' || ch == '\"') {
+				quotesRequired = true;
+				if (ch == '\"') {
+					retValue.append(ch);
+				}
+			}
 		}
 
-		return quotesRequired ? quote + returnValue + quote : returnValue;
+		// Wrap the whole value in double quotes if we've found character that needed to be escaped.
+		if (quotesRequired) {
+			retValue.insert(0, "\"");
+			retValue.append('\"');
+		}
+
+		return retValue.toString();
 	}
 
 	/**

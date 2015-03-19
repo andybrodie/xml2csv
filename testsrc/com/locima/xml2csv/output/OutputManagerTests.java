@@ -1,6 +1,7 @@
 package com.locima.xml2csv.output;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -126,15 +127,6 @@ public class OutputManagerTests {
 		addOMConfig(config, "test2", "colA", "colB", "colC");
 		IOutputManager om = createTempOutputManager(createConfig(config), false);
 		om.close();
-	}
-
-	@Test
-	public void testEscape() {
-		String[] input = new String[] { null, "a", "", "\"", "a\"b", "," };
-		String[] expected = new String[] { null, "a", "", "\"\"\"\"", "\"a\"\"b\"", "\",\"" };
-		for (int i = 0; i < input.length; i++) {
-			assertEquals(expected[i], StringUtil.escapeForCsv(input[i]));
-		}
 	}
 
 }
