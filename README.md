@@ -2,6 +2,19 @@
 
 This is a command line utility and library to convert XML files to CSV files, according to a configuration provided by the user.
 
+## Why you would want to use xml2csv?
+
+xml2csv works well for the following scenarios:
+
+1. You have a set of XML files that:
+  1. all need converting.
+  1. some of them need converting, based on file name.
+  1. some of them need converting, based on the contents of each XML file.
+1. You require a specific mapping and ordering of fields in the output CSV file.
+1. CSV field names are dependant on the content of the XML file.
+1. You need to flatten the hierarchical structure of XML files in to repeating fields.
+1. Any combination of the above at once!
+
 This software is maintained on Github at http://www.github.com/andybrodie/xml2csv.  See the [Github project wiki](https://github.com/andybrodie/xml2csv/wiki) to get started, specifically the [Tutorial](https://github.com/andybrodie/xml2csv/wiki/Tutorial).
 
 ## Key Features:
