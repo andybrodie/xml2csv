@@ -15,7 +15,7 @@ xml2csv works well for the following scenarios:
 1. You need to flatten the hierarchical structure of XML files in to repeating fields.
 1. Any combination of the above at once!
 
-This software is maintained on Github at http://www.github.com/andybrodie/xml2csv.  See the [Github project wiki](https://github.com/andybrodie/xml2csv/wiki) to get started, specifically the [Tutorial](https://github.com/andybrodie/xml2csv/wiki/Tutorial).
+This software is maintained on GitHub at http://www.github.com/andybrodie/xml2csv.  See the [GitHub project wiki](https://github.com/andybrodie/xml2csv/wiki) to get started, specifically the [Tutorial](https://github.com/andybrodie/xml2csv/wiki/Tutorial).
 
 ## Key Features:
 * Using a user-supplied configuration, xml2csv reads input XML files and creates output CSV files.
