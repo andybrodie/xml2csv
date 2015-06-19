@@ -61,5 +61,5 @@ local.properties
 # PDT-specific
 .buildpath
 /bin/
-
 .buildpath/testbin/
+temp

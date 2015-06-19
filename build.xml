@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project basedir="." default="build" name="xml2csv" xmlns:ivy="antlib:org.apache.ivy.ant">
+<!-- This is the default Apache Ant build file for xml2csv.  It contains all the targets required to clean, build, test and package xml2csv, with
+	 all it's publishable artifacts (including javadoc and source distributions). -->
+<project basedir="." default="all" name="xml2csv" xmlns:ivy="antlib:org.apache.ivy.ant">
+
 	<property environment="env" />
 	<path id="ivy.lib.path">
-		<fileset dir="${env.IVY_HOME}" includes="ivy-2.4.0-rc1.jar" />
+		<fileset dir="${env.IVY_HOME}" includes="*.jar" />
 	</path>
 	<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
 	<property name="junit.output.dir" value="junit" />
@@ -37,9 +40,11 @@
 		<!-- Don't forget to include our own bin directory -->
 		<pathelement location="bin" />
 	</path>
+
 	<target name="resolve" description="Retrieve dependencies with ivy">
-		<ivy:retrieve />
+		<ivy:retrieve sync="true" />
 	</target>
+
 	<!-- Cleaning targets -->
 	<target name="clean" description="Deletes all the built artifacts">
 		<delete dir="bin" />
@@ -48,18 +53,23 @@
 		<delete dir="${dist}" />
 		<delete dir="${lib}" />
 	</target>
+
 	<target name="clean-ivy" description="Deletes the dependencies downloaded by Ivy">
 		<delete dir="${lib}" />
 	</target>
+
 	<target name="clean-junit" description="Deletes all JUnit outputs">
 		<delete dir="${junit.output.dir}" />
 	</target>
+
 	<target name="clean-jar" description="Deletes all built jar artifacts">
 		<delete file="${dist}/xml2csv.jar" />
 		<delete file="${dist}/xml2csv-standalone.jar" />
 	</target>
+
 	<target depends="clean, clean-ivy, clean-junit,clean-jar" name="clean-all" description="Deletes all built artifacts and downloaded dependencies" />
-	<target depends="resolve" name="build" description="Compile all the sources">
+
+	<target depends="resolve" name="build" description="Compile all the sources that make up xml2csv (not tests)">
 		<echo message="${ant.project.name}: ${ant.file}" />
 		<mkdir dir="bin" />
 		<!-- Copy all the non-compiled resources from the source directory to bin -->
@@ -73,6 +83,7 @@
 			<classpath refid="xml2csv.build.classpath" />
 		</javac>
 	</target>
+
 	<target depends="resolve" name="build-tests" description="Compile all the test sources">
 		<echo message="${ant.project.name}: ${ant.file}" />
 		<mkdir dir="testbin" />
@@ -90,6 +101,7 @@
 			</classpath>
 		</javac>
 	</target>
+
 	<target name="test" depends="build, build-tests" description="Run all the unit tests">
 		<mkdir dir="${junit.output.dir}" />
 		<junit fork="yes" printsummary="withOutAndErr">
@@ -99,7 +111,7 @@
 					<include name="**/*Tests.class" />
 				</fileset>
 			</batchtest>
-			<jvmarg value="-Dlogback.configurationFile=&quot;src/logback.xml&quot;"/>
+			<jvmarg value="-Dlogback.configurationFile=&quot;src/logback.xml&quot;" />
 			<classpath>
 				<path refid="xml2csv.execute.classpath" />
 				<pathelement location="bin" />
@@ -107,7 +119,8 @@
 			</classpath>
 		</junit>
 	</target>
-	<target name="junit-report" depends="test" description="Creates a Junit execution report">
+
+	<target name="junit-report" depends="test" description="Creates a pretty Junit execution report">
 		<junitreport todir="${junit.output.dir}">
 			<fileset dir="${junit.output.dir}">
 				<include name="TEST-*.xml" />
@@ -115,7 +128,8 @@
 			<report format="frames" todir="${junit.output.dir}" />
 		</junitreport>
 	</target>
-	<target name="build-jar" description="Create runnable jar which requires external dependencies" depends="build, update-build.properties">
+
+	<target name="build-jar" description="Create runnable jar which requires external dependencies in a lib subdirectory" depends="build, update-build.properties">
 		<!-- convert classpath to a flat list/string for use in manifest task -->
 		<pathconvert property="mf.classpath" pathsep=" ">
 			<path refid="xml2csv.execute.classpath" />
@@ -135,7 +149,8 @@
 			<fileset dir="bin" excludes="**/logback-test.xml" />
 		</jar>
 	</target>
-	<target name="build-standalone-jar" description="Create standalone runnable jar" depends="build, update-build.properties">
+
+	<target name="build-standalone-jar" description="Create standalone runnable jar with all dependencies embedded within it" depends="build, update-build.properties">
 		<jar destfile="${dist}/xml2csv-standalone-${version}.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
@@ -154,7 +169,8 @@
 			<zipfileset dir="lib" includes="xml-apis-1.4.01.jar" />
 		</jar>
 	</target>
-	<target name="build-javadoc" depends="resolve, create-properties" description="Build project javadoc">
+
+	<target name="build-javadoc" depends="resolve, create-properties" description="Build javadoc for all the source code except tests">
 		<javadoc sourcepath="src" access="private" destdir="javadoc" packagenames="com.locima.xml2csv.*" author="true" version="true" use="true" overview="src/overview.html" windowtitle="xml2csv ${version}">
 			<classpath refid="xml2csv.execute.classpath" />
 			<bottom>
@@ -163,7 +179,8 @@
 		</javadoc>
 		<jar destfile="${dist}/xml2csv-${version}-javadoc.jar" basedir="javadoc" />
 	</target>
-	<target name="create-properties" description="Creates properties used in the build (current timestamp and Git information (latest tag is version number and latest commit hash)">
+
+	<target name="create-properties" description="Sets the values up for properties used in the build (current timestamp and Git information (latest tag is version number and latest commit hash)">
 		<!-- Get the short commit hash from Git -->
 		<exec executable="git.exe" outputproperty="commitHash">
 			<arg value="log" />
@@ -172,7 +189,7 @@
 		</exec>
 		<echo message="Latest commit hash: ${commitHash}" />
 
-		<!-- Get the tag name -->
+		<!-- Get the latest tag name, which is used as the version number of the build product -->
 		<exec executable="git.exe" outputproperty="version">
 			<arg value="describe" />
 			<arg value="--abbrev=0" />
@@ -180,13 +197,14 @@
 		</exec>
 		<echo message="Version: ${version}" />
 
-		<!-- Get the build date -->
+		<!-- Get the current date and time as the build timestamp -->
 		<tstamp>
 			<format property="buildTimeStamp" pattern="yyyy-MM-dd HH:mm:ss" />
 		</tstamp>
 		<echo message="Build Timestamp ${buildTimeStamp}" />
 
 	</target>
+
 	<target name="update-build.properties" description="Updates or creates the file src/META-INF/build.properties which contains information used by the packaged program to track version." depends="create-properties">
 		<property name="propsFile" value="src/META-INF/build.properties" />
 		<propertyfile file="${propsFile}" comment="Created dynamically by Ant in build.xml update-version-properties task">
@@ -195,13 +213,12 @@
 			<entry key="BuildTimeStamp" value="${buildTimeStamp}" />
 		</propertyfile>
 	</target>
-	
-	<target name="build-src-jar" depends="update-build.properties" description="Builds the distributable source jar">
-		<jar destfile="${dist}/xml2csv-${version}-sources.jar" basedir="src"/>
-		<jar destfile="${dist}/xml2csv-${version}-test-sources.jar" basedir="src"/>
+
+	<target name="build-src-jar" depends="update-build.properties" description="Builds main code and test code source jars">
+		<jar destfile="${dist}/xml2csv-${version}-sources.jar" basedir="src" />
+		<jar destfile="${dist}/xml2csv-${version}-test-sources.jar" basedir="src" />
 	</target>
 
-	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc, build-src-jar, test, junit-report"
-		description="Build the regular jar, standalone jar and javadoc (all delivered targets)" />
+	<target name="all" depends="build-jar, build-standalone-jar, build-javadoc, build-src-jar, test, junit-report" description="Build, run and package everything" />
 
 </project>
