@@ -334,7 +334,7 @@ public class Program {
 	 */
 	private void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java.exe " + getExecutableName(), createHeader(), MAIN_OPTIONS, 0, 0,
+		formatter.printHelp(new PrintWriter(System.err, true), CONSOLE_WIDTH, "java " + getExecutableName(), createHeader(), MAIN_OPTIONS, 0, 0,
 						null, true);
 	}
 
