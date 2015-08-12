@@ -23,7 +23,8 @@ public class FilterTests {
 	private void checkAllInputFileFilterInputs(IInputFilter filter, boolean expectedResult, String... filenames) {
 		for (String filename : filenames) {
 			File f = new File(filename);
-			assertEquals(expectedResult, filter.include(f));
+			boolean result = filter.include(f);
+			assertEquals("Test for " + f  +" failed",expectedResult, result);
 		}
 	}
 
@@ -35,18 +36,18 @@ public class FilterTests {
 
 	@Test
 	public void fileNameTest() {
-		FileNameInputFilter filter = new FileNameInputFilter("\\.xml$");
+		FileNameInputFilter filter = new FileNameInputFilter("\\.xml$",true);
 		checkAllInputFileFilterInputs(filter, true, "wibble.xml", "test.xml", ".xml");
 		checkAllInputFileFilterInputs(filter, false, "wibble.xml ", "wibble.xml.bak", "wibble.bak");
 	}
 
 	@Test
 	public void nestedTest() {
-		FileNameInputFilter xmlFilter = new FileNameInputFilter("\\.xml$");
-		FileNameInputFilter andyFilter = new FileNameInputFilter("a");
-		xmlFilter.addNestedFilter(andyFilter);
-		FileNameInputFilter tomFilter = new FileNameInputFilter("b");
-		andyFilter.addNestedFilter(tomFilter);
+		FileNameInputFilter xmlFilter = new FileNameInputFilter("\\.xml$", true);
+		FileNameInputFilter aFilter = new FileNameInputFilter("a", true);
+		xmlFilter.addNestedFilter(aFilter);
+		FileNameInputFilter bFilter = new FileNameInputFilter("b", true);
+		aFilter.addNestedFilter(bFilter);
 
 		checkAllInputFileFilterInputs(xmlFilter, false, "a.xml", "b.xml", "c.xml", "ab.bak", "ab.xml2");
 		checkAllInputFileFilterInputs(xmlFilter, true, "ba.xml", "ab.xml", "abba.xml", "ab.xml.bak.xml");

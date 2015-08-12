@@ -1,8 +1,5 @@
 package com.locima.xml2csv.output;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,7 +22,6 @@ import com.locima.xml2csv.configuration.MappingConfiguration;
 import com.locima.xml2csv.configuration.MappingList;
 import com.locima.xml2csv.configuration.MultiValueBehaviour;
 import com.locima.xml2csv.configuration.NameFormat;
-import com.locima.xml2csv.util.StringUtil;
 import com.locima.xml2csv.util.XmlUtil;
 
 public class OutputManagerTests {

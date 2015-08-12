@@ -15,19 +15,22 @@ import org.slf4j.LoggerFactory;
 public class FileNameInputFilter extends FilterContainer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FileNameInputFilter.class);
+	private boolean matchLocalFileNameOnly;
 	private Pattern pattern;
 
 	/**
 	 * Sets the regex that this filter will use to match on {@link #include(File)}.
 	 *
 	 * @param regex the regular expression that will be used to match. Must not be null.
+	 * @param matchLocalFileNameOnly if true, then only the relative filename (i.e. no directory information) will be passed to the filter.
 	 * @throws PatternSyntaxException if the regular expression passed by <code>regex</code> is invalid.
 	 */
 	// CHECKSTYLE:OFF I don't care if PatternSyntaxException is a runtime exception, it's pertinent!
-	public FileNameInputFilter(String regex) throws PatternSyntaxException {
+	public FileNameInputFilter(String regex, boolean matchLocalFileNameOnly) throws PatternSyntaxException {
 		// CHECKSTYLE:ON
 		LOG.debug("Compiling regex {}", regex);
 		this.pattern = Pattern.compile(regex);
+		this.matchLocalFileNameOnly = matchLocalFileNameOnly;
 	}
 
 	/**
@@ -39,16 +42,18 @@ public class FileNameInputFilter extends FilterContainer {
 	@Override
 	public boolean include(File xmlInputFile) {
 		boolean match;
-		String absPath = xmlInputFile.getAbsolutePath();
+		String pathToTest = this.matchLocalFileNameOnly ? xmlInputFile.getName() : xmlInputFile.getAbsolutePath();
 		if (this.pattern == null) {
 			LOG.warn("Regex pattern not specified on FileNameInputFilter, returning true");
 			match = false;
 		} else {
-			match = this.pattern.matcher(absPath).find();
-			LOG.debug("Input file {} did {}match file name input filter {}", absPath, match ? "" : "not ", this.pattern);
+			match = this.pattern.matcher(pathToTest).find();
+			LOG.debug("Input file {} did {}match file name input filter {}", pathToTest, match ? "" : "not ", this.pattern);
 			if (match) {
 				match = this.executeNestedFilters(xmlInputFile);
-				LOG.trace("Input file {} excluded by nested filter", absPath);
+				if (!match) {
+					LOG.trace("Nested filter of {} rejected {}", this, xmlInputFile);
+				}
 			}
 		}
 		return match;

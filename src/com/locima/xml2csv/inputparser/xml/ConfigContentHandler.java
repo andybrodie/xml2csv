@@ -7,6 +7,7 @@ import java.util.Stack;
 import java.util.regex.PatternSyntaxException;
 
 import javax.xml.XMLConstants;
+import javax.xml.bind.DatatypeConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ public class ConfigContentHandler extends DefaultHandler {
 
 	private static final String CUSTOM_NAME_FORMAT_ATTR = "customNameFormat";
 
+	private static final String FILENAME_FILTER_MATCH_LOCAL_ATTR = "matchLocalFileNameOnly";
 	private static final String GROUP_NUMBER_ATTR = "group";
 	private static final String KEY_XPATH_ATTR = "keyXPath";
 	private static final String KVPAIR_ROOT_XPATH_ATTR = "kvPairRoot";
@@ -323,12 +325,37 @@ public class ConfigContentHandler extends DefaultHandler {
 	}
 
 	/**
+	 * Retrieve an attribute value cast as a Boolean, according the rules specified by XSD spec ({@link DatatypeConverter#parseBoolean(String)}).
+	 *
+	 * @param atts the set of of attributes to retrieve from.
+	 * @param attrName the name of the attribute to retrieve.
+	 * @return true or false, depending on the value of the attribute, as per the XSD spec.
+	 * @throws SAXException if the value specified by <code>attrName</code> is present but not valid according to the XSD spec for XSD boolean value
+	 *             types.
+	 */
+	private boolean getAttributeValueAsBoolean(Attributes atts, String attrName) throws SAXException {
+		String attrValueAsString = atts.getValue(attrName);
+		if (attrValueAsString == null) {
+			return false;
+		} else {
+			try {
+				boolean parsedBoolean = DatatypeConverter.parseBoolean(attrValueAsString);
+				LOG.trace("Parsed {} value {} as {}", attrName, attrValueAsString, parsedBoolean);
+				return parsedBoolean;
+			} catch (IllegalArgumentException iae) {
+				// Thrown by DatatypeConverter.parseBoolean for an invalid argument
+				throw getException(iae, "Invalid value \"%s\" found in attriute \"%s\"", attrValueAsString, attrName);
+			}
+		}
+	}
+
+	/**
 	 * Retrieve an attribute value cast as an Integer, null if one wasn't specified, or throw an exception if malformed.
 	 *
 	 * @param atts the set of of attributes to retrieve from.
 	 * @param attrName the name of the attribute to retrieve.
-	 * @return the value retrieved, or value in <code>defaultValue</code> if a value could not be found.
-	 * @throws SAXException thrown if the value found in the attribute is an integer.
+	 * @return an integer value of the value in <code>attrName</code>, null if no value was specified.
+	 * @throws SAXException thrown if the value found in the attribute is not an integer.
 	 */
 	private Integer getAttributeValueAsInteger(Attributes atts, String attrName) throws SAXException {
 		String attrValueAsString = atts.getValue(attrName);
@@ -341,27 +368,6 @@ public class ConfigContentHandler extends DefaultHandler {
 		} catch (NumberFormatException nfe) {
 			throw getException(nfe, "Invalid value for %s found: %s", attrName, attrValueAsString);
 		}
-	}
-
-	/**
-	 * Gets a list of the known child names of the parent container.  These are used as variable names, available in the XPath evaluation of subsequent
-	 * mappings with the same parent.
-	 * @return an array, possibly empty, of known siblings of the current mapping (as determined by the top of {@link #mappingListStack}.
-	 */
-	private String[] getPreviousSiblingNames() {
-		List<String> variables = new ArrayList<String>();
-		MappingList currentContainer = this.mappingListStack.peek();
-		for (IMapping m : currentContainer) {
-			if (m instanceof IValueMapping) {
-				IValueMapping vm = (IValueMapping) m;
-				variables.add(vm.getName());
-			}
-		}
-		String[] varArray = variables.toArray(new String[0]);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Created variable set for {}: {}", currentContainer.getName(), StringUtil.toStringList(varArray));
-		}
-		return varArray;
 	}
 
 	/**
@@ -393,9 +399,8 @@ public class ConfigContentHandler extends DefaultHandler {
 	 */
 	private SAXException getException(Exception inner, String message, Object... parameters) {
 		String temp = String.format(message, parameters);
-		XMLException de =
-						new XMLException(inner, "Error parsing %s(%d:%d) %s", this.documentLocator.getSystemId(),
-										this.documentLocator.getLineNumber(), this.documentLocator.getColumnNumber(), temp);
+		XMLException de = new XMLException(inner, "Error parsing %s(%d:%d) %s", this.documentLocator.getSystemId(),
+						this.documentLocator.getLineNumber(), this.documentLocator.getColumnNumber(), temp);
 		SAXException se = new SAXException(de);
 		return se;
 	}
@@ -407,6 +412,28 @@ public class ConfigContentHandler extends DefaultHandler {
 	 */
 	public MappingConfiguration getMappings() {
 		return this.mappingConfiguration;
+	}
+
+	/**
+	 * Gets a list of the known child names of the parent container. These are used as variable names, available in the XPath evaluation of subsequent
+	 * mappings with the same parent.
+	 *
+	 * @return an array, possibly empty, of known siblings of the current mapping (as determined by the top of {@link #mappingListStack}.
+	 */
+	private String[] getPreviousSiblingNames() {
+		List<String> variables = new ArrayList<String>();
+		MappingList currentContainer = this.mappingListStack.peek();
+		for (IMapping m : currentContainer) {
+			if (m instanceof IValueMapping) {
+				IValueMapping vm = (IValueMapping) m;
+				variables.add(vm.getName());
+			}
+		}
+		String[] varArray = variables.toArray(new String[0]);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Created variable set for {}: {}", currentContainer.getName(), StringUtil.toStringList(varArray));
+		}
+		return varArray;
 	}
 
 	@Override
@@ -466,7 +493,7 @@ public class ConfigContentHandler extends DefaultHandler {
 					startXPathFilter(atts.getValue("xPath"));
 					break;
 				case FileNameInputFilter:
-					startFileNameFilter(atts.getValue("fileNameRegex"));
+					startFileNameFilter(atts.getValue("fileNameRegex"), getAttributeValueAsBoolean(atts, FILENAME_FILTER_MATCH_LOCAL_ATTR));
 					break;
 				default:
 					LOG.warn("Ignoring element ({}):{} as it isn't supported in this version of xml2csv", uri, localName);
@@ -480,11 +507,13 @@ public class ConfigContentHandler extends DefaultHandler {
 	 * Adds filters to the mapping configuration.
 	 *
 	 * @param fileNameRegex a regular expression to match against the filename. May be null.
+	 * @param matchLocalFileNameOnly if false then the filter must match the absolute path name, if true then only the file name (no directory
+	 *            information) will be used.
 	 * @throws SAXException If any errors occur whilst adding the filters.
 	 */
-	private void startFileNameFilter(String fileNameRegex) throws SAXException {
+	private void startFileNameFilter(String fileNameRegex, boolean matchLocalFileNameOnly) throws SAXException {
 		try {
-			IInputFilter filter = new FileNameInputFilter(fileNameRegex);
+			IInputFilter filter = new FileNameInputFilter(fileNameRegex, matchLocalFileNameOnly);
 			addFilter(filter);
 		} catch (PatternSyntaxException pse) {
 			throw getException(pse, "Invalid Regular Expression {} specified for input filter.", fileNameRegex);

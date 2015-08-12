@@ -203,6 +203,13 @@
 				</documentation>
 			</annotation>
 		</attribute>
+		<attribute name="matchLocalFileNameOnly" type="boolean" use="optional">
+			<annotation>
+				<documentation>
+					Enter true to match on only the file name (exclude all directory information), false or omitted means that the absolute file name is used.
+				</documentation>
+			</annotation>
+		</attribute>
 	</complexType>
 
 	<complexType name="XPathInputFilter">
